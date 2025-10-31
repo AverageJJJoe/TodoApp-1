@@ -2,7 +2,7 @@
 
 ## The Problem
 
-Supabase's web page (`https://...verify?...`) is showing a white screen instead of redirecting to `todomorning://auth/callback`. This means the redirect mechanism isn't working.
+Supabase's web page (`https://...verify?...`) is showing a white screen instead of redirecting to `todotomorrow://auth/callback`. This means the redirect mechanism isn't working.
 
 ## ✅ Solution: Test Deep Link Directly
 
@@ -12,7 +12,7 @@ We'll bypass Supabase's redirect page and test the deep link handler directly.
 
 From your email link:
 ```
-https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e&type=magiclink&redirect_to=todomorning://auth/callback
+https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e&type=magiclink&redirect_to=todotomorrow://auth/callback
 ```
 
 **Your token is:** `c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e`
@@ -24,7 +24,7 @@ https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=c5edb72ca94c8eb95d
 1. **Open Chrome browser**
 2. **In the address bar, type exactly:**
    ```
-   todomorning://auth/callback?token=c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e&type=magiclink
+   todotomorrow://auth/callback?token=c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e&type=magiclink
    ```
 3. **Press Enter/Go**
 4. **You should see a prompt:** "Open in Expo Go?" or similar
@@ -35,7 +35,7 @@ https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=c5edb72ca94c8eb95d
 
 **In your Expo terminal (on PC),** you should see logs like:
 ```
-🔗 Deep link received: todomorning://auth/callback?token=...
+🔗 Deep link received: todotomorrow://auth/callback?token=...
 📦 Parsed URL: {...}
 🔑 Query params: {...}
 🎫 Token: Found Type: magiclink
@@ -45,7 +45,7 @@ https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=c5edb72ca94c8eb95d
 ### What This Tests
 
 This bypasses Supabase's redirect page entirely and tests:
-1. ✅ Deep link registration (`todomorning://` scheme)
+1. ✅ Deep link registration (`todotomorrow://` scheme)
 2. ✅ Deep link handler in your app
 3. ✅ Token extraction and verification
 4. ✅ Session creation
@@ -68,7 +68,7 @@ This suggests:
 
 **Troubleshooting:**
 1. Make sure Expo Go is **running** (not just installed)
-2. Check `app.json` has `"scheme": "todomorning"` ✅ (we added this)
+2. Check `app.json` has `"scheme": "todotomorrow"` ✅ (we added this)
 3. Restart Expo: `npx expo start -c`
 
 ## 📝 Alternative: Use Newer Token

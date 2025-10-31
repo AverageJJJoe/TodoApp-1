@@ -2,7 +2,7 @@
 
 ## Overview
 
-TodoMorning must work completely offline. Users can add tasks, mark complete, and see full history without internet. Sync happens automatically when connection restores.
+TodoTomorrow must work completely offline. Users can add tasks, mark complete, and see full history without internet. Sync happens automatically when connection restores.
 
 ## Data Flow Diagram
 

@@ -1,4 +1,4 @@
-# TodoMorning - Complete Technical Architecture
+# TodoTomorrow - Complete Technical Architecture
 
 **Version:** 1.0  
 **Date:** October 2025  
@@ -447,7 +447,7 @@ const supabase = createClient(
 )
 
 const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY')!
-const SENDGRID_FROM_EMAIL = 'team@todomorning.app'
+const SENDGRID_FROM_EMAIL = 'team@todotomorrow.app'
 
 interface EmailUser {
   id: string
@@ -554,7 +554,7 @@ function generateEmailHTML(
           </tbody>
         </table>
         <p style="color: #999; font-size: 12px; text-align: center;">
-          Open TodoMorning to manage your tasks • ${workflowMode === 'fresh_start' ? 'Fresh Start mode' : 'Carry Over mode'}
+          Open TodoTomorrow to manage your tasks • ${workflowMode === 'fresh_start' ? 'Fresh Start mode' : 'Carry Over mode'}
         </p>
       </body>
     </html>
@@ -575,7 +575,7 @@ async function sendEmail(
   try {
     const response = await axios.post('https://api.sendgrid.com/v3/mail/send', {
       personalizations: [{ to: [{ email: to }] }],
-      from: { email: SENDGRID_FROM_EMAIL, name: 'TodoMorning' },
+      from: { email: SENDGRID_FROM_EMAIL, name: 'TodoTomorrow' },
       subject,
       content: [{ type: 'text/html', value: html }],
       mail_settings: {
@@ -758,7 +758,7 @@ SELECT cron.unschedule('send-daily-emails-hourly');
 
 ### Overview
 
-TodoMorning must work completely offline. Users can add tasks, mark complete, and see full history without internet. Sync happens automatically when connection restores.
+TodoTomorrow must work completely offline. Users can add tasks, mark complete, and see full history without internet. Sync happens automatically when connection restores.
 
 ### Data Flow Diagram
 
@@ -1249,7 +1249,7 @@ export async function handleStripeWebhook(event: any) {
 // apple-iap-integration.ts
 import { requestPurchase, purchaseUpdatedListener } from 'react-native-iap'
 
-const APPLE_PRODUCT_ID = 'com.todomorning.subscription_month'
+const APPLE_PRODUCT_ID = 'com.todotomorrow.subscription_month'
 
 export async function processPaymentApple(userId: string): Promise<boolean> {
   try {
@@ -1298,7 +1298,7 @@ import {
   validateReceiptAndroid 
 } from 'react-native-iap'
 
-const GOOGLE_PRODUCT_ID = 'com.todomorning.subscription_month'
+const GOOGLE_PRODUCT_ID = 'com.todotomorrow.subscription_month'
 
 export async function processPaymentGoogle(userId: string): Promise<boolean> {
   try {
@@ -1308,7 +1308,7 @@ export async function processPaymentGoogle(userId: string): Promise<boolean> {
     if (sku?.purchaseToken) {
       await acknowledgePurchaseAndroid({
         token: sku.purchaseToken,
-        packageName: 'com.todomorning'
+        packageName: 'com.todotomorrow'
       })
 
       // Validate receipt

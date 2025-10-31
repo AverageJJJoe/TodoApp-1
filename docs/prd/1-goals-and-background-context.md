@@ -12,14 +12,14 @@
 
 ## 1.2 Background Context
 
-TodoMorning solves a problem experienced by email-native knowledge workers: capturing sporadic evening brain dumps without cluttering their inbox or requiring manual intervention.
+TodoTomorrow solves a problem experienced by email-native knowledge workers: capturing sporadic evening brain dumps without cluttering their inbox or requiring manual intervention.
 
 **The Problem:** During busy reactive daytimes, there's no time for planning. But during evenings (bed, car, waiting for kids), strategic ideas for tomorrow surface sporadically. Existing solutions fail:
 - **Email drafts** - Users forget to send them, tasks never arrive in morning inbox
 - **Todoist** - Too complex with overwhelming features, clutters inbox with individual reminder emails
 - **TodoMailer** - Sends one email per task immediately, creating inbox spam
 
-**The Solution:** TodoMorning is a mobile-first capture tool that automatically batches evening brain dumps into one clean morning email at the user's chosen time (default 6:00 AM), delivering a consolidated daily action plan directly to their inbox.
+**The Solution:** TodoTomorrow is a mobile-first capture tool that automatically batches evening brain dumps into one clean morning email at the user's chosen time (default 6:00 AM), delivering a consolidated daily action plan directly to their inbox.
 
 **Why This Matters:** Email remains the universal productivity hub for knowledge workers. The app doesn't try to replace email—it bridges mobile capture to email delivery. Competitive analysis reveals no existing solution offers automatic batched email delivery, creating a genuine blue ocean opportunity.
 
@@ -27,7 +27,7 @@ TodoMorning solves a problem experienced by email-native knowledge workers: capt
 
 ## 1.3 Monetization Strategy Overview
 
-TodoMorning uses a **tiered freemium launch strategy** to maximize adoption first, then capture revenue through data-driven pricing:
+TodoTomorrow uses a **tiered freemium launch strategy** to maximize adoption first, then capture revenue through data-driven pricing:
 
 **Phase 1 (Weeks 4-6):** Launch completely FREE
 - Remove all payment friction
@@ -58,7 +58,7 @@ TodoMorning uses a **tiered freemium launch strategy** to maximize adoption firs
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | October 14, 2025 | 1.0 | Initial PRD creation from Project Brief | John (PM) |
-| October 14, 2025 | 1.0.1 | Renamed from Night Owl Todo to TodoMorning | John (PM) |
+| October 14, 2025 | 1.0.1 | Renamed from Night Owl Todo to TodoTomorrow | John (PM) |
 | October 30, 2025 | 1.1 | Updated monetization strategy: tiered freemium launch, cohort tracking, grandfather status, A/B pricing tests | John (PM) |
 | October 31, 2025 | 1.2 | Restructured all stories to be 2-4 hours each, testable independently, and building sequentially | John (PM) |
 

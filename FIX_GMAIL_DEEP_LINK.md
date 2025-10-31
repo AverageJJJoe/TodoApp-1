@@ -2,7 +2,7 @@
 
 ## The Problem
 
-When you click the magic link in Gmail on your phone, Gmail opens its **in-app browser** instead of letting the system handle the `todomorning://` deep link. This prevents Expo Go from receiving the deep link.
+When you click the magic link in Gmail on your phone, Gmail opens its **in-app browser** instead of letting the system handle the `todotomorrow://` deep link. This prevents Expo Go from receiving the deep link.
 
 ## ✅ Solutions (Try These in Order)
 
@@ -14,7 +14,7 @@ When you click the magic link in Gmail on your phone, Gmail opens its **in-app b
 2. **This should:**
    - Open Chrome/Safari
    - Navigate to Supabase's verify page
-   - Redirect to `todomorning://auth/callback`
+   - Redirect to `todotomorrow://auth/callback`
    - **Then** the system will ask "Open in Expo Go?" → Click Yes
 
 ### Solution 2: Copy Link and Paste in Browser
@@ -32,7 +32,7 @@ Since Supabase's redirect might not work in Gmail's browser, we can test the dee
 
 1. **Extract the token from the email link:**
    ```
-   From: https://...verify?token=XXXXX&type=magiclink&redirect_to=todomorning://auth/callback
+   From: https://...verify?token=XXXXX&type=magiclink&redirect_to=todotomorrow://auth/callback
    Copy: XXXXX (the token value)
    ```
 
@@ -40,7 +40,7 @@ Since Supabase's redirect might not work in Gmail's browser, we can test the dee
 
 3. **Type this in the address bar:**
    ```
-   todomorning://auth/callback?token=YOUR_TOKEN_HERE&type=magiclink
+   todotomorrow://auth/callback?token=YOUR_TOKEN_HERE&type=magiclink
    ```
    Replace `YOUR_TOKEN_HERE` with the actual token from step 1
 
@@ -60,7 +60,7 @@ Try using:
 ## 🔍 Why This Happens
 
 - **Gmail's in-app browser** tries to open the link internally
-- It may not properly redirect `todomorning://` deep links
+- It may not properly redirect `todotomorrow://` deep links
 - System deep link handlers need the link to come from the system browser
 - Gmail's internal browser can't trigger system-level deep links easily
 
@@ -69,7 +69,7 @@ Try using:
 1. Click link in email
 2. Opens in **system browser** (Chrome/Safari)
 3. Supabase page loads
-4. Supabase redirects to `todomorning://auth/callback?token=...`
+4. Supabase redirects to `todotomorrow://auth/callback?token=...`
 5. **System intercepts** the deep link
 6. Shows dialog: **"Open in Expo Go?"**
 7. Click **"Open"**
@@ -82,14 +82,14 @@ Try using:
 2. **Open Chrome on your phone**
 3. **Paste and go** to that URL
 4. **Watch what happens:**
-   - If it redirects to `todomorning://` → System should ask to open Expo Go ✅
+   - If it redirects to `todotomorrow://` → System should ask to open Expo Go ✅
    - If it shows a white page → The redirect isn't working (we need to fix Supabase config)
    - If nothing happens → Deep link might not be registered
 
 ## 🐛 If Nothing Works
 
 We might need to check:
-1. Is `todomorning://` scheme properly registered? (Check `app.json` ✅ we added it)
+1. Is `todotomorrow://` scheme properly registered? (Check `app.json` ✅ we added it)
 2. Is Expo Go running? (Must be running for deep links to work)
 3. Is the redirect URL correctly configured in Supabase? (You added it ✅)
 

@@ -2,12 +2,12 @@
 
 ## 9.1 Immediate Actions
 
-1. **Save this PRD** as `docs/prd.md` in your TodoMorning project repository
+1. **Save this PRD** as `docs/prd.md` in your TodoTomorrow project repository
 2. **Review monetization strategy** with stakeholders (if any) to confirm tiered approach
-3. **Verify domain availability** for email sending (todomorning.com or alternative)
+3. **Verify domain availability** for email sending (todotomorrow.com or alternative)
 4. **Set up project structure**:
    ```
-   todomorning/
+   todotomorrow/
    ├── docs/
    │   ├── prd.md ✅
    │   ├── project-brief.md
@@ -23,7 +23,7 @@
 
 **Handoff Prompt:**
 ```
-I've completed the TodoMorning Product Requirements Document (PRD v1.1). 
+I've completed the TodoTomorrow Product Requirements Document (PRD v1.1). 
 
 Key points for architecture:
 - Mobile-first React Native app (iOS/Android) + Next.js PWA

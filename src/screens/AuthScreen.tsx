@@ -193,7 +193,7 @@ export const AuthScreen = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: 'todomorning://auth/callback',
+          emailRedirectTo: 'todotomorrow://auth/callback',
         },
       });
 

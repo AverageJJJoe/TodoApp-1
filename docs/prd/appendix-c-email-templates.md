@@ -8,7 +8,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your TodoMorning</title>
+  <title>Your TodoTomorrow</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
   <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
@@ -33,7 +33,7 @@
   <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
   
   <p style="font-size: 12px; color: #999; text-align: center;">
-    TodoMorning - Sent at your requested time<br>
+    TodoTomorrow - Sent at your requested time<br>
     <a href="{unsubscribe_url}" style="color: #999;">Unsubscribe</a>
   </p>
   
@@ -50,7 +50,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your TodoMorning</title>
+  <title>Your TodoTomorrow</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
   <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
@@ -78,7 +78,7 @@
   <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
   
   <p style="font-size: 12px; color: #999; text-align: center;">
-    TodoMorning - Sent at your requested time<br>
+    TodoTomorrow - Sent at your requested time<br>
     <a href="{unsubscribe_url}" style="color: #999;">Unsubscribe</a>
   </p>
   

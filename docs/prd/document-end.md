@@ -1,6 +1,6 @@
 # Document End
 
-**TodoMorning PRD - Version 1.1**  
+**TodoTomorrow PRD - Version 1.1**  
 **Updated:** October 30, 2025  
 **Total Pages:** ~65  
 **Total Stories:** 31  
@@ -24,4 +24,4 @@
 **Next Document:** `docs/architecture.md`  
 **Handoff:** Use prompt from Section 9.2
 
-🌅 **Let's build TodoMorning with a sustainable monetization strategy!**
+🌅 **Let's build TodoTomorrow with a sustainable monetization strategy!**

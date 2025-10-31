@@ -332,7 +332,7 @@
 
 **Acceptance Criteria:**
 1. SendGrid account created (free tier)
-2. Sender email verified: `hello@todomorning.com` (or temp email for MVP)
+2. Sender email verified: `hello@todotomorrow.com` (or temp email for MVP)
 3. Supabase Edge Function created: `send-email`
 4. Function accepts: `{ to, subject, html }`
 5. Function calls SendGrid API with template
@@ -535,8 +535,8 @@
 **Acceptance Criteria:**
 1. Apple Developer account created ($99/year)
 2. IAP products created in App Store Connect:
-   - `com.todomorning.premium_2_99` ($2.99)
-   - `com.todomorning.premium_4_99` ($4.99)
+   - `com.todotomorrow.premium_2_99` ($2.99)
+   - `com.todotomorrow.premium_4_99` ($4.99)
 3. `react-native-iap` library integrated
 4. Tapping "Unlock Premium" triggers StoreKit purchase
 5. Receipt validated via Supabase Edge Function

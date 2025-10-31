@@ -57,7 +57,7 @@ npx expo start -c
 
 1. **Assets are now optional** - The app will run without icon/splash images. For production, you'll want to add proper assets later, but for development/testing, this is fine.
 
-2. **Supabase is configured** ✅ - I can see from your screenshot that you've correctly added `todomorning://auth/callback` to Supabase redirect URLs. Great job!
+2. **Supabase is configured** ✅ - I can see from your screenshot that you've correctly added `todotomorrow://auth/callback` to Supabase redirect URLs. Great job!
 
 3. **expo-linking is installed** ✅ - The package is now properly installed and should be recognized.
 

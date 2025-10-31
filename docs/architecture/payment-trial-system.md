@@ -143,7 +143,7 @@ export async function handleStripeWebhook(event: any) {
 // apple-iap-integration.ts
 import { requestPurchase, purchaseUpdatedListener } from 'react-native-iap'
 
-const APPLE_PRODUCT_ID = 'com.todomorning.subscription_month'
+const APPLE_PRODUCT_ID = 'com.todotomorrow.subscription_month'
 
 export async function processPaymentApple(userId: string): Promise<boolean> {
   try {
@@ -192,7 +192,7 @@ import {
   validateReceiptAndroid 
 } from 'react-native-iap'
 
-const GOOGLE_PRODUCT_ID = 'com.todomorning.subscription_month'
+const GOOGLE_PRODUCT_ID = 'com.todotomorrow.subscription_month'
 
 export async function processPaymentGoogle(userId: string): Promise<boolean> {
   try {
@@ -202,7 +202,7 @@ export async function processPaymentGoogle(userId: string): Promise<boolean> {
     if (sku?.purchaseToken) {
       await acknowledgePurchaseAndroid({
         token: sku.purchaseToken,
-        packageName: 'com.todomorning'
+        packageName: 'com.todotomorrow'
       })
 
       // Validate receipt

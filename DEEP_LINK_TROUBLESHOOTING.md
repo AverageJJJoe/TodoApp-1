@@ -40,11 +40,11 @@ Click the "Confirm your mail" link in the new email.
 
 ## Understanding the Flow
 
-1. **Email Link:** `https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=...&redirect_to=todomorning://auth/callback`
+1. **Email Link:** `https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=...&redirect_to=todotomorrow://auth/callback`
    - This is a web page hosted by Supabase
 
 2. **Supabase Redirect:** The web page should automatically redirect to:
-   - `todomorning://auth/callback?token=...&type=signup`
+   - `todotomorrow://auth/callback?token=...&type=signup`
    - This is the deep link that opens your app
 
 3. **App Receives Deep Link:** Your app should catch this and verify the token
@@ -59,9 +59,9 @@ If you see the Supabase web page instead of the app opening:
 
 ### Issue 2: Deep Link Not Caught
 If nothing happens when clicking:
-- Check if `todomorning://` scheme is registered in your phone
+- Check if `todotomorrow://` scheme is registered in your phone
 - For Expo Go, the scheme should work automatically
-- Try manually opening: `todomorning://auth/callback?token=test&type=signup`
+- Try manually opening: `todotomorrow://auth/callback?token=test&type=signup`
 
 ### Issue 3: Error in Handler
 If you see error messages:
@@ -77,7 +77,7 @@ If you see error messages:
 When you click the magic link, watch the Expo terminal/console. You should see logs like:
 
 ```
-🔗 Deep link received: todomorning://auth/callback?token=...
+🔗 Deep link received: todotomorrow://auth/callback?token=...
 📦 Parsed URL: {...}
 🔑 Query params: {...}
 🎫 Token: Found Type: signup
@@ -98,8 +98,8 @@ If clicking the email link doesn't work, you can test the deep link manually:
    - Extract the `token=XXXXX` part
 
 2. **Manually trigger deep link:**
-   - iOS Simulator: `xcrun simctl openurl booted "todomorning://auth/callback?token=YOUR_TOKEN&type=signup"`
-   - Android: `adb shell am start -W -a android.intent.action.VIEW -d "todomorning://auth/callback?token=YOUR_TOKEN&type=signup"`
+   - iOS Simulator: `xcrun simctl openurl booted "todotomorrow://auth/callback?token=YOUR_TOKEN&type=signup"`
+   - Android: `adb shell am start -W -a android.intent.action.VIEW -d "todotomorrow://auth/callback?token=YOUR_TOKEN&type=signup"`
 
 This bypasses the email/web redirect and tests the deep link handler directly.
 

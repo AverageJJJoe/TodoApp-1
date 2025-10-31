@@ -81,7 +81,7 @@ const supabase = createClient(
 )
 
 const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY')!
-const SENDGRID_FROM_EMAIL = 'team@todomorning.app'
+const SENDGRID_FROM_EMAIL = 'team@todotomorrow.app'
 
 interface EmailUser {
   id: string
@@ -188,7 +188,7 @@ function generateEmailHTML(
           </tbody>
         </table>
         <p style="color: #999; font-size: 12px; text-align: center;">
-          Open TodoMorning to manage your tasks • ${workflowMode === 'fresh_start' ? 'Fresh Start mode' : 'Carry Over mode'}
+          Open TodoTomorrow to manage your tasks • ${workflowMode === 'fresh_start' ? 'Fresh Start mode' : 'Carry Over mode'}
         </p>
       </body>
     </html>
@@ -209,7 +209,7 @@ async function sendEmail(
   try {
     const response = await axios.post('https://api.sendgrid.com/v3/mail/send', {
       personalizations: [{ to: [{ email: to }] }],
-      from: { email: SENDGRID_FROM_EMAIL, name: 'TodoMorning' },
+      from: { email: SENDGRID_FROM_EMAIL, name: 'TodoTomorrow' },
       subject,
       content: [{ type: 'text/html', value: html }],
       mail_settings: {

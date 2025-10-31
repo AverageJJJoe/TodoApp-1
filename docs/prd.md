@@ -1,6 +1,6 @@
-# Product Requirements Document: TodoMorning
+# Product Requirements Document: TodoTomorrow
 
-**Project Name:** TodoMorning - Evening Brain Dump App  
+**Project Name:** TodoTomorrow - Evening Brain Dump App  
 **PRD Date:** October 14, 2025  
 **Version:** 1.2 - Restructured Stories 
 **Author:** John (Product Manager)  
@@ -36,14 +36,14 @@
 
 ### 1.2 Background Context
 
-TodoMorning solves a problem experienced by email-native knowledge workers: capturing sporadic evening brain dumps without cluttering their inbox or requiring manual intervention.
+TodoTomorrow solves a problem experienced by email-native knowledge workers: capturing sporadic evening brain dumps without cluttering their inbox or requiring manual intervention.
 
 **The Problem:** During busy reactive daytimes, there's no time for planning. But during evenings (bed, car, waiting for kids), strategic ideas for tomorrow surface sporadically. Existing solutions fail:
 - **Email drafts** - Users forget to send them, tasks never arrive in morning inbox
 - **Todoist** - Too complex with overwhelming features, clutters inbox with individual reminder emails
 - **TodoMailer** - Sends one email per task immediately, creating inbox spam
 
-**The Solution:** TodoMorning is a mobile-first capture tool that automatically batches evening brain dumps into one clean morning email at the user's chosen time (default 6:00 AM), delivering a consolidated daily action plan directly to their inbox.
+**The Solution:** TodoTomorrow is a mobile-first capture tool that automatically batches evening brain dumps into one clean morning email at the user's chosen time (default 6:00 AM), delivering a consolidated daily action plan directly to their inbox.
 
 **Why This Matters:** Email remains the universal productivity hub for knowledge workers. The app doesn't try to replace email—it bridges mobile capture to email delivery. Competitive analysis reveals no existing solution offers automatic batched email delivery, creating a genuine blue ocean opportunity.
 
@@ -51,7 +51,7 @@ TodoMorning solves a problem experienced by email-native knowledge workers: capt
 
 ### 1.3 Monetization Strategy Overview
 
-TodoMorning uses a **tiered freemium launch strategy** to maximize adoption first, then capture revenue through data-driven pricing:
+TodoTomorrow uses a **tiered freemium launch strategy** to maximize adoption first, then capture revenue through data-driven pricing:
 
 **Phase 1 (Weeks 4-6):** Launch completely FREE
 - Remove all payment friction
@@ -82,7 +82,7 @@ TodoMorning uses a **tiered freemium launch strategy** to maximize adoption firs
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | October 14, 2025 | 1.0 | Initial PRD creation from Project Brief | John (PM) |
-| October 14, 2025 | 1.0.1 | Renamed from Night Owl Todo to TodoMorning | John (PM) |
+| October 14, 2025 | 1.0.1 | Renamed from Night Owl Todo to TodoTomorrow | John (PM) |
 | October 30, 2025 | 1.1 | Updated monetization strategy: tiered freemium launch, cohort tracking, grandfather status, A/B pricing tests | John (PM) |
 | October 31, 2025 | 1.2 | Restructured all stories to be 2-4 hours each, testable independently, and building sequentially | John (PM) |
 
@@ -222,7 +222,7 @@ TodoMorning uses a **tiered freemium launch strategy** to maximize adoption firs
 
 ### 3.1 Overall UX Vision
 
-TodoMorning embraces Apple's design philosophy: radical simplicity with obsessive attention to detail. The interface should feel native, polished, and invisible - users capture thoughts with zero friction, then forget about the app until the next evening.
+TodoTomorrow embraces Apple's design philosophy: radical simplicity with obsessive attention to detail. The interface should feel native, polished, and invisible - users capture thoughts with zero friction, then forget about the app until the next evening.
 
 **Design Philosophy:**
 - **Apple Minimalism**: Clean white space, subtle shadows, native feel
@@ -349,7 +349,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 - Location: Full-screen modal (blocking)
 - Dismissible: No
 - Headline: "🌅 Trial Complete"
-- Body: "Continue with TodoMorning Premium for $X.XX—one time, forever."
+- Body: "Continue with TodoTomorrow Premium for $X.XX—one time, forever."
 - Stats: "You've captured [TASK_COUNT] tasks and received [EMAIL_COUNT] emails."
 - Primary CTA: "Unlock Premium" (blue button)
 - Secondary CTA: "Use Free Tier (50 tasks/month)" (text link)
@@ -357,7 +357,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 **State 4: Free Launch Cohort (Optional, Post-Day 30)**
 - Location: Modal (shown once, never repeats)
 - Dismissible: Yes (always)
-- Headline: "🌅 Love TodoMorning? ❤️"
+- Headline: "🌅 Love TodoTomorrow? ❤️"
 - Body: "If you'd like to support ongoing development, you can opt-in to premium for $X.XX. Your free access is locked in forever—thanks for being early! 🎉"
 - Primary CTA: "Support Development" (blue button)
 - Secondary CTA: "Keep Free" (text link)
@@ -370,7 +370,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 **Layout:**
 ```
 ┌─────────────────────────────────┐
-│  TodoMorning              [⚙️]  │  ← Header
+│  TodoTomorrow              [⚙️]  │  ← Header
 ├─────────────────────────────────┤
 │                                 │
 │  🌅 Add your first task         │  ← Empty state
@@ -463,7 +463,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 **Layout:**
 ```
 ┌─────────────────────────────────┐
-│  TodoMorning              [⚙️]  │
+│  TodoTomorrow              [⚙️]  │
 ├─────────────────────────────────┤
 │                                 │
 │  ✅ Completed presentation      │
@@ -1029,7 +1029,7 @@ The following features are intentionally excluded from the 4-week MVP to maintai
 
 **Acceptance Criteria:**
 1. SendGrid account created (free tier)
-2. Sender email verified: `hello@todomorning.com` (or temp email for MVP)
+2. Sender email verified: `hello@todotomorrow.com` (or temp email for MVP)
 3. Supabase Edge Function created: `send-email`
 4. Function accepts: `{ to, subject, html }`
 5. Function calls SendGrid API with template
@@ -1232,8 +1232,8 @@ The following features are intentionally excluded from the 4-week MVP to maintai
 **Acceptance Criteria:**
 1. Apple Developer account created ($99/year)
 2. IAP products created in App Store Connect:
-   - `com.todomorning.premium_2_99` ($2.99)
-   - `com.todomorning.premium_4_99` ($4.99)
+   - `com.todotomorrow.premium_2_99` ($2.99)
+   - `com.todotomorrow.premium_4_99` ($4.99)
 3. `react-native-iap` library integrated
 4. Tapping "Unlock Premium" triggers StoreKit purchase
 5. Receipt validated via Supabase Edge Function
@@ -1497,12 +1497,12 @@ The architect should focus on:
 
 ### 9.1 Immediate Actions
 
-1. **Save this PRD** as `docs/prd.md` in your TodoMorning project repository
+1. **Save this PRD** as `docs/prd.md` in your TodoTomorrow project repository
 2. **Review monetization strategy** with stakeholders (if any) to confirm tiered approach
-3. **Verify domain availability** for email sending (todomorning.com or alternative)
+3. **Verify domain availability** for email sending (todotomorrow.com or alternative)
 4. **Set up project structure**:
    ```
-   todomorning/
+   todotomorrow/
    ├── docs/
    │   ├── prd.md ✅
    │   ├── project-brief.md
@@ -1518,7 +1518,7 @@ The architect should focus on:
 
 **Handoff Prompt:**
 ```
-I've completed the TodoMorning Product Requirements Document (PRD v1.1). 
+I've completed the TodoTomorrow Product Requirements Document (PRD v1.1). 
 
 Key points for architecture:
 - Mobile-first React Native app (iOS/Android) + Next.js PWA
@@ -1764,7 +1764,7 @@ CREATE INDEX idx_email_logs_user_sent ON email_logs(user_id, sent_at DESC);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your TodoMorning</title>
+  <title>Your TodoTomorrow</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
   <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
@@ -1789,7 +1789,7 @@ CREATE INDEX idx_email_logs_user_sent ON email_logs(user_id, sent_at DESC);
   <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
   
   <p style="font-size: 12px; color: #999; text-align: center;">
-    TodoMorning - Sent at your requested time<br>
+    TodoTomorrow - Sent at your requested time<br>
     <a href="{unsubscribe_url}" style="color: #999;">Unsubscribe</a>
   </p>
   
@@ -1806,7 +1806,7 @@ CREATE INDEX idx_email_logs_user_sent ON email_logs(user_id, sent_at DESC);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your TodoMorning</title>
+  <title>Your TodoTomorrow</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5;">
   <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
@@ -1834,7 +1834,7 @@ CREATE INDEX idx_email_logs_user_sent ON email_logs(user_id, sent_at DESC);
   <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
   
   <p style="font-size: 12px; color: #999; text-align: center;">
-    TodoMorning - Sent at your requested time<br>
+    TodoTomorrow - Sent at your requested time<br>
     <a href="{unsubscribe_url}" style="color: #999;">Unsubscribe</a>
   </p>
   
@@ -1978,7 +1978,7 @@ CREATE INDEX idx_email_logs_user_sent ON email_logs(user_id, sent_at DESC);
 
 ## Document End
 
-**TodoMorning PRD - Version 1.1**  
+**TodoTomorrow PRD - Version 1.1**  
 **Updated:** October 30, 2025  
 **Total Pages:** ~65  
 **Total Stories:** 31  
@@ -2002,4 +2002,4 @@ CREATE INDEX idx_email_logs_user_sent ON email_logs(user_id, sent_at DESC);
 **Next Document:** `docs/architecture.md`  
 **Handoff:** Use prompt from Section 9.2
 
-🌅 **Let's build TodoMorning with a sustainable monetization strategy!**
+🌅 **Let's build TodoTomorrow with a sustainable monetization strategy!**

@@ -2,7 +2,7 @@
 
 ## 3.1 Overall UX Vision
 
-TodoMorning embraces Apple's design philosophy: radical simplicity with obsessive attention to detail. The interface should feel native, polished, and invisible - users capture thoughts with zero friction, then forget about the app until the next evening.
+TodoTomorrow embraces Apple's design philosophy: radical simplicity with obsessive attention to detail. The interface should feel native, polished, and invisible - users capture thoughts with zero friction, then forget about the app until the next evening.
 
 **Design Philosophy:**
 - **Apple Minimalism**: Clean white space, subtle shadows, native feel
@@ -129,7 +129,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 - Location: Full-screen modal (blocking)
 - Dismissible: No
 - Headline: "🌅 Trial Complete"
-- Body: "Continue with TodoMorning Premium for $X.XX—one time, forever."
+- Body: "Continue with TodoTomorrow Premium for $X.XX—one time, forever."
 - Stats: "You've captured [TASK_COUNT] tasks and received [EMAIL_COUNT] emails."
 - Primary CTA: "Unlock Premium" (blue button)
 - Secondary CTA: "Use Free Tier (50 tasks/month)" (text link)
@@ -137,7 +137,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 **State 4: Free Launch Cohort (Optional, Post-Day 30)**
 - Location: Modal (shown once, never repeats)
 - Dismissible: Yes (always)
-- Headline: "🌅 Love TodoMorning? ❤️"
+- Headline: "🌅 Love TodoTomorrow? ❤️"
 - Body: "If you'd like to support ongoing development, you can opt-in to premium for $X.XX. Your free access is locked in forever—thanks for being early! 🎉"
 - Primary CTA: "Support Development" (blue button)
 - Secondary CTA: "Keep Free" (text link)
@@ -150,7 +150,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 **Layout:**
 ```
 ┌─────────────────────────────────┐
-│  TodoMorning              [⚙️]  │  ← Header
+│  TodoTomorrow              [⚙️]  │  ← Header
 ├─────────────────────────────────┤
 │                                 │
 │  🌅 Add your first task         │  ← Empty state
@@ -243,7 +243,7 @@ TodoMorning embraces Apple's design philosophy: radical simplicity with obsessiv
 **Layout:**
 ```
 ┌─────────────────────────────────┐
-│  TodoMorning              [⚙️]  │
+│  TodoTomorrow              [⚙️]  │
 ├─────────────────────────────────┤
 │                                 │
 │  ✅ Completed presentation      │

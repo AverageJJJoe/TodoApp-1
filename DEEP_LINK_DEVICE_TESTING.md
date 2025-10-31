@@ -5,7 +5,7 @@
 You're running Expo Go on your **phone**, but clicking the magic link from your **PC email**. This creates a mismatch:
 
 1. **Email link clicked on PC** → Opens in PC browser
-2. **Deep link `todomorning://`** → PC doesn't know what to do with it (no Expo Go on PC)
+2. **Deep link `todotomorrow://`** → PC doesn't know what to do with it (no Expo Go on PC)
 3. **Result:** White screen or nothing happens
 
 ## ✅ Solution: Test on the Same Device
@@ -41,7 +41,7 @@ If you want to test the deep link handler directly without the email redirect:
 2. **On your phone, manually open the deep link:**
    - **Android:** Use a browser and type/paste:
      ```
-     todomorning://auth/callback?token=YOUR_TOKEN&type=magiclink
+     todotomorrow://auth/callback?token=YOUR_TOKEN&type=magiclink
      ```
    - **iOS:** Same as Android
 
@@ -49,7 +49,7 @@ If you want to test the deep link handler directly without the email redirect:
 
 ## 🔍 Why This Happens
 
-- **Deep links (`todomorning://`)** are device-specific
+- **Deep links (`todotomorrow://`)** are device-specific
 - They need a registered app handler on the same device
 - PC browsers don't know about your phone's Expo Go installation
 - So the redirect fails silently (white screen)
@@ -89,7 +89,7 @@ If you want to test the deep link handler directly without the email redirect:
 ### Android
 - Email apps usually handle deep links automatically
 - If it opens in a browser first, the browser should still trigger the deep link
-- Chrome on Android handles `todomorning://` links well
+- Chrome on Android handles `todotomorrow://` links well
 
 ### iOS
 - iOS Mail app handles deep links
@@ -101,7 +101,7 @@ If you want to test the deep link handler directly without the email redirect:
 ### "Nothing happens when I click the link on my phone"
 
 1. **Check Expo Go is running** on your phone
-2. **Check the link format** - Should contain `todomorning://auth/callback?token=...`
+2. **Check the link format** - Should contain `todotomorrow://auth/callback?token=...`
 3. **Try copying the link** and pasting it in your phone's browser address bar
 4. **Check console logs** in Expo terminal for debug messages
 
@@ -109,7 +109,7 @@ If you want to test the deep link handler directly without the email redirect:
 
 1. **Make sure Expo Go is running** (not just installed)
 2. **Try closing and reopening Expo Go**
-3. **Check `app.json` has `"scheme": "todomorning"`** (we added this ✅)
+3. **Check `app.json` has `"scheme": "todotomorrow"`** (we added this ✅)
 4. **Restart Expo dev server** with `npx expo start -c`
 
 ### "I see an error message in the app"

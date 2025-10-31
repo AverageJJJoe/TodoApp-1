@@ -20,7 +20,7 @@ INSERT INTO users (
   cohort,
   grandfather_status
 ) VALUES (
-  'test@todomorning.com',
+  'test@todotomorrow.com',
   '3a25218c-64a6-4fba-8993-0784546d4663'::UUID,  -- Replace with actual auth.users UUID
   '06:00:00',
   'UTC',
@@ -31,5 +31,5 @@ INSERT INTO users (
 );
 
 -- Verify the test user was inserted
-SELECT * FROM users WHERE email = 'test@todomorning.com';
+SELECT * FROM users WHERE email = 'test@todotomorrow.com';
 

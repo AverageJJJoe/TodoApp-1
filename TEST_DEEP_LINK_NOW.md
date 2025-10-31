@@ -20,7 +20,7 @@ c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e
 **On your phone, open Chrome browser and type this EXACTLY:**
 
 ```
-todomorning://auth/callback?token=c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e&type=magiclink
+todotomorrow://auth/callback?token=c5edb72ca94c8eb95d18672da27bb4971ffd2dd97384f89cb752168e&type=magiclink
 ```
 
 Then press **Go/Enter**.
@@ -32,7 +32,7 @@ Then press **Go/Enter**.
 3. **Expo Go should open** (or switch to it if already open)
 4. **Check the Expo terminal on your PC** - you should see debug logs:
    ```
-   🔗 Deep link received: todomorning://auth/callback?token=...
+   🔗 Deep link received: todotomorrow://auth/callback?token=...
    📦 Parsed URL: {...}
    🔑 Query params: {...}
    🎫 Token: Found Type: magiclink

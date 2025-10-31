@@ -2,7 +2,7 @@
 
 ## The Problem
 
-**Expo Go doesn't register custom URL schemes!** When you type `todomorning://` in a browser, the system doesn't recognize it because Expo Go only handles `exp://` links.
+**Expo Go doesn't register custom URL schemes!** When you type `todotomorrow://` in a browser, the system doesn't recognize it because Expo Go only handles `exp://` links.
 
 This is a known limitation of Expo Go - custom schemes only work in **development builds** or **production builds**, not in Expo Go.
 
@@ -25,7 +25,7 @@ For testing in Expo Go, we can use Expo's built-in URL format:
 ### Option 2: Accept Limitation for Now (Recommended for MVP)
 
 **Document this limitation:**
-- Custom URL schemes (`todomorning://`) only work in development builds or production
+- Custom URL schemes (`todotomorrow://`) only work in development builds or production
 - Expo Go doesn't support custom schemes
 - For testing the authentication flow:
   1. Test that magic link email is sent ✅ (this works!)
@@ -72,7 +72,7 @@ We can add a temporary test button in the app to simulate receiving a deep link:
 ```typescript
 // Temporary test button (remove later)
 <TouchableOpacity onPress={() => {
-  handleDeepLink('todomorning://auth/callback?token=TEST_TOKEN&type=magiclink');
+  handleDeepLink('todotomorrow://auth/callback?token=TEST_TOKEN&type=magiclink');
 }}>
   <Text>Test Deep Link Handler</Text>
 </TouchableOpacity>

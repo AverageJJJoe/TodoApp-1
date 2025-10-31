@@ -1,5 +1,5 @@
 # Product Owner Master Validation Report
-**Project:** TodoMorning - Evening Brain Dump App  
+**Project:** TodoTomorrow - Evening Brain Dump App  
 **Project Type:** Greenfield with UI/UX  
 **Validation Date:** October 31, 2025  
 **Validator:** Sarah (Product Owner)  

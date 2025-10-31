@@ -5,7 +5,7 @@
 Your logs prove that **the deep link handler is working perfectly!** 🎉
 
 ```
-✅ Deep link received: todomorning://auth/callback?token=...
+✅ Deep link received: todotomorrow://auth/callback?token=...
 ✅ Parsed URL: {scheme, path, queryParams all correct}
 ✅ Query params extracted: token and type found
 ✅ Token: Found Type: magiclink

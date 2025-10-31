@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "TodoMorning",
-    "slug": "todomorning",
-    "scheme": "todomorning",
+    "name": "TodoTomorrow",
+    "slug": "todotomorrow",
+    "scheme": "todotomorrow",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -19,13 +19,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.todomorning.app"
+      "bundleIdentifier": "com.todotomorrow.app"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.todomorning.app"
+      "package": "com.todotomorrow.app"
     }
   }
 }

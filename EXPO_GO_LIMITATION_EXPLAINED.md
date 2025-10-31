@@ -2,9 +2,9 @@
 
 ## The Issue
 
-**Expo Go doesn't support custom URL schemes like `todomorning://`**
+**Expo Go doesn't support custom URL schemes like `todotomorrow://`**
 
-When you type `todomorning://auth/callback?...` in Chrome, the system treats it as a search query because Expo Go hasn't registered that custom scheme. Expo Go only handles `exp://` links (Expo's own deep link format).
+When you type `todotomorrow://auth/callback?...` in Chrome, the system treats it as a search query because Expo Go hasn't registered that custom scheme. Expo Go only handles `exp://` links (Expo's own deep link format).
 
 ## Why This Happens
 
@@ -30,7 +30,7 @@ I've added a **"🧪 Test Deep Link Handler"** button to your AuthScreen. This b
 2. **Click "🧪 Test Deep Link Handler"** button
 3. **Watch the Expo terminal** for debug logs:
    ```
-   🔗 Deep link received: todomorning://auth/callback?token=...
+   🔗 Deep link received: todotomorrow://auth/callback?token=...
    📦 Parsed URL: {...}
    🔑 Query params: {...}
    🎫 Token: Found Type: magiclink
@@ -50,7 +50,7 @@ I've added a **"🧪 Test Deep Link Handler"** button to your AuthScreen. This b
 ## For Production/Dev Builds
 
 When you create a development build or production build:
-- Custom URL schemes (`todomorning://`) **will work**
+- Custom URL schemes (`todotomorrow://`) **will work**
 - Deep links from emails **will work**
 - The test button can be removed
 

@@ -1,8 +1,8 @@
-# TodoMorning - Complete Technical Architecture
+# TodoTomorrow - Complete Technical Architecture
 
 ## Table of Contents
 
-- [TodoMorning - Complete Technical Architecture](#table-of-contents)
+- [TodoTomorrow - Complete Technical Architecture](#table-of-contents)
   - [Table of Contents](./table-of-contents.md)
   - [System Architecture Overview](./system-architecture-overview.md)
     - [High-Level System Diagram](./system-architecture-overview.md#high-level-system-diagram)

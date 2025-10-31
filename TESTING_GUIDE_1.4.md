@@ -27,7 +27,7 @@ This is a critical step that must be done before testing the magic link flow.
 
 4. **Add Redirect URL**
    - Find the **"Redirect URLs"** section (may also be called "Allowed Redirect URLs" or "Email Redirect URLs")
-   - Add this exact URL: `todomorning://auth/callback`
+   - Add this exact URL: `todotomorrow://auth/callback`
    - Click **"Save"** or **"Add"**
 
 5. **Verify Site URL** (Optional but recommended)
@@ -35,7 +35,7 @@ This is a critical step that must be done before testing the magic link flow.
    - This is used as a fallback
 
 **Important Notes:**
-- The redirect URL format is: `todomorning://auth/callback`
+- The redirect URL format is: `todotomorrow://auth/callback`
 - This must match exactly what we configured in the app
 - Supabase will reject magic link authentication if this URL is not whitelisted
 
@@ -250,7 +250,7 @@ This is the most complex test. We'll test it multiple ways.
 2. Use ADB command (see Test 6c)
 
 **What Happens:**
-- Email link redirects to: `todomorning://auth/callback?token=XXXXX&type=email`
+- Email link redirects to: `todotomorrow://auth/callback?token=XXXXX&type=email`
 - Deep link handler detects the URL
 - Token is extracted and verified with Supabase
 - Session is created automatically
@@ -267,7 +267,7 @@ This is the most complex test. We'll test it multiple ways.
 
 2. **Open Terminal** and run:
    ```powershell
-   xcrun simctl openurl booted "todomorning://auth/callback?token=test&type=email"
+   xcrun simctl openurl booted "todotomorrow://auth/callback?token=test&type=email"
      ```
    
    **Note:** This uses a dummy token. For real testing, you need the actual token from the email.
@@ -290,7 +290,7 @@ This is the most complex test. We'll test it multiple ways.
 
 2. **Test basic deep link:**
    ```powershell
-   adb shell am start -W -a android.intent.action.VIEW -d "todomorning://auth/callback?token=test&type=email"
+   adb shell am start -W -a android.intent.action.VIEW -d "todotomorrow://auth/callback?token=test&type=email"
      ```
 
 3. **Expected Results:**
@@ -323,7 +323,7 @@ This is the most complex test. We'll test it multiple ways.
    - "Copy link address" or "Copy link"
    - The URL will look like:
      ```
-     https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=XXXXX&type=email&redirect_to=todomorning://auth/callback
+     https://zrnjxrtgrommlhexbpde.supabase.co/auth/v1/verify?token=XXXXX&type=email&redirect_to=todotomorrow://auth/callback
      ```
    - The token is the `token=XXXXX` part
 
@@ -383,7 +383,7 @@ This is the most complex test. We'll test it multiple ways.
 #### Error Test 3: Invalid Token Format
 1. Use manual deep link with malformed token:
    ```powershell
-   xcrun simctl openurl booted "todomorning://auth/callback?token=invalid&type=email"
+   xcrun simctl openurl booted "todotomorrow://auth/callback?token=invalid&type=email"
      ```
 2. **Expected:** Error handling gracefully shows error message
 
@@ -450,7 +450,7 @@ This is the most complex test. We'll test it multiple ways.
 - Platform-specific deep link handler issue
 
 **Solutions:**
-1. Verify `app.json` has `"scheme": "todomorning"` (we added this)
+1. Verify `app.json` has `"scheme": "todotomorrow"` (we added this)
 2. Make sure app is installed on device/simulator
 3. For iOS Simulator: Rebuild app after adding scheme
 4. For Android: Rebuild app after adding scheme
@@ -512,10 +512,10 @@ npm run ios
 npm run android
 
 # Test deep link on iOS Simulator
-xcrun simctl openurl booted "todomorning://auth/callback?token=test&type=email"
+xcrun simctl openurl booted "todotomorrow://auth/callback?token=test&type=email"
 
 # Test deep link on Android Emulator
-adb shell am start -W -a android.intent.action.VIEW -d "todomorning://auth/callback?token=test&type=email"
+adb shell am start -W -a android.intent.action.VIEW -d "todotomorrow://auth/callback?token=test&type=email"
 ```
 
 ---

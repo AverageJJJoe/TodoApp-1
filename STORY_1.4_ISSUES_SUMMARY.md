@@ -21,8 +21,8 @@
 
 **Verified via logs:**
 ```
-✅ Deep link received: todomorning://auth/callback?token=...&type=magiclink
-✅ Parsed URL: {scheme: "todomorning", path: "callback", queryParams: {...}}
+✅ Deep link received: todotomorrow://auth/callback?token=...&type=magiclink
+✅ Parsed URL: {scheme: "todotomorrow", path: "callback", queryParams: {...}}
 ✅ Token extraction works
 ✅ Handler processes correctly
 ```
@@ -32,8 +32,8 @@
 ### Issue 1: Expo Go Doesn't Support Custom URL Schemes
 
 **Problem:**
-- Custom URL schemes (`todomorning://`) do not work in Expo Go
-- When user types `todomorning://auth/callback?...` in browser, it's treated as a search query
+- Custom URL schemes (`todotomorrow://`) do not work in Expo Go
+- When user types `todotomorrow://auth/callback?...` in browser, it's treated as a search query
 - System doesn't recognize the scheme because Expo Go only handles `exp://` links
 
 **Why:**
@@ -45,7 +45,7 @@
   - ❌ NOT in Expo Go
 
 **Evidence:**
-- Browser doesn't prompt "Open in Expo Go?" when navigating to `todomorning://...`
+- Browser doesn't prompt "Open in Expo Go?" when navigating to `todotomorrow://...`
 - Deep link never reaches the app
 
 **Workaround Implemented:**
@@ -57,25 +57,25 @@
 
 **Problem:**
 - When clicking magic link email URL (`https://...supabase.co/auth/v1/verify?...`)
-- Supabase's redirect page shows white screen instead of redirecting to `todomorning://auth/callback`
+- Supabase's redirect page shows white screen instead of redirecting to `todotomorrow://auth/callback`
 - Occurs in:
   - Gmail's in-app browser
   - Chrome on mobile
   - Chrome on desktop
 
 **Configuration:**
-- ✅ Supabase Dashboard configured: Redirect URL `todomorning://auth/callback` is added
-- ✅ `app.json` configured: `"scheme": "todomorning"` is set
-- ✅ Magic link API call includes: `emailRedirectTo: 'todomorning://auth/callback'`
+- ✅ Supabase Dashboard configured: Redirect URL `todotomorrow://auth/callback` is added
+- ✅ `app.json` configured: `"scheme": "todotomorrow"` is set
+- ✅ Magic link API call includes: `emailRedirectTo: 'todotomorrow://auth/callback'`
 
 **Possible Causes:**
 1. Supabase's redirect page may not handle custom URL schemes properly
-2. Browser security may block `todomorning://` redirects from HTTPS pages
+2. Browser security may block `todotomorrow://` redirects from HTTPS pages
 3. Supabase redirect might need different format or configuration
 4. May require Universal Links (iOS) / App Links (Android) instead of custom schemes
 
 **Evidence:**
-- Email links contain correct redirect: `redirect_to=todomorning://auth/callback`
+- Email links contain correct redirect: `redirect_to=todotomorrow://auth/callback`
 - But Supabase's verify page never redirects (white screen)
 - No console errors in browser
 - No network errors
@@ -103,12 +103,12 @@
 
 **Files Modified:**
 - `src/screens/AuthScreen.tsx` - Main auth component with deep link handler
-- `app.json` - Added `"scheme": "todomorning"`
+- `app.json` - Added `"scheme": "todotomorrow"`
 - `package.json` - Added `expo-linking` dependency
 
 **Deep Link Handler:**
 ```typescript
-// Handles: todomorning://auth/callback?token=XXX&type=magiclink
+// Handles: todotomorrow://auth/callback?token=XXX&type=magiclink
 // Extracts token correctly
 // Verifies with Supabase
 // Creates session
@@ -120,7 +120,7 @@
 supabase.auth.signInWithOtp({
   email,
   options: {
-    emailRedirectTo: 'todomorning://auth/callback',
+    emailRedirectTo: 'todotomorrow://auth/callback',
   },
 })
 ```
@@ -128,7 +128,7 @@ supabase.auth.signInWithOtp({
 ### Supabase Configuration
 
 **Dashboard Settings:**
-- Redirect URLs: `todomorning://auth/callback` ✅
+- Redirect URLs: `todotomorrow://auth/callback` ✅
 - Site URL: `http://localhost:3000` (fallback)
 
 ### Expo Configuration
@@ -137,7 +137,7 @@ supabase.auth.signInWithOtp({
 ```json
 {
   "expo": {
-    "scheme": "todomorning",  // ✅ Custom scheme configured
+    "scheme": "todotomorrow",  // ✅ Custom scheme configured
     // ... other config
   }
 }

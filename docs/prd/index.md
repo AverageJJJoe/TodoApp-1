@@ -1,8 +1,8 @@
-# Product Requirements Document: TodoMorning
+# Product Requirements Document: TodoTomorrow
 
 ## Table of Contents
 
-- [Product Requirements Document: TodoMorning](#table-of-contents)
+- [Product Requirements Document: TodoTomorrow](#table-of-contents)
   - [Table of Contents](./table-of-contents.md)
   - [1. Goals and Background Context](./1-goals-and-background-context.md)
     - [1.1 Goals](./1-goals-and-background-context.md#11-goals)
