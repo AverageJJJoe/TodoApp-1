@@ -65,12 +65,27 @@ export const MainScreen = () => {
     setTaskInput('');
   };
 
-  const handleSubmitTask = () => {
+  const handleSubmitTask = async () => {
     const trimmedText = taskInput.trim();
-    if (trimmedText) {
-      addTask(trimmedText);
+    if (!trimmedText) {
+      return;
+    }
+
+    try {
+      await addTask(trimmedText);
+      // Success: task saved, close modal and clear input
       setTaskInput('');
       setIsModalVisible(false);
+    } catch (error: any) {
+      // Error: show error toast, task already removed from store
+      if (__DEV__) {
+        console.error('Error saving task:', error);
+      }
+      Alert.alert(
+        'Error',
+        'Failed to save task. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
