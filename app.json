@@ -14,6 +14,10 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "extra": {
+      "supabaseUrl": "https://zrnjxrtgrommlhexbpde.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpybmp4cnRncm9tbWxoZXhicGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4ODc2OTQsImV4cCI6MjA3NzQ2MzY5NH0.8Ci--doOpAqx9FRGLH_cIF4E4xPHIKszlwp0DorSvOo"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.todomorning.app"
