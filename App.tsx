@@ -58,10 +58,15 @@ export default function App() {
     );
   }
 
+  // TEMPORARY: Dev-only bypass for Story 2.1 UI testing
+  // Set to true to bypass auth and show MainScreen directly
+  // TODO: Set to false after Story 2.1 testing is complete
+  const DEV_BYPASS_AUTH = __DEV__ && false; // Disabled - set to true only for UI testing
+
   // Conditional rendering based on session state
   return (
     <>
-      {session ? <MainScreen /> : <AuthScreen />}
+      {DEV_BYPASS_AUTH || session ? <MainScreen /> : <AuthScreen />}
       <StatusBar style="auto" />
     </>
   );

@@ -9,15 +9,33 @@ import {
 } from 'react-native';
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../stores/authStore';
 
 export const AuthScreen = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const setSession = useAuthStore((state) => state.setSession);
+  const initializeSession = useAuthStore((state) => state.initializeSession);
 
   // Basic email validation regex pattern
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Check for existing session when AuthScreen mounts
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      // Only check if we don't already have a session (to avoid unnecessary checks)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        if (__DEV__) {
+          console.log('✅ Existing session found, updating store');
+        }
+        setSession(session);
+      }
+    };
+    checkExistingSession();
+  }, [setSession]);
 
   // Handle deep link for magic link callback
   useEffect(() => {
@@ -133,8 +151,10 @@ export const AuthScreen = () => {
                 if (__DEV__) {
                   console.log('🎉 Session created successfully!', sessionData.session.user.email);
                 }
+                // Update Zustand store with session to trigger navigation to MainScreen
+                setSession(sessionData.session);
                 setSuccessMessage('Successfully signed in!');
-                // Note: Navigation to authenticated screens will be handled in Story 1.5
+                // Navigation to MainScreen happens automatically via App.tsx session check
               } else {
                 if (__DEV__) {
                   console.warn('⚠️ No session found after verification');
@@ -260,6 +280,26 @@ export const AuthScreen = () => {
           <Text style={styles.buttonText}>Send Magic Link</Text>
         )}
       </TouchableOpacity>
+
+      {/* Temporary test button for Story 2.1 UI testing - REMOVE AFTER TESTING */}
+      {__DEV__ && (
+        <TouchableOpacity
+          style={[styles.button, styles.testButton]}
+          onPress={async () => {
+            // For Story 2.1 testing: Manually check if there's a session from browser auth
+            // If user clicked magic link in browser, session might be in AsyncStorage
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              setSession(session);
+              setSuccessMessage('Session found! Navigating to MainScreen...');
+            } else {
+              setErrorMessage('No session found. Complete authentication first, or the token may have expired.');
+            }
+          }}
+        >
+          <Text style={styles.buttonText}>🔧 Check for Session (Dev Only)</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -325,6 +365,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  testButton: {
+    backgroundColor: '#666',
+    marginTop: 12,
   },
 });
 

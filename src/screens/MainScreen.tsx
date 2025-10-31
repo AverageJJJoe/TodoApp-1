@@ -48,20 +48,21 @@ export const MainScreen = () => {
     }
   };
 
+  const handleAddTask = () => {
+    Alert.alert('Coming Soon', 'Add task feature coming soon');
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Main Screen</Text>
-        <Text style={styles.subtitle}>Welcome!</Text>
+        <Text style={styles.title}>TodoTomorrow</Text>
         {session?.user?.email && (
           <Text style={styles.email}>Signed in as: {session.user.email}</Text>
         )}
       </View>
       
       <View style={styles.content}>
-        <Text style={styles.description}>
-          This is the main screen placeholder. It will be replaced with the Tasks Screen in Story 2.1.
-        </Text>
+        <Text style={styles.emptyState}>🌅 Add your first task</Text>
       </View>
       
       <View style={styles.footer}>
@@ -77,6 +78,17 @@ export const MainScreen = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleAddTask}
+        accessible={true}
+        accessibilityLabel="Add task"
+        accessibilityRole="button"
+      >
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -98,11 +110,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#000',
   },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 12,
-  },
   email: {
     fontSize: 14,
     color: '#888',
@@ -114,11 +121,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  description: {
-    fontSize: 16,
+  emptyState: {
+    fontSize: 18,
     color: '#666',
     textAlign: 'center',
-    lineHeight: 24,
   },
   footer: {
     marginBottom: 40,
@@ -138,6 +144,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2563eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '300',
+    lineHeight: 32,
   },
 });
 
