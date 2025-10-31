@@ -19,13 +19,33 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.todotomorrow.app"
+      "bundleIdentifier": "com.todotomorrow.app",
+      "associatedDomains": [
+        "applinks:todotomorrow.com"
+      ]
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.todotomorrow.app"
+      "package": "com.todotomorrow.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "todotomorrow.com",
+              "pathPrefix": "/auth/callback"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     }
   }
 }

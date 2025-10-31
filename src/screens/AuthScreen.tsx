@@ -51,10 +51,13 @@ export const AuthScreen = () => {
         console.log('📦 Parsed URL:', JSON.stringify(parsedUrl, null, 2));
       }
       
-      // Check if this is an auth callback (path might be 'auth/callback' or just the full URL)
-      const isAuthCallback = parsedUrl.path === 'auth/callback' || 
-                             parsedUrl.path?.includes('auth/callback') ||
-                             url.includes('auth/callback');
+      // Check if this is an auth callback
+      // Support both custom scheme (todotomorrow://auth/callback) and Universal Links (https://todotomorrow.com/auth/callback)
+      const isCustomScheme = parsedUrl.scheme === 'todotomorrow' && 
+                            (parsedUrl.path === 'auth/callback' || parsedUrl.path?.includes('auth/callback'));
+      const isUniversalLink = parsedUrl.hostname === 'todotomorrow.com' && 
+                             (parsedUrl.path === '/auth/callback' || parsedUrl.path?.includes('/auth/callback'));
+      const isAuthCallback = isCustomScheme || isUniversalLink || url.includes('auth/callback');
       
       if (isAuthCallback) {
         const queryParams = parsedUrl.queryParams as {
@@ -190,10 +193,12 @@ export const AuthScreen = () => {
 
     try {
       // Call Supabase magic link API
+      // Use web URL for Universal Links / App Links (primary)
+      // Custom scheme will still work as fallback
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: 'todotomorrow://auth/callback',
+          emailRedirectTo: 'https://todotomorrow.com/auth/callback',
         },
       });
 

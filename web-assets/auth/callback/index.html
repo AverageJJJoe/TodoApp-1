@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TodoTomorrow - Authentication</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    p {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .button {
+      background: #007AFF;
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .button:hover {
+      background: #0051D5;
+    }
+    .button:active {
+      transform: scale(0.98);
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .error {
+      color: #ff4444;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Opening TodoTomorrow...</h1>
+    <p id="message">Redirecting to the app...</p>
+    <button id="fallback-button" class="button" style="display: none;">
+      Open in App
+    </button>
+    <p id="error" class="error" style="display: none;"></p>
+  </div>
+
+  <script>
+    (function() {
+      try {
+        // Extract token and type from URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token') || urlParams.get('token_hash');
+        const type = urlParams.get('type') || 'email';
+        
+        // Get elements
+        const messageEl = document.getElementById('message');
+        const fallbackButton = document.getElementById('fallback-button');
+        const errorEl = document.getElementById('error');
+        
+        // Check if we have the required token
+        if (!token) {
+          messageEl.textContent = 'Missing authentication token';
+          errorEl.textContent = 'The authentication link is invalid. Please request a new magic link.';
+          errorEl.style.display = 'block';
+          return;
+        }
+        
+        // Detect mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        
+        // Build URLs
+        const customSchemeUrl = 'todotomorrow://auth/callback?token=' + encodeURIComponent(token) + '&type=' + encodeURIComponent(type);
+        
+        if (isAndroid) {
+          // For Android: Try custom scheme directly (most reliable)
+          // App Links should intercept https:// URLs, but if they don't, custom scheme works
+          messageEl.textContent = 'Opening app...';
+          
+          // Immediate redirect to custom scheme (works better than waiting)
+          setTimeout(function() {
+            window.location.href = customSchemeUrl;
+          }, 100);
+          
+          // Show fallback button in case redirect fails
+          setTimeout(function() {
+            if (document.visibilityState === 'visible') {
+              // Still visible = app didn't open
+              messageEl.textContent = 'Click the button to open the app';
+              fallbackButton.style.display = 'block';
+              fallbackButton.onclick = function() {
+                window.location.href = customSchemeUrl;
+              };
+            }
+          }, 2000);
+          
+        } else if (isIOS) {
+          // iOS: Try Universal Link format first
+          const universalLinkUrl = 'https://todotomorrow.com/auth/callback?token=' + encodeURIComponent(token) + '&type=' + encodeURIComponent(type);
+          messageEl.textContent = 'Opening app...';
+          
+          // Try Universal Link (iOS should intercept)
+          window.location.href = universalLinkUrl;
+          
+          // Fallback to custom scheme after delay
+          setTimeout(function() {
+            if (document.visibilityState === 'visible') {
+              messageEl.textContent = 'App not opening? Try the button.';
+              fallbackButton.style.display = 'block';
+              fallbackButton.onclick = function() {
+                window.location.href = customSchemeUrl;
+              };
+            }
+          }, 2000);
+          
+        } else if (isMobile) {
+          // Other mobile - try custom scheme
+          messageEl.textContent = 'Opening app...';
+          setTimeout(function() {
+            window.location.href = customSchemeUrl;
+          }, 100);
+          
+          setTimeout(function() {
+            if (document.visibilityState === 'visible') {
+              messageEl.textContent = 'Click to open app';
+              fallbackButton.style.display = 'block';
+              fallbackButton.onclick = function() {
+                window.location.href = customSchemeUrl;
+              };
+            }
+          }, 2000);
+          
+        } else {
+          // Desktop
+          messageEl.textContent = 'Please open this link on your mobile device.';
+          fallbackButton.style.display = 'block';
+          fallbackButton.onclick = function() {
+            window.location.href = customSchemeUrl;
+          };
+        }
+      } catch (error) {
+        // Error handling - show error message
+        console.error('Redirect error:', error);
+        const errorEl = document.getElementById('error');
+        const messageEl = document.getElementById('message');
+        if (errorEl && messageEl) {
+          messageEl.textContent = 'Error occurred';
+          errorEl.textContent = 'Please try clicking the button below or request a new magic link.';
+          errorEl.style.display = 'block';
+          document.getElementById('fallback-button').style.display = 'block';
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
+

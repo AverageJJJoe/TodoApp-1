@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "XXXXXXXXXX.com.todotomorrow.app",
+        "paths": [
+          "/auth/callback*"
+        ]
+      }
+    ]
+  }
+}
+
