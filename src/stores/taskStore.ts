@@ -25,15 +25,40 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       throw new Error('No authenticated session found');
     }
 
-    // Get user_id from users table
-    const { data: user, error: userError } = await supabase
+    // Get user_id from users table, create if doesn't exist
+    let { data: user, error: userError } = await supabase
       .from('users')
       .select('id')
       .eq('auth_id', session.user.id)
       .single();
 
+    // If user doesn't exist, create it (should be handled by trigger, but fallback here)
     if (userError || !user) {
-      throw new Error(`User not found: ${userError?.message || 'No user record'}`);
+      if (__DEV__) {
+        console.log('⚠️ User record not found, creating one...');
+      }
+      
+      // Create user record
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert([
+          {
+            auth_id: session.user.id,
+            email: session.user.email || '',
+            // Other fields use defaults from schema
+          },
+        ])
+        .select('id')
+        .single();
+
+      if (createError || !newUser) {
+        throw new Error(`Failed to create user record: ${createError?.message || 'Unknown error'}`);
+      }
+
+      user = newUser;
+      if (__DEV__) {
+        console.log('✅ User record created successfully');
+      }
     }
 
     const userId = user.id;

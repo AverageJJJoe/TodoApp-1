@@ -305,6 +305,34 @@ When auth flow works, you should see:
 
 ---
 
+---
+
+## ✅ **Solutions Provided by Dev Friend**
+
+### **Root Cause:**
+1. **Expo Go limitation** - Cannot handle custom URL schemes (`todotomorrow://`)
+2. **Token type mismatch** - Supabase magic links use `type: 'email'` in `verifyOtp`, NOT `type: 'magiclink'`
+3. **Universal Links not configured** - Requires proper domain setup (Apple App Site Association, etc.)
+
+### **Recommended Solution:**
+1. **Create EAS Development Build** - Required for testing auth properly (Expo Go doesn't support custom schemes)
+2. **Fix token verification** - Always use `type: 'email'` in `verifyOtp()` call
+3. **Improve logging** - Added detailed console logs to track auth flow
+
+### **Code Fixes Applied:**
+- ✅ Changed token verification to always use `type: 'email'` (not 'magiclink')
+- ✅ Improved deep link listener setup with better error handling
+- ✅ Added comprehensive logging throughout auth flow
+- ✅ Improved session detection with retry logic
+- ✅ Enhanced `onAuthStateChange` logging in App.tsx
+- ✅ Changed `DEV_BYPASS_AUTH` default to `false` to enable real auth testing
+
+### **Next Steps:**
+1. Create EAS development build: `eas build --profile development --platform ios`
+2. Test magic link flow with real email
+3. Monitor console logs to see exactly where auth succeeds/fails
+4. Once auth works, remove `DEV_BYPASS_AUTH` completely
+
 **Last Updated:** 2025-01-27
-**Status:** Blocking - Auth needs to work before testing Story 2.3 task saving
+**Status:** Fixes applied - Ready for testing with EAS development build
 

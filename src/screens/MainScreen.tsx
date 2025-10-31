@@ -9,6 +9,8 @@ import {
   Modal,
   TextInput,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
@@ -81,9 +83,10 @@ export const MainScreen = () => {
       if (__DEV__) {
         console.error('Error saving task:', error);
       }
+      const errorMessage = error?.message || 'Failed to save task. Please try again.';
       Alert.alert(
         'Error',
-        'Failed to save task. Please try again.',
+        `Error saving task: ${errorMessage}`,
         [{ text: 'OK' }]
       );
     }
@@ -152,46 +155,52 @@ export const MainScreen = () => {
         transparent={true}
         onRequestClose={handleCloseModal}
       >
-        <TouchableOpacity
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={handleCloseModal}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Task</Text>
-              <TouchableOpacity onPress={handleCloseModal}>
-                <Text style={styles.modalCloseButton}>✕</Text>
+          <TouchableOpacity
+            style={styles.modalOverlayInner}
+            activeOpacity={1}
+            onPress={handleCloseModal}
+          >
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add Task</Text>
+                <TouchableOpacity onPress={handleCloseModal}>
+                  <Text style={styles.modalCloseButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.taskInput}
+                placeholder="What needs to be done?"
+                placeholderTextColor="#999"
+                value={taskInput}
+                onChangeText={setTaskInput}
+                autoFocus={true}
+                multiline={true}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.addTaskButton,
+                  !taskInput.trim() && styles.addTaskButtonDisabled,
+                ]}
+                onPress={handleSubmitTask}
+                disabled={!taskInput.trim()}
+              >
+                <Text
+                  style={[
+                    styles.addTaskButtonText,
+                    !taskInput.trim() && styles.addTaskButtonTextDisabled,
+                  ]}
+                >
+                  Add Task
+                </Text>
               </TouchableOpacity>
             </View>
-            <TextInput
-              style={styles.taskInput}
-              placeholder="What needs to be done?"
-              placeholderTextColor="#999"
-              value={taskInput}
-              onChangeText={setTaskInput}
-              autoFocus={true}
-              multiline={true}
-            />
-            <TouchableOpacity
-              style={[
-                styles.addTaskButton,
-                !taskInput.trim() && styles.addTaskButtonDisabled,
-              ]}
-              onPress={handleSubmitTask}
-              disabled={!taskInput.trim()}
-            >
-              <Text
-                style={[
-                  styles.addTaskButtonText,
-                  !taskInput.trim() && styles.addTaskButtonTextDisabled,
-                ]}
-              >
-                Add Task
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -275,6 +284,9 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   modalOverlay: {
+    flex: 1,
+  },
+  modalOverlayInner: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',

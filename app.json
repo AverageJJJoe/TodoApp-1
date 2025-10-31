@@ -15,7 +15,10 @@
     ],
     "extra": {
       "supabaseUrl": "https://zrnjxrtgrommlhexbpde.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpybmp4cnRncm9tbWxoZXhicGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4ODc2OTQsImV4cCI6MjA3NzQ2MzY5NH0.8Ci--doOpAqx9FRGLH_cIF4E4xPHIKszlwp0DorSvOo"
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpybmp4cnRncm9tbWxoZXhicGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4ODc2OTQsImV4cCI6MjA3NzQ2MzY5NH0.8Ci--doOpAqx9FRGLH_cIF4E4xPHIKszlwp0DorSvOo",
+      "eas": {
+        "projectId": "d9259efb-a198-4da8-9580-23e51504ac3b"
+      }
     },
     "ios": {
       "supportsTablet": true,
@@ -38,6 +41,11 @@
               "scheme": "https",
               "host": "todotomorrow.com",
               "pathPrefix": "/auth/callback"
+            },
+            {
+              "scheme": "todotomorrow",
+              "host": "auth",
+              "pathPrefix": "/callback"
             }
           ],
           "category": [
