@@ -43,6 +43,22 @@ export default function App() {
           setConnectionStatus(successMsg);
           Alert.alert('Success!', 'Supabase connection is working!');
         }
+
+        // Test query from users table (Story 1.3)
+        // Note: This may fail if RLS policies block access without authenticated session (expected behavior)
+        // Full RLS testing will be done in Story 1.5 with session management
+        const { data: usersData, error: usersError } = await supabase
+          .from('users')
+          .select('*')
+          .limit(1);
+        
+        if (usersError) {
+          console.log('Users table query result (expected if RLS blocks access):', usersError.message);
+          // This is expected if RLS is properly configured and no authenticated session exists
+          // Error codes like '42501' or messages about permissions are normal
+        } else {
+          console.log('Users table query successful:', usersData);
+        }
       } catch (err: any) {
         const errorMsg = `❌ Failed to connect to Supabase: ${err?.message || err}`;
         console.error(errorMsg);
