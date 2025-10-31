@@ -1,100 +1,77 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Alert } from 'react-native';
-import { useEffect, useState } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
 import { supabase } from './src/lib/supabase';
+import { AuthScreen } from './src/screens/AuthScreen';
+import { MainScreen } from './src/screens/MainScreen';
+import { useAuthStore } from './src/stores/authStore';
 
 export default function App() {
-  const [connectionStatus, setConnectionStatus] = useState('Testing connection...');
+  const session = useAuthStore((state) => state.session);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const initializeSession = useAuthStore((state) => state.initializeSession);
+  const setSession = useAuthStore((state) => state.setSession);
 
   useEffect(() => {
-    // Test Supabase connection
-    const testConnection = async () => {
-      try {
-        // Attempt a query - table doesn't exist yet, but should get "table not found" not connection error
-        const { data, error } = await supabase.from('test').select('1');
-        
-        if (error) {
-          // If we get an error about table not existing/found, connection is working
-          // Supabase returns different error messages for missing tables:
-          // - "does not exist"
-          // - "Could not find the table"
-          // - Error code '42P01' or 'PGRST116'
-          const isTableNotFound = 
-            error.message.includes('does not exist') ||
-            error.message.includes('Could not find the table') ||
-            error.message.includes('not found') ||
-            error.code === '42P01' ||
-            error.code === 'PGRST116';
-          
-          if (isTableNotFound) {
-            const successMsg = '✅ Supabase connection successful! (Table does not exist, which is expected)';
-            console.log(successMsg);
-            setConnectionStatus(successMsg);
-            Alert.alert('Success!', 'Supabase connection is working! The "table not found" error confirms the connection is successful.');
-          } else {
-            const errorMsg = `❌ Supabase connection error: ${error.message}`;
-            console.error(errorMsg);
-            setConnectionStatus(errorMsg);
-            Alert.alert('Connection Error', error.message);
-          }
-        } else {
-          const successMsg = '✅ Supabase connection successful!';
-          console.log(successMsg);
-          setConnectionStatus(successMsg);
-          Alert.alert('Success!', 'Supabase connection is working!');
-        }
+    // Initialize session on app mount
+    initializeSession();
 
-        // Test query from users table (Story 1.3)
-        // Note: This may fail if RLS policies block access without authenticated session (expected behavior)
-        // Full RLS testing will be done in Story 1.5 with session management
-        const { data: usersData, error: usersError } = await supabase
-          .from('users')
-          .select('*')
-          .limit(1);
-        
-        if (usersError) {
-          console.log('Users table query result (expected if RLS blocks access):', usersError.message);
-          // This is expected if RLS is properly configured and no authenticated session exists
-          // Error codes like '42501' or messages about permissions are normal
-        } else {
-          console.log('Users table query successful:', usersData);
-        }
-      } catch (err: any) {
-        const errorMsg = `❌ Failed to connect to Supabase: ${err?.message || err}`;
-        console.error(errorMsg);
-        setConnectionStatus(errorMsg);
-        Alert.alert('Connection Failed', err?.message || 'Unknown error');
+    // Listen to auth state changes to keep store in sync
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (__DEV__) {
+        console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
       }
+
+      switch (event) {
+        case 'SIGNED_IN':
+        case 'TOKEN_REFRESHED':
+        case 'USER_UPDATED':
+          if (session) {
+            setSession(session);
+          }
+          break;
+        case 'SIGNED_OUT':
+          setSession(null);
+          break;
+        default:
+          break;
+      }
+    });
+
+    // Cleanup listener on unmount
+    return () => {
+      subscription.unsubscribe();
     };
+  }, [initializeSession, setSession]);
 
-    testConnection();
-  }, []);
+  // Show loading state while checking session
+  if (isLoading) {
+    return (
+      <>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+        <StatusBar style="auto" />
+      </>
+    );
+  }
 
+  // Conditional rendering based on session state
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Hello World</Text>
-      <Text style={styles.status}>{connectionStatus}</Text>
+    <>
+      {session ? <MainScreen /> : <AuthScreen />}
       <StatusBar style="auto" />
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  status: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 10,
   },
 });
