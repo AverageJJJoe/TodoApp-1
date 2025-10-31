@@ -6,14 +6,22 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
+  FlatList,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
+import { useTaskStore, Task } from '../stores/taskStore';
 
 export const MainScreen = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [taskInput, setTaskInput] = useState('');
   const session = useAuthStore((state) => state.session);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const tasks = useTaskStore((state) => state.tasks);
+  const addTask = useTaskStore((state) => state.addTask);
 
   const handleSignOut = async () => {
     try {
@@ -49,7 +57,30 @@ export const MainScreen = () => {
   };
 
   const handleAddTask = () => {
-    Alert.alert('Coming Soon', 'Add task feature coming soon');
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setTaskInput('');
+  };
+
+  const handleSubmitTask = () => {
+    const trimmedText = taskInput.trim();
+    if (trimmedText) {
+      addTask(trimmedText);
+      setTaskInput('');
+      setIsModalVisible(false);
+    }
+  };
+
+  const renderTaskItem = ({ item }: { item: Task }) => {
+    return (
+      <View style={styles.taskItem}>
+        <Text style={styles.taskText}>{item.text}</Text>
+        <Text style={styles.taskTimestamp}>Just now</Text>
+      </View>
+    );
   };
 
   return (
@@ -62,7 +93,16 @@ export const MainScreen = () => {
       </View>
       
       <View style={styles.content}>
-        <Text style={styles.emptyState}>🌅 Add your first task</Text>
+        {tasks.length === 0 ? (
+          <Text style={styles.emptyState}>🌅 Add your first task</Text>
+        ) : (
+          <FlatList
+            data={tasks}
+            keyExtractor={(item) => item.id}
+            renderItem={renderTaskItem}
+            contentContainerStyle={styles.taskList}
+          />
+        )}
       </View>
       
       <View style={styles.footer}>
@@ -89,6 +129,55 @@ export const MainScreen = () => {
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
+
+      {/* Bottom Sheet Modal */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleCloseModal}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={handleCloseModal}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Task</Text>
+              <TouchableOpacity onPress={handleCloseModal}>
+                <Text style={styles.modalCloseButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.taskInput}
+              placeholder="What needs to be done?"
+              placeholderTextColor="#999"
+              value={taskInput}
+              onChangeText={setTaskInput}
+              autoFocus={true}
+              multiline={true}
+            />
+            <TouchableOpacity
+              style={[
+                styles.addTaskButton,
+                !taskInput.trim() && styles.addTaskButtonDisabled,
+              ]}
+              onPress={handleSubmitTask}
+              disabled={!taskInput.trim()}
+            >
+              <Text
+                style={[
+                  styles.addTaskButtonText,
+                  !taskInput.trim() && styles.addTaskButtonTextDisabled,
+                ]}
+              >
+                Add Task
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -169,6 +258,82 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '300',
     lineHeight: 32,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  modalCloseButton: {
+    fontSize: 24,
+    color: '#666',
+    fontWeight: '300',
+  },
+  taskInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 16,
+    fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    color: '#000',
+    marginBottom: 20,
+  },
+  addTaskButton: {
+    backgroundColor: '#2563eb',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addTaskButtonDisabled: {
+    opacity: 0.5,
+  },
+  addTaskButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  addTaskButtonTextDisabled: {
+    color: '#ccc',
+  },
+  taskList: {
+    paddingVertical: 10,
+  },
+  taskItem: {
+    backgroundColor: '#f9f9f9',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  taskText: {
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 4,
+  },
+  taskTimestamp: {
+    fontSize: 12,
+    color: '#888',
   },
 });
 

@@ -115,8 +115,9 @@ export const AuthScreen = () => {
             }
             
             // Try with the actual type from URL first
+            // Note: For URL tokens, use 'token' parameter (not 'token_hash')
             let verificationResult = await supabase.auth.verifyOtp({
-              token_hash: token,
+              token: token,
               type: type === 'magiclink' ? 'email' : (type as 'email' | 'signup'),
             });
             
@@ -126,7 +127,7 @@ export const AuthScreen = () => {
                 console.log('🔄 Retrying with signup type...');
               }
               verificationResult = await supabase.auth.verifyOtp({
-                token_hash: token,
+                token: token,
                 type: 'signup',
               });
             }
