@@ -10,6 +10,7 @@ import {
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
+import { clearStoredDeepLink } from '../lib/deepLinkIntent';
 
 interface AuthScreenProps {
   initialDeepLink?: string | null;
@@ -149,40 +150,123 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
       const isAuthCallback = isCustomScheme || isUniversalLink || url.includes('auth/callback');
       
       if (isAuthCallback) {
+        // Parse both query params (?) and fragments (#)
         const queryParams = parsedUrl.queryParams as {
           token?: string;
           token_hash?: string;
           type?: string;
         };
         
+        // Extract fragment from URL (everything after #)
+        const fragmentIndex = url.indexOf('#');
+        let fragmentParams: { [key: string]: string } = {};
+        
+        if (fragmentIndex !== -1) {
+          const fragment = url.substring(fragmentIndex + 1);
+          if (__DEV__) {
+            console.log('🔍 URL fragment found:', fragment.substring(0, 100) + '...');
+          }
+          
+          // Parse fragment as key-value pairs (format: key1=value1&key2=value2)
+          fragment.split('&').forEach(param => {
+            const [key, value] = param.split('=');
+            if (key && value) {
+              fragmentParams[key] = decodeURIComponent(value);
+            }
+          });
+          
+          if (__DEV__) {
+            console.log('🔑 Fragment params:', Object.keys(fragmentParams));
+            console.log('🔑 Fragment param values:', JSON.stringify(fragmentParams, null, 2));
+          }
+        }
+        
         if (__DEV__) {
           console.log('🔑 Query params:', queryParams);
           console.log('🔑 All query keys:', Object.keys(queryParams));
         }
         
-        // Extract token (may be called 'token' or 'token_hash' in URL)
+        // Check if we have session tokens in fragment (Supabase redirect format)
+        const accessToken = fragmentParams.access_token;
+        const refreshToken = fragmentParams.refresh_token;
+        const expiresAt = fragmentParams.expires_at;
+        const fragmentType = fragmentParams.type;
+        
+        // Fallback: Extract token from query params (may be called 'token' or 'token_hash' in URL)
         // Also check for 't' parameter (Supabase sometimes uses shortened names)
         const token = queryParams.token || queryParams.token_hash || queryParams.t;
-        const type = queryParams.type;
+        const queryType = queryParams.type;
+        
+        // Use fragment type if available, otherwise query type
+        const type = fragmentType || queryType;
 
         if (__DEV__) {
-          console.log('🎫 Token:', token ? `Found (${token.substring(0, 10)}...)` : 'Missing');
+          console.log('🎫 Access token (fragment):', accessToken ? `Found (${accessToken.substring(0, 10)}...)` : 'Missing');
+          console.log('🎫 Refresh token (fragment):', refreshToken ? `Found (${refreshToken.substring(0, 10)}...)` : 'Missing');
+          console.log('🎫 Token (query params):', token ? `Found (${token.substring(0, 10)}...)` : 'Missing');
           console.log('🎫 Token type from URL:', type);
-          console.log('🎫 Full token length:', token?.length || 0);
-          console.log('🎫 All query param values:', JSON.stringify(queryParams, null, 2));
+          console.log('🎫 Expires at:', expiresAt || 'Not provided');
           
-          if (!token) {
-            console.warn('⚠️ WARNING: No token found in URL!');
+          if (!accessToken && !token) {
+            console.warn('⚠️ WARNING: No access token or verification token found in URL!');
             console.warn('⚠️ Available query params:', Object.keys(queryParams));
-            console.warn('⚠️ Full query params object:', queryParams);
+            console.warn('⚠️ Available fragment params:', Object.keys(fragmentParams));
           }
         }
 
-        // Accept 'email', 'signup', and 'magiclink' types (Supabase uses different types)
-        // Note: Supabase magic links use 'type: email' in verifyOtp, not 'magiclink'
-        if (token && (type === 'email' || type === 'signup' || type === 'magiclink')) {
+        // Handle two scenarios:
+        // 1. Session tokens in fragment (Supabase redirect with access_token) - use setSession
+        // 2. Verification token in query params (legacy/fallback) - use verifyOtp
+        const hasSessionTokens = accessToken && refreshToken;
+        const hasVerificationToken = token && (type === 'email' || type === 'signup' || type === 'magiclink');
+        
+        if (hasSessionTokens) {
+          // Scenario 1: Session tokens provided directly in fragment
           if (__DEV__) {
-            console.log('✅ Processing authentication...');
+            console.log('✅ Processing authentication with session tokens (fragment)...');
+            console.log('🔐 Access token type:', fragmentType);
+          }
+          setIsLoading(true);
+          setErrorMessage('');
+          setSuccessMessage(''); // Clear any previous messages
+          
+          try {
+            // Set session directly from tokens
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            
+            if (sessionError) {
+              if (__DEV__) {
+                console.error('❌ Session error:', sessionError);
+              }
+              setErrorMessage(`Session error: ${sessionError.message}`);
+            } else if (sessionData?.session) {
+              if (__DEV__) {
+                console.log('🎉 Session set successfully!');
+                console.log('👤 User email:', sessionData.session.user.email);
+                console.log('🔑 Session expires at:', new Date(sessionData.session.expires_at! * 1000).toLocaleString());
+              }
+              // Update Zustand store with session to trigger navigation to MainScreen
+              setSession(sessionData.session);
+              setSuccessMessage('Successfully signed in!');
+              // Clear stored deep link since we've successfully processed it
+              clearStoredDeepLink();
+              // Navigation to MainScreen happens automatically via App.tsx session check and onAuthStateChange
+            } else {
+              setErrorMessage('Session not created. Please try again.');
+            }
+          } catch (err: any) {
+            console.error('❌ Deep link handling error:', err);
+            setErrorMessage(`Error: ${err?.message || 'An unexpected error occurred'}`);
+          } finally {
+            setIsLoading(false);
+          }
+        } else if (hasVerificationToken) {
+          // Scenario 2: Verification token in query params (legacy/fallback)
+          if (__DEV__) {
+            console.log('✅ Processing authentication with verification token (query params)...');
             console.log('🔐 Token type from URL:', type);
           }
           setIsLoading(true);
@@ -283,6 +367,8 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                 // Update Zustand store with session to trigger navigation to MainScreen
                 setSession(sessionData.session);
                 setSuccessMessage('Successfully signed in!');
+                // Clear stored deep link since we've successfully processed it
+                clearStoredDeepLink();
                 // Navigation to MainScreen happens automatically via App.tsx session check and onAuthStateChange
               } else {
                 if (__DEV__) {
@@ -298,6 +384,8 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                     }
                     setSession(retrySession.session);
                     setSuccessMessage('Successfully signed in!');
+                    // Clear stored deep link since we've successfully processed it
+                    clearStoredDeepLink();
                   } else {
                     setErrorMessage('Session not created. Please try again.');
                   }
@@ -312,11 +400,11 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
           }
         } else {
           if (__DEV__) {
-            console.warn('⚠️ Missing token or unsupported type. Token:', !!token, 'Type:', type);
+            console.warn('⚠️ Missing tokens. Has session tokens:', hasSessionTokens, 'Has verification token:', hasVerificationToken);
           }
-          if (!token) {
-            setErrorMessage('Magic link token is missing. Please request a new link.');
-          } else if (type !== 'email' && type !== 'signup') {
+          if (!hasSessionTokens && !hasVerificationToken) {
+            setErrorMessage('Magic link tokens are missing. Please request a new link.');
+          } else if (hasVerificationToken && type && type !== 'email' && type !== 'signup' && type !== 'magiclink') {
             setErrorMessage(`Unsupported authentication type: ${type}`);
           }
         }

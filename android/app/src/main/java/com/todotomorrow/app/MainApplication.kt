@@ -2,6 +2,7 @@ package com.todotomorrow.app
 
 import android.app.Application
 import android.content.res.Configuration
+import android.util.Log
 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -23,8 +24,10 @@ class MainApplication : Application(), ReactApplication {
       object : DefaultReactNativeHost(this) {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
-              // Packages that cannot be autolinked yet can be added manually here, for example:
-              // add(MyReactNativePackage())
+              // Add custom native module for deep link intent capture
+              Log.d("DeepLinkIntent", "Registering DeepLinkIntentPackage")
+              add(DeepLinkIntentPackage())
+              Log.d("DeepLinkIntent", "DeepLinkIntentPackage registered successfully")
             }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
@@ -40,6 +43,10 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    
+    // VERIFICATION: This log should ALWAYS appear if native code is running
+    Log.e("DeepLinkIntent", "🔴 VERIFICATION: MainApplication.onCreate() called - Native code IS running!")
+    
     DefaultNewArchitectureEntryPoint.releaseLevel = try {
       ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
     } catch (e: IllegalArgumentException) {
@@ -47,6 +54,8 @@ class MainApplication : Application(), ReactApplication {
     }
     loadReactNative(this)
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    
+    Log.d("DeepLinkIntent", "MainApplication.onCreate() completed")
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

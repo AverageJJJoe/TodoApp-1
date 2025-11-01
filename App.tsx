@@ -6,6 +6,7 @@ import { supabase } from './src/lib/supabase';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { MainScreen } from './src/screens/MainScreen';
 import { useAuthStore } from './src/stores/authStore';
+import { getStoredDeepLink } from './src/lib/deepLinkIntent';
 
 export default function App() {
   const session = useAuthStore((state) => state.session);
@@ -19,6 +20,26 @@ export default function App() {
     const maxRetries = 3;
     
     const captureInitialURL = async () => {
+      // FIRST: Check native module (catches intent stored before React Native initialized)
+      try {
+        if (__DEV__) {
+          console.log('🔍 [App.tsx] Checking native module for stored deep link...');
+        }
+        const nativeUrl = await getStoredDeepLink();
+        if (nativeUrl) {
+          if (__DEV__) {
+            console.log('✅ [App.tsx] Found deep link from native module:', nativeUrl);
+          }
+          setInitialDeepLink(nativeUrl);
+          return; // Success, stop checking
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('⚠️ [App.tsx] Native module check failed (this is OK if not on Android):', error);
+        }
+      }
+
+      // FALLBACK: Check standard Linking API
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
           if (attempt > 0) {
@@ -27,18 +48,18 @@ export default function App() {
           }
           
           if (__DEV__) {
-            console.log(`🔍 [App.tsx] Checking for initial deep link URL (attempt ${attempt + 1}/${maxRetries + 1})...`);
+            console.log(`🔍 [App.tsx] Checking Linking API for initial URL (attempt ${attempt + 1}/${maxRetries + 1})...`);
           }
           const url = await Linking.getInitialURL();
           if (url) {
             if (__DEV__) {
-              console.log('✅ [App.tsx] Captured initial URL:', url);
+              console.log('✅ [App.tsx] Captured initial URL from Linking API:', url);
             }
             setInitialDeepLink(url);
             return; // Success, stop retrying
           } else {
             if (__DEV__ && attempt === maxRetries) {
-              console.log('ℹ️ [App.tsx] No initial URL after all retries');
+              console.log('ℹ️ [App.tsx] No initial URL found after all checks');
             }
           }
         } catch (error) {
