@@ -23,6 +23,9 @@ export const MainScreen = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editTaskInput, setEditTaskInput] = useState('');
   const session = useAuthStore((state) => state.session);
   const clearSession = useAuthStore((state) => state.clearSession);
   
@@ -31,6 +34,7 @@ export const MainScreen = () => {
   const addTask = useTaskStore((state) => state.addTask);
   const loadTasks = useTaskStore((state) => state.loadTasks);
   const deleteTask = useTaskStore((state) => state.deleteTask);
+  const updateTask = useTaskStore((state) => state.updateTask);
   const isLoading = useTaskStore((state) => state.isLoading);
   const loadError = useTaskStore((state) => state.loadError);
   
@@ -161,6 +165,47 @@ export const MainScreen = () => {
     );
   };
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setEditTaskInput(task.text);
+    setIsEditModalVisible(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalVisible(false);
+    setEditingTask(null);
+    setEditTaskInput('');
+  };
+
+  const handleSaveTask = async () => {
+    const trimmedText = editTaskInput.trim();
+    if (!trimmedText) {
+      return;
+    }
+
+    if (!editingTask || !editingTask.id) {
+      return;
+    }
+
+    try {
+      await updateTask(editingTask.id, trimmedText);
+      // Success: task updated, close modal and clear state
+      setIsEditModalVisible(false);
+      setEditingTask(null);
+      setEditTaskInput('');
+    } catch (error: any) {
+      // Error: show error alert, task text already reverted by store rollback
+      if (__DEV__) {
+        console.error('Error updating task:', error);
+      }
+      Alert.alert(
+        'Error',
+        'Failed to update task. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   const renderTaskItem = ({ item }: { item: Task }) => {
     const renderRightActions = () => {
       return (
@@ -182,10 +227,15 @@ export const MainScreen = () => {
         }}
         renderRightActions={renderRightActions}
       >
-        <View style={styles.taskItem}>
-          <Text style={styles.taskText}>{item.text}</Text>
-          <Text style={styles.taskTimestamp}>Just now</Text>
-        </View>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => handleEditTask(item)}
+        >
+          <View style={styles.taskItem}>
+            <Text style={styles.taskText}>{item.text}</Text>
+            <Text style={styles.taskTimestamp}>Just now</Text>
+          </View>
+        </TouchableOpacity>
       </Swipeable>
     );
   };
@@ -311,6 +361,61 @@ export const MainScreen = () => {
                   ]}
                 >
                   Add Task
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Edit Task Bottom Sheet Modal */}
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleCloseEditModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlayInner}
+            activeOpacity={1}
+            onPress={handleCloseEditModal}
+          >
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Edit Task</Text>
+                <TouchableOpacity onPress={handleCloseEditModal}>
+                  <Text style={styles.modalCloseButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.taskInput}
+                placeholder="What needs to be done?"
+                placeholderTextColor="#999"
+                value={editTaskInput}
+                onChangeText={setEditTaskInput}
+                autoFocus={true}
+                multiline={true}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.addTaskButton,
+                  (!editTaskInput.trim() || editTaskInput.trim() === editingTask?.text) && styles.addTaskButtonDisabled,
+                ]}
+                onPress={handleSaveTask}
+                disabled={!editTaskInput.trim() || editTaskInput.trim() === editingTask?.text}
+              >
+                <Text
+                  style={[
+                    styles.addTaskButtonText,
+                    (!editTaskInput.trim() || editTaskInput.trim() === editingTask?.text) && styles.addTaskButtonTextDisabled,
+                  ]}
+                >
+                  Save
                 </Text>
               </TouchableOpacity>
             </View>

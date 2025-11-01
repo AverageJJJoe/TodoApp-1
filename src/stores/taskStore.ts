@@ -7,6 +7,7 @@ export interface Task {
   text: string;
   status: 'open' | 'completed' | 'archived';
   created_at: string; // ISO timestamp
+  updated_at?: string; // ISO timestamp (optional, populated when task is updated)
   user_id?: string; // UUID from users table (optional, populated when saved to Supabase)
 }
 
@@ -17,6 +18,7 @@ interface TaskStore {
   addTask: (text: string) => Promise<void>;
   loadTasks: () => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  updateTask: (id: string, text: string) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -200,6 +202,59 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       set((state) => ({
         tasks: [...state.tasks, taskToDelete].sort(
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ),
+      }));
+      throw error; // Re-throw for UI error handling
+    }
+  },
+  updateTask: async (id: string, text: string) => {
+    // Store original task for rollback
+    const taskToUpdate = get().tasks.find((t) => t.id === id);
+    
+    if (!taskToUpdate) {
+      throw new Error('Task not found');
+    }
+
+    const originalText = taskToUpdate.text;
+    const originalUpdatedAt = taskToUpdate.updated_at || taskToUpdate.created_at;
+
+    // Optimistic update: Update local state immediately
+    set((state) => ({
+      tasks: state.tasks.map((t) =>
+        t.id === id
+          ? { ...t, text, updated_at: new Date().toISOString() }
+          : t
+      ),
+    }));
+
+    try {
+      // Get session and validate (for consistency, though RLS handles auth)
+      const session = useAuthStore.getState().session;
+      if (!session?.user?.id) {
+        throw new Error('No authenticated session found');
+      }
+
+      // Update in Supabase
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          text: text, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Success: Task already updated in local state
+    } catch (error: any) {
+      // Rollback: Restore original text
+      set((state) => ({
+        tasks: state.tasks.map((t) =>
+          t.id === id
+            ? { ...t, text: originalText, updated_at: originalUpdatedAt }
+            : t
         ),
       }));
       throw error; // Re-throw for UI error handling
