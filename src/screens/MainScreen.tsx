@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Platform,
   RefreshControl,
 } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { useTaskStore, Task } from '../stores/taskStore';
@@ -29,8 +30,12 @@ export const MainScreen = () => {
   const tasks = useTaskStore((state) => state.tasks);
   const addTask = useTaskStore((state) => state.addTask);
   const loadTasks = useTaskStore((state) => state.loadTasks);
+  const deleteTask = useTaskStore((state) => state.deleteTask);
   const isLoading = useTaskStore((state) => state.isLoading);
   const loadError = useTaskStore((state) => state.loadError);
+  
+  // Swipeable refs for closing swipe gesture after delete
+  const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
 
   // Load tasks on mount
   useEffect(() => {
@@ -120,12 +125,68 @@ export const MainScreen = () => {
     }
   };
 
+  const handleDeleteTask = async (id: string) => {
+    Alert.alert(
+      'Delete Task',
+      'Are you sure you want to delete this task?',
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => {
+          // Close swipe gesture on cancel
+          swipeableRefs.current.get(id)?.close();
+        }},
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteTask(id);
+              // Success: Task already removed by optimistic update
+              // Close swipe gesture
+              swipeableRefs.current.get(id)?.close();
+            } catch (error: any) {
+              // Error: Task will be automatically restored by store's error handling
+              if (__DEV__) {
+                console.error('Error deleting task:', error);
+              }
+              Alert.alert(
+                'Error',
+                'Failed to delete task. Please try again.',
+                [{ text: 'OK' }]
+              );
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const renderTaskItem = ({ item }: { item: Task }) => {
+    const renderRightActions = () => {
+      return (
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteTask(item.id)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+      );
+    };
+
     return (
-      <View style={styles.taskItem}>
-        <Text style={styles.taskText}>{item.text}</Text>
-        <Text style={styles.taskTimestamp}>Just now</Text>
-      </View>
+      <Swipeable
+        ref={(ref) => {
+          if (ref) {
+            swipeableRefs.current.set(item.id, ref);
+          }
+        }}
+        renderRightActions={renderRightActions}
+      >
+        <View style={styles.taskItem}>
+          <Text style={styles.taskText}>{item.text}</Text>
+          <Text style={styles.taskTimestamp}>Just now</Text>
+        </View>
+      </Swipeable>
     );
   };
 
@@ -435,6 +496,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#dc2626',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+    borderRadius: 8,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

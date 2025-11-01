@@ -16,6 +16,7 @@ interface TaskStore {
   loadError: string | null;
   addTask: (text: string) => Promise<void>;
   loadTasks: () => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -160,6 +161,48 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             : t
         ),
       }));
+    }
+  },
+  deleteTask: async (id: string) => {
+    // Store original task for rollback
+    const taskToDelete = get().tasks.find((t) => t.id === id);
+    
+    if (!taskToDelete) {
+      // Task not found, nothing to delete
+      return;
+    }
+
+    // Optimistic update: Remove from local state immediately
+    set((state) => ({
+      tasks: state.tasks.filter((t) => t.id !== id),
+    }));
+
+    try {
+      // Get session and validate
+      const session = useAuthStore.getState().session;
+      if (!session?.user?.id) {
+        throw new Error('No authenticated session found');
+      }
+
+      // Soft delete in Supabase
+      const { error } = await supabase
+        .from('tasks')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Success: Task already removed from local state
+    } catch (error: any) {
+      // Rollback: Restore task to list
+      set((state) => ({
+        tasks: [...state.tasks, taskToDelete].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ),
+      }));
+      throw error; // Re-throw for UI error handling
     }
   },
 }));

@@ -1,7 +1,9 @@
+import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useEffect, useState } from 'react';
 import * as Linking from 'expo-linking';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { supabase } from './src/lib/supabase';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { MainScreen } from './src/screens/MainScreen';
@@ -147,12 +149,12 @@ export default function App() {
   // Show loading state while checking session
   if (isLoading) {
     return (
-      <>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
         <StatusBar style="auto" />
-      </>
+      </GestureHandlerRootView>
     );
   }
 
@@ -163,11 +165,12 @@ export default function App() {
 
   // Conditional rendering based on session state
   // Pass initial deep link to AuthScreen so it can process it
+  // Wrap in GestureHandlerRootView to enable gesture handlers throughout the app
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       {DEV_BYPASS_AUTH || session ? <MainScreen /> : <AuthScreen initialDeepLink={initialDeepLink} />}
       <StatusBar style="auto" />
-    </>
+    </GestureHandlerRootView>
   );
 }
 
