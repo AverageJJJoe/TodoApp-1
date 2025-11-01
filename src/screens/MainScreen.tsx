@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
@@ -20,10 +21,37 @@ export const MainScreen = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const session = useAuthStore((state) => state.session);
   const clearSession = useAuthStore((state) => state.clearSession);
+  
+  // Select store values - split selectors to avoid infinite loops
   const tasks = useTaskStore((state) => state.tasks);
   const addTask = useTaskStore((state) => state.addTask);
+  const loadTasks = useTaskStore((state) => state.loadTasks);
+  const isLoading = useTaskStore((state) => state.isLoading);
+  const loadError = useTaskStore((state) => state.loadError);
+
+  // Load tasks on mount
+  useEffect(() => {
+    loadTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps: loadTasks is stable Zustand action
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadTasks();
+    } catch (error) {
+      // Error is already handled in loadTasks and set in loadError state
+      if (__DEV__) {
+        console.error('Error refreshing tasks:', error);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -111,14 +139,40 @@ export const MainScreen = () => {
       </View>
       
       <View style={styles.content}>
-        {tasks.length === 0 ? (
-          <Text style={styles.emptyState}>🌅 Add your first task</Text>
+        {isLoading && tasks.length === 0 && !refreshing ? (
+          // Only show spinner on initial load when there are no tasks
+          <ActivityIndicator size="large" color="#2563eb" />
         ) : (
           <FlatList
             data={tasks}
             keyExtractor={(item) => item.id}
             renderItem={renderTaskItem}
-            contentContainerStyle={styles.taskList}
+            contentContainerStyle={
+              tasks.length === 0 && !isLoading
+                ? styles.emptyListContainer
+                : styles.taskList
+            }
+            ListEmptyComponent={
+              loadError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{loadError}</Text>
+                  <Text style={styles.errorHint}>Pull down to retry</Text>
+                </View>
+              ) : (
+                <Text style={styles.emptyState}>🌅 Add your first task</Text>
+              )
+            }
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh}
+                tintColor="#2563eb"
+                colors={["#2563eb"]}
+              />
+            }
+            scrollEnabled={true}
+            nestedScrollEnabled={false}
+            alwaysBounceVertical={Platform.OS === 'ios'}
           />
         )}
       </View>
@@ -230,9 +284,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
   },
   emptyState: {
     fontSize: 18,
@@ -347,6 +398,13 @@ const styles = StyleSheet.create({
   taskList: {
     paddingVertical: 10,
   },
+  emptyListContainer: {
+    flexGrow: 1,
+    minHeight: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
   taskItem: {
     backgroundColor: '#f9f9f9',
     padding: 16,
@@ -361,6 +419,22 @@ const styles = StyleSheet.create({
   taskTimestamp: {
     fontSize: 12,
     color: '#888',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#dc2626',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  errorHint: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
   },
 });
 

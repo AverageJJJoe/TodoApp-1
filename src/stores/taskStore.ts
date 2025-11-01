@@ -12,11 +12,63 @@ export interface Task {
 
 interface TaskStore {
   tasks: Task[];
+  isLoading: boolean;
+  loadError: string | null;
   addTask: (text: string) => Promise<void>;
+  loadTasks: () => Promise<void>;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
+  isLoading: false,
+  loadError: null,
+  loadTasks: async () => {
+    // Get session from auth store
+    const session = useAuthStore.getState().session;
+    
+    if (!session?.user?.id) {
+      set({ loadError: 'No authenticated session found' });
+      return;
+    }
+
+    // Clear any previous errors
+    set({ loadError: null, isLoading: true });
+
+    try {
+      // Get user_id from users table
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', session.user.id)
+        .single();
+
+      if (userError || !user) {
+        throw new Error(`User not found: ${userError?.message || 'No user record'}`);
+      }
+
+      const userId = user.id;
+
+      // Query tasks from Supabase
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      // Update store state with tasks
+      set({ tasks: data || [], isLoading: false });
+    } catch (error: any) {
+      set({
+        loadError: error.message || 'Failed to load tasks',
+        isLoading: false,
+      });
+    }
+  },
   addTask: async (text: string) => {
     // Get session from auth store
     const session = useAuthStore.getState().session;
