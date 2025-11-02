@@ -303,11 +303,23 @@
 
 **Epic Goal:** Automated daily emails with task list sent at user's chosen time.
 
+**Status:** ✅ **COMPLETE** (Core functionality complete - Story 3.4 optional for testing)
+
+**Completion Summary:**
+- ✅ Story 3.1: User Preferences - Delivery Time (Done)
+- ✅ Story 3.2: Email Template - HTML Design (Done)
+- ✅ Story 3.3: Resend Email Integration (Done)
+- ⚠️ Story 3.4: Manual "Send Now" Button (Draft - Optional testing utility, not required for production)
+- ✅ Story 3.5: Automated Cron Job (Done)
+
+**Note:** Story 3.4 is a manual testing utility. Core epic goal (automated email delivery) achieved via Story 3.5.
+
 ---
 
-### Story 3.1: User Preferences - Delivery Time
+### Story 3.1: User Preferences - Delivery Time ✅ DONE
 **Estimated Time:** 2 hours  
 **Dependencies:** Epic 1 complete
+**Status:** Done
 
 **As a** user  
 **I want to** set what time I receive my daily email  
@@ -326,9 +338,10 @@
 
 ---
 
-### Story 3.2: Email Template - HTML Design
+### Story 3.2: Email Template - HTML Design ✅ DONE
 **Estimated Time:** 2 hours  
 **Dependencies:** Story 3.1
+**Status:** Done
 
 **As a** developer  
 **I want to** create a clean HTML email template  
@@ -347,9 +360,10 @@
 
 ---
 
-### Story 3.3: Resend Email Integration
+### Story 3.3: Resend Email Integration ✅ DONE
 **Estimated Time:** 3 hours  
 **Dependencies:** Story 3.2
+**Status:** Done
 
 **As a** developer  
 **I want to** integrate Resend for email sending  
@@ -369,9 +383,10 @@
 
 ---
 
-### Story 3.4: Manual "Send Now" Button (Testing)
+### Story 3.4: Manual "Send Now" Button (Testing) ⚠️ OPTIONAL
 **Estimated Time:** 2 hours  
 **Dependencies:** Story 3.3
+**Status:** Draft (Optional - Manual testing utility, not required for production)
 
 **As a** user (for testing)  
 **I want to** manually trigger email sending  
@@ -390,9 +405,10 @@
 
 ---
 
-### Story 3.5: Automated Cron Job
+### Story 3.5: Automated Cron Job ✅ DONE
 **Estimated Time:** 3 hours  
-**Dependencies:** Story 3.4
+**Dependencies:** Story 3.4 (Optional - Skipped, functionality incorporated)
+**Status:** Done
 
 **As a** user  
 **I want to** automatically receive my task list every morning  
@@ -417,6 +433,10 @@
 ## Epic 4: Monetization & Payments (Week 2, Day 5 + Week 3)
 
 **Epic Goal:** Trial system, paywall, and payment processing working.
+
+**Status:** 🔄 **READY TO START**
+
+**Sequencing Note:** Epic 4 uses **parallel execution strategy** - backend stories (4.1-4.3, 4.7) can start immediately, UI stories (4.4-4.6, 4.8) wait for Epic 6, Story 6.4 (design specs). See `docs/development-sequencing-plan.md` for detailed execution plan.
 
 ---
 
@@ -693,11 +713,31 @@
 
 **Epic Goal:** Integrate polished Lovable designs into the existing React Native app, transforming the functional MVP into a visually polished, delightful user experience that matches Apple-level design quality.
 
-**Status:** 🔄 **NOT STARTED**
+**Status:** 🔄 **READY TO START**
 
-**Design Source:**
-- **Lovable Design Repository:** https://github.com/AverageJJJoe/todo-morning-delight.git
-- **Design Specification Document:** `docs/todomorning-app-lovable-prompt.md` (contains complete UI specs, component library, animations, and design system)
+**Sequencing Note:** Epic 6 uses **design-first approach** with parallel execution where safe. Stories 6.1-6.2 can start immediately. Stories 6.3-6.4 must complete before Epic 4/5 UI work begins. See `docs/development-sequencing-plan.md` for detailed execution plan.
+
+**Design Source (AUTHORITATIVE DOCUMENTS):**
+- **`docs/design-system-complete.md`** - **PRIMARY SOURCE OF TRUTH**
+  - Complete design system extracted from Lovable implementation
+  - All color values (HSL format) - Part 2
+  - All spacing values (4pt grid system) - Part 2
+  - All typography values (font sizes, line heights, weights) - Part 8
+  - All shadow specifications - Part 10
+  - Complete component patterns and examples - Part 12
+  - Animation timings and sequences - Part 7
+  - **THIS IS THE AUTHORITATIVE SOURCE for all design tokens**
+- **`docs/cursor-implementation-guide.md`** - **REACT NATIVE TRANSLATION GUIDE**
+  - Step-by-step translation from Lovable (web) to React Native
+  - NativeWind configuration
+  - Component translation patterns
+  - Animation implementation with React Native Reanimated
+- **Lovable Reference Implementation:** `lovable-reference/` directory (cloned from `https://github.com/AverageJJJoe/todo-morning-delight.git`)
+  - Actual Lovable component files (`.tsx`, `.css`)
+  - Source of truth for component structure and behavior
+  - Visual reference for layout, spacing, and interactions
+  - Key files: `src/components/EmailLogin.tsx`, `TodoApp.tsx`, `TaskItem.tsx`, `EmptyState.tsx`, `src/index.css`
+- **Legacy Reference (DEPRECATED):** `docs/todomorning-app-lovable-prompt.md` - Use `design-system-complete.md` instead
 - **Design Philosophy:** Apple minimalism + Things 3 polish with delightful micro-interactions
 
 **Epic Context & Developer Guidance:**
@@ -709,33 +749,40 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 - **Design-First Approach:** All visual design decisions reference the Lovable repository and design spec document.
 - **Incremental Integration:** Updates existing screens (Stories 6.1-6.2) and ensures new screens (Epics 3-5) use the design system from the start (Stories 6.3-6.4).
 
-**For Developers Implementing Epic 6:**
+**For Developers Implementing Epic 6 - CRITICAL READING ORDER:**
 
-1. **Start Here:** Clone or reference the Lovable design repository: `https://github.com/AverageJJJoe/todo-morning-delight.git`
-   - Review the implemented PWA to understand visual design, animations, and interaction patterns
-   - Use it as a visual reference when implementing React Native components
+1. **MANDATORY FIRST STEP:** Read `docs/design-system-complete.md` BEFORE starting ANY implementation
+   - This is the authoritative source for ALL design tokens
+   - Contains complete component examples, animations, and patterns
+   - Every color, spacing, typography value must match exactly
+   - Review Part 12 for complete copy-pasteable component examples
+
+2. **IMPLEMENTATION GUIDE:** Follow `docs/cursor-implementation-guide.md`
+   - React Native translation patterns from Lovable (web) to React Native
+   - NativeWind configuration setup
+   - Component translation examples
+   - Animation implementation guide
+
+3. **REFERENCE IMPLEMENTATION:** Use `lovable-reference/` directory
+   - Actual Lovable component files (`.tsx`, `.css`)
+   - Source of truth for component structure and behavior
+   - Visual reference for layout, spacing, and interactions
+   - Key files: `src/components/EmailLogin.tsx`, `TodoApp.tsx`, `TaskItem.tsx`, `EmptyState.tsx`
    - **Important:** The Lovable repository uses "TodoMorning" as the project name, but all implementation should use "TodoTomorrow" to match our project branding
 
-2. **Design System Reference:** Always consult `docs/todomorning-app-lovable-prompt.md` for:
-   - Color palette (CSS variables defined)
-   - Typography hierarchy (font sizes, weights, line heights)
-   - Spacing system (4pt base grid)
-   - Component specifications (TaskItem, FAB, BottomSheet, etc.)
-   - Animation timing and patterns (especially the 600ms task completion animation)
-
-3. **Implementation Strategy:**
+4. **Implementation Strategy:**
    - **Story 6.1:** Extract design tokens → Create design system constants → Update existing screens
    - **Story 6.2:** Coordinate with Epic 3, Story 3.1 work → Apply iOS Settings style
    - **Story 6.3:** Ensure onboarding screens (Epic 5) use design system
    - **Story 6.4:** Apply design to payment (Epic 4) and archive screens (Epic 5)
 
-4. **Key Design Principles to Follow:**
+5. **Key Design Principles to Follow:**
    - **Apple Minimalism:** Clean white space, subtle shadows, native feel
    - **Things 3 Polish:** Soft shadows, spring animations (300-600ms), satisfying interactions
    - **60fps Animations:** All animations must be smooth (use Framer Motion or React Native Reanimated)
    - **Haptic Feedback:** Use `expo-haptics` for tactile satisfaction on key interactions
 
-5. **Coordination Points:**
+6. **Coordination Points:**
    - Story 6.2 should coordinate with Epic 3, Story 3.1 (Settings screen) implementation
    - Stories 6.3-6.4 should be completed before implementing Epic 4 and Epic 5 screens to ensure design consistency
 
@@ -755,28 +802,43 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 **I want to** extract the Lovable design system and update existing screens to match the polished design  
 **So that** the app has a consistent, professional visual identity from the start
 
-**Design References:**
-- Lovable Repository: `https://github.com/AverageJJJoe/todo-morning-delight.git` (Note: Repository uses "TodoMorning" as project name, but all implementation should use "TodoTomorrow" to match project branding)
-- Design Spec: `docs/todomorning-app-lovable-prompt.md` (Section: Design System, Colors, Typography, Spacing)
+**Design References (AUTHORITATIVE):**
+- **PRIMARY:** `docs/design-system-complete.md` - Complete design system specification
+  - Part 2: CSS Variables & Design Tokens (colors, spacing, shadows)
+  - Part 7: Animation Timings & Sequences (600ms task completion)
+  - Part 8: Typography Scale (all font sizes, line heights, weights)
+  - Part 10: Border Radius & Shadows
+  - Part 12: Example Component Implementations
+- **TRANSLATION GUIDE:** `docs/cursor-implementation-guide.md` - React Native implementation guide
+- **REFERENCE IMPLEMENTATION:** `lovable-reference/src/components/EmailLogin.tsx` - Actual Lovable component
+- **Note:** Lovable repository uses "TodoMorning" as project name, but all implementation should use "TodoTomorrow" to match project branding
 
 **Acceptance Criteria:**
-1. Design system constants file created: `src/design-system/colors.ts`, `typography.ts`, `spacing.ts`
-2. Colors extracted from Lovable spec (iOS palette: primary blue #007AFF, neutrals, semantic colors)
-3. Typography hierarchy defined (title-large 34px, body-large 17px, caption 13px, etc.)
-4. Spacing system implemented: Use 8px base unit (matching PRD Section 3.3) but align values to Lovable 4pt grid where appropriate (4px, 8px, 12px, 16px, 24px, 32px) - **Note:** PRD specifies 8px base unit; Lovable uses 4px increments which are compatible (all Lovable spacing values are multiples of 4px)
-5. AuthScreen (Epic 1) updated to match Lovable Email Login design:
-   - App icon (🌅) with subtle shadow, 80px
-   - Title "TodoTomorrow" (34px bold) - **Note:** Lovable designs use "TodoMorning" as reference, but implementation uses project name "TodoTomorrow"
-   - Subtitle text styling
-   - Email input with proper styling (50px height, rounded, focus states)
-   - Primary button styling (full-width, blue #007AFF, subtle shadow)
-6. MainScreen (Epic 2) updated to match Lovable Main Screen design:
-   - Header styling (44px height, white background, subtle shadow)
-   - Empty state with icon + text (matches Lovable spec)
-   - FAB (Floating Action Button): 56px circle, primary blue, proper shadow
-   - Task items: 60px min height, proper padding, white background
-   - Task completion animation foundation (600ms multi-step animation)
-7. All styling uses NativeWind/Tailwind classes or StyleSheet with design tokens
+1. Design system constants created matching `docs/design-system-complete.md` EXACTLY:
+   - `src/design-system/colors.ts` - All colors from Part 2 (CSS Variables)
+   - `src/design-system/typography.ts` - All typography from Part 8 (Typography Scale)
+   - `src/design-system/spacing.ts` - All spacing from Part 2 (Spacing System, 4pt grid)
+   - `src/design-system/shadows.ts` - All shadows from Part 10 (Shadow System)
+   - `src/design-system/index.ts` - Central export point
+2. AuthScreen updated to match `lovable-reference/src/components/EmailLogin.tsx` EXACTLY:
+   - Logo: 120px size (not 80px)
+   - Title: "TodoTomorrow" (34px bold)
+   - Subtitle: Two-line format "Evening brain dump, morning clarity."
+   - Email input: 50px height, 2px border (not 1px), proper focus states
+   - Primary button: 50px height, 8px radius, icon + text layout
+   - Success state: Checkmark screen after email sent
+   - Helper text: Two-line format matching Lovable
+3. MainScreen updated to match `lovable-reference/src/components/TodoApp.tsx` EXACTLY:
+   - Header: 44px height, border separator (not shadow)
+   - Empty state: Matches `EmptyState.tsx` - floating Moon icon, two-line text
+   - FAB: 56px circle, shadow-fab (blue glow), positioned bottom-80px right-lg
+   - **CRITICAL:** Task items are CARD-BASED matching `TaskItem.tsx`:
+     - White card (`bg-card`), rounded-lg (16px), shadow-soft-sm
+     - Custom checkbox (24px circle, 2px border)
+     - Proper padding (16px) and gap spacing (12px)
+4. Task completion animation: 600ms multi-step sequence matching `design-system-complete.md` Part 7 EXACTLY
+5. All design tokens match `docs/design-system-complete.md` values exactly (no approximations)
+6. All styling uses NativeWind/Tailwind classes or StyleSheet with design tokens
 
 **Deliverable:** Design system constants + Updated AuthScreen & MainScreen
 
@@ -795,9 +857,13 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 **I want to** apply iOS Settings-style design to the Settings screen  
 **So that** it matches the polished Lovable design specification
 
-**Design References:**
-- Lovable Repository: Settings Screen section (Note: Repository uses "TodoMorning" name, adapt to "TodoTomorrow")
-- Design Spec: `docs/todomorning-app-lovable-prompt.md` (Section: Settings Screen)
+**Design References (AUTHORITATIVE):**
+- **PRIMARY:** `docs/design-system-complete.md` - Complete design system specification
+  - Part 2: CSS Variables & Design Tokens (iOS Settings colors)
+  - Part 12: Example Component Implementations (Settings patterns)
+- **TRANSLATION GUIDE:** `docs/cursor-implementation-guide.md` - React Native implementation guide
+- **REFERENCE IMPLEMENTATION:** `lovable-reference/` directory - Actual Lovable Settings component (if available)
+- **Note:** Repository uses "TodoMorning" name, adapt to "TodoTomorrow"
 
 **Acceptance Criteria:**
 1. Settings screen uses iOS grouped table view style:
@@ -829,9 +895,14 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 **I want to** implement the onboarding flow and workflow mode selection with polished Lovable design  
 **So that** users have a delightful first-time experience
 
-**Design References:**
-- Lovable Repository: Onboarding Flow section (Welcome, Delivery Time Picker, Workflow Mode Selection) (Note: Repository uses "TodoMorning" name, adapt to "TodoTomorrow")
-- Design Spec: `docs/todomorning-app-lovable-prompt.md` (Section: Onboarding Flow)
+**Design References (AUTHORITATIVE):**
+- **PRIMARY:** `docs/design-system-complete.md` - Complete design system specification
+  - Part 2: CSS Variables & Design Tokens (colors, spacing)
+  - Part 7: Animation Timings & Sequences (onboarding animations)
+  - Part 12: Example Component Implementations (OnboardingWelcome, DeliveryTimePicker, WorkflowModeSelection)
+- **TRANSLATION GUIDE:** `docs/cursor-implementation-guide.md` - React Native implementation guide
+- **REFERENCE IMPLEMENTATION:** `lovable-reference/` directory - Actual Lovable onboarding components
+- **Note:** Repository uses "TodoMorning" name, adapt to "TodoTomorrow"
 
 **Acceptance Criteria:**
 1. Welcome screen (Epic 5, Story 5.1) matches Lovable Welcome design:
@@ -870,9 +941,14 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 **I want to** apply polished Lovable design to payment modal and archive screen  
 **So that** monetization and archive features match the app's visual quality
 
-**Design References:**
-- Lovable Repository: Trial/Payment Modal, Archive Screen sections (Note: Repository uses "TodoMorning" name, adapt to "TodoTomorrow")
-- Design Spec: `docs/todomorning-app-lovable-prompt.md` (Sections: Trial Badge, Paywall, Archive Screen)
+**Design References (AUTHORITATIVE):**
+- **PRIMARY:** `docs/design-system-complete.md` - Complete design system specification
+  - Part 2: CSS Variables & Design Tokens (trial badge colors, payment modal colors)
+  - Part 7: Animation Timings & Sequences (modal animations, tab switching)
+  - Part 12: Example Component Implementations (TrialBadge, UpgradeModal patterns)
+- **TRANSLATION GUIDE:** `docs/cursor-implementation-guide.md` - React Native implementation guide
+- **REFERENCE IMPLEMENTATION:** `lovable-reference/` directory - Actual Lovable payment/archive components
+- **Note:** Repository uses "TodoMorning" name, adapt to "TodoTomorrow"
 
 **Acceptance Criteria:**
 1. Trial Badge component created (matches Lovable spec):

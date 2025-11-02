@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { clearStoredDeepLink } from '../lib/deepLinkIntent';
+import { colors, typography, spacing } from '../design-system';
 
 interface AuthScreenProps {
   initialDeepLink?: string | null;
@@ -22,6 +24,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [requestedEmail, setRequestedEmail] = useState<string | null>(null); // Store email when requesting magic link
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const setSession = useAuthStore((state) => state.setSession);
   const initializeSession = useAuthStore((state) => state.initializeSession);
 
@@ -517,48 +520,101 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
     }
   };
 
+  // Show success state if magic link sent successfully
+  if (successMessage && successMessage.includes('Check your email')) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.successIconContainer}>
+          <View style={styles.successIconBackground}>
+            <Text style={styles.successCheckmark}>✓</Text>
+          </View>
+        </View>
+        
+        <Text style={styles.successTitle}>Check your email!</Text>
+        
+        <Text style={styles.successMessage}>
+          We sent a magic link to {'\n'}
+          <Text style={styles.successEmail}>{requestedEmail || email}</Text>
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
-      <Text style={styles.subtitle}>Enter your email to receive a magic link</Text>
+      {/* Logo/Icon - Match Lovable: 120px size with spring animation feel */}
+      <View style={styles.logoContainer}>
+        <Text style={styles.logo}>🌅</Text>
+      </View>
 
-      <View style={styles.inputContainer}>
+      {/* Title - Match Lovable exactly */}
+      <Text style={styles.title}>TodoTomorrow</Text>
+
+      {/* Subtitle - Match Lovable line breaks */}
+      <Text style={styles.subtitle}>
+        Evening brain dump,{'\n'}morning clarity.
+      </Text>
+
+      {/* Email Input - Match Lovable: 2px border, proper focus states */}
+      <View style={styles.inputWrapper}>
         <TextInput
-          style={[styles.input, errorMessage && styles.inputError]}
-          placeholder="Email address"
-          placeholderTextColor="#999"
+          style={[
+            styles.input,
+            email && !validateEmail(email) && styles.inputError,
+            email && validateEmail(email) && styles.inputValid,
+            isInputFocused && !email && styles.inputFocused,
+          ]}
+          placeholder="name@email.com"
+          placeholderTextColor={colors.textTertiary}
           value={email}
           onChangeText={(text) => {
             setEmail(text);
-            setErrorMessage(''); // Clear error when user starts typing
-            setSuccessMessage(''); // Clear success message when user starts typing
+            setErrorMessage('');
+            setSuccessMessage('');
           }}
+          onFocus={() => setIsInputFocused(true)}
+          onBlur={() => setIsInputFocused(false)}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
+          autoFocus
           editable={!isLoading}
         />
       </View>
 
+      {/* Error Message */}
       {errorMessage ? (
         <Text style={styles.errorText}>{errorMessage}</Text>
       ) : null}
 
-      {successMessage ? (
-        <Text style={styles.successText}>{successMessage}</Text>
-      ) : null}
-
+      {/* Submit Button - Match Lovable with icon space */}
       <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          (!validateEmail(email) || isLoading) && styles.buttonDisabled,
+        ]}
         onPress={handleSendMagicLink}
-        disabled={isLoading}
+        disabled={!validateEmail(email) || isLoading}
+        activeOpacity={0.8}
       >
         {isLoading ? (
-          <ActivityIndicator color="#fff" />
+          <>
+            <ActivityIndicator size="small" color={colors.background} style={{ marginRight: spacing.sm }} />
+            <Text style={styles.buttonText}>Sending...</Text>
+          </>
         ) : (
-          <Text style={styles.buttonText}>Send Magic Link</Text>
+          <>
+            <Text style={styles.buttonIcon}>✉</Text>
+            <Text style={styles.buttonText}>Send Magic Link</Text>
+          </>
         )}
       </TouchableOpacity>
+
+      {/* Helper Text - Match Lovable exactly */}
+      <Text style={styles.helperText}>
+        We'll email you a secure login link.{'\n'}
+        No password needed.
+      </Text>
 
       {/* Temporary test buttons for debugging - REMOVE AFTER TESTING */}
       {__DEV__ && (
@@ -622,68 +678,144 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing['2xl'] as number,
     justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '100%',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  inputError: {
-    borderColor: '#ff4444',
-  },
-  errorText: {
-    color: '#ff4444',
-    fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  successText: {
-    color: '#00C851',
-    fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 16,
+  // Logo - Match Lovable: 120px size (w-[120px] h-[120px])
+  logoContainer: {
+    marginBottom: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 50,
+  },
+  logo: {
+    fontSize: 120,
+    width: 120,
+    height: 120,
+    textAlign: 'center',
+  },
+  // Title - Match Lovable text-title-large
+  title: {
+    ...typography.titleLarge,
+    textAlign: 'center',
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
+    maxWidth: 400, // Match Lovable max-w-sm
+  },
+  // Subtitle - Match Lovable text-body-large
+  subtitle: {
+    ...typography.bodyLarge,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing['3xl'],
+    maxWidth: 400,
+  },
+  // Input Wrapper - Match Lovable w-full max-w-sm
+  inputWrapper: {
+    width: '100%',
+    maxWidth: 400,
+    marginBottom: spacing.lg,
+  },
+  input: {
+    width: '100%',
+    height: 50,
+    paddingHorizontal: spacing.lg,
+    ...typography.bodyLarge,
+    backgroundColor: colors.background,
+    borderRadius: spacing.radiusMd,
+    borderWidth: 2, // Match Lovable border-2
+    borderColor: colors.separator,
+    color: colors.textPrimary,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+  },
+  inputValid: {
+    borderColor: colors.primary,
+  },
+  inputError: {
+    borderColor: colors.destructive,
+  },
+  errorText: {
+    ...typography.caption,
+    color: colors.destructive,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    maxWidth: 400,
+  },
+  // Button - Match Lovable exactly
+  button: {
+    width: '100%',
+    maxWidth: 400,
+    height: 50,
+    backgroundColor: colors.primary,
+    borderRadius: spacing.radiusSm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    ...colors.shadowSm,
+    marginBottom: spacing.lg,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
+  },
+  buttonIcon: {
+    fontSize: 20,
+    color: colors.background,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    ...typography.bodyLarge,
+    color: colors.background,
+    fontWeight: '500',
+  },
+  // Helper Text - Match Lovable text-caption
+  helperText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    maxWidth: 400,
+  },
+  // Success State - Match Lovable success screen
+  successIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
+  successIconBackground: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: `${colors.success}1A`, // 10% opacity
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successCheckmark: {
+    fontSize: 36,
+    color: colors.success,
+  },
+  successTitle: {
+    ...typography.titleMedium,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    maxWidth: 400,
+  },
+  successMessage: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 400,
+  },
+  successEmail: {
     fontWeight: '600',
+    color: colors.textPrimary,
   },
   testButton: {
     backgroundColor: '#666',
-    marginTop: 12,
+    marginTop: spacing.md,
   },
 });
 

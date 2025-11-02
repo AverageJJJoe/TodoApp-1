@@ -12,6 +12,8 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Localization from 'expo-localization';
 import { useUserPreferencesStore } from '../stores/userPreferencesStore';
+import { useAuthStore } from '../stores/authStore';
+import { supabase } from '../lib/supabase';
 
 interface SettingsScreenProps {
   onClose: () => void;
@@ -27,6 +29,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const [selectedTimezone, setSelectedTimezone] = useState<string>('');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const {
     preferences,
@@ -88,6 +91,173 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     }
     if (Platform.OS === 'android' && event.type === 'dismissed') {
       setShowTimePicker(false);
+    }
+  };
+
+  // HTML escaping function to prevent XSS
+  const escapeHTML = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const handleSendTestEmail = async () => {
+    try {
+      setIsSendingEmail(true);
+
+      // Get current user session
+      const session = useAuthStore.getState().session;
+      if (!session?.user?.id) {
+        Alert.alert('Error', 'No authenticated session found. Please sign in.');
+        setIsSendingEmail(false);
+        return;
+      }
+
+      // Get user_id from users table
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('auth_id', session.user.id)
+        .single();
+
+      if (userError || !user) {
+        Alert.alert(
+          'Error',
+          `User not found: ${userError?.message || 'No user record'}`
+        );
+        setIsSendingEmail(false);
+        return;
+      }
+
+      const userId = user.id;
+      const userEmail = user.email;
+
+      // Query tasks
+      const { data: tasks, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (tasksError) {
+        Alert.alert('Error', `Failed to load tasks: ${tasksError.message}`);
+        setIsSendingEmail(false);
+        return;
+      }
+
+      // Check if tasks exist
+      if (!tasks || tasks.length === 0) {
+        Alert.alert(
+          'No Tasks',
+          'No tasks to send. Add some tasks first!',
+          [{ text: 'OK' }]
+        );
+        setIsSendingEmail(false);
+        return;
+      }
+
+      // Generate task list HTML
+      const taskListHTML = tasks
+        .map(
+          (task) =>
+            `<li style="padding: 8px 0; border-bottom: 1px solid #eee;">${escapeHTML(task.text)}</li>`
+        )
+        .join('');
+
+      // Generate full email HTML using template structure
+      const emailHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Daily Tasks</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; color: #333; background-color: #FFFFFF;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: collapse; background-color: #FFFFFF;">
+    <tr>
+      <td style="padding: 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px; margin: 0 auto; border-collapse: collapse;">
+          <!-- Header Section -->
+          <tr>
+            <td style="padding: 20px; text-align: left;">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 600; color: #333;">Good morning! ☀️</h2>
+            </td>
+          </tr>
+          
+          <!-- Task List Section -->
+          <tr>
+            <td style="padding: 0 20px 20px 20px;">
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                ${taskListHTML}
+              </ul>
+            </td>
+          </tr>
+          
+          <!-- Footer Section -->
+          <tr>
+            <td style="padding: 20px; text-align: center; border-top: 1px solid #eee;">
+              <p style="margin: 0; font-size: 12px; color: #999;">Open TodoTomorrow to manage your tasks</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+      // Generate subject line
+      const taskCount = tasks.length;
+      const subject = `Your ${taskCount} Todo${taskCount !== 1 ? 's' : ''} for Today`;
+
+      // Call Edge Function
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: userEmail,
+          subject: subject,
+          html: emailHTML,
+        },
+      });
+
+      if (error) {
+        Alert.alert(
+          'Error',
+          `Failed to send email: ${error.message || 'Unknown error'}`
+        );
+        setIsSendingEmail(false);
+        return;
+      }
+
+      // Check if response indicates success
+      if (data?.error) {
+        Alert.alert(
+          'Error',
+          `Email sending failed: ${data.error}${data.details ? ` - ${data.details}` : ''}`
+        );
+        setIsSendingEmail(false);
+        return;
+      }
+
+      // Success!
+      Alert.alert(
+        'Success',
+        'Email sent successfully! Check your inbox.',
+        [{ text: 'OK' }]
+      );
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error sending test email:', error);
+      }
+      Alert.alert(
+        'Error',
+        error?.message || 'Failed to send email. Please try again.'
+      );
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -185,6 +355,27 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
           <Text style={styles.timezoneHint}>
             Using your device's system timezone
           </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Test Email</Text>
+          <Text style={styles.sectionDescription}>
+            Send a test email with your current tasks
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.testEmailButton,
+              isSendingEmail && styles.testEmailButtonDisabled,
+            ]}
+            onPress={handleSendTestEmail}
+            disabled={isSendingEmail}
+          >
+            {isSendingEmail ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.testEmailButtonText}>Send Test Email</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -307,6 +498,23 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  testEmailButton: {
+    backgroundColor: '#2563eb',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
+    marginTop: 12,
+  },
+  testEmailButtonDisabled: {
+    opacity: 0.6,
+  },
+  testEmailButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',

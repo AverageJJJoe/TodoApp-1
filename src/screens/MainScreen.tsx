@@ -12,12 +12,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  Animated,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { useTaskStore, Task } from '../stores/taskStore';
 import { SettingsScreen } from './SettingsScreen';
+import { TaskItem } from '../components/TaskItem';
+import { colors, typography, spacing } from '../design-system';
 
 export const MainScreen = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -28,6 +31,16 @@ export const MainScreen = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editTaskInput, setEditTaskInput] = useState('');
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const [fabPressed, setFabPressed] = useState(false);
+  
+  // Empty state floating animation
+  const emptyStateYAnim = useRef(new Animated.Value(0)).current;
+  const emptyStateOpacityAnim1 = useRef(new Animated.Value(0)).current;
+  const emptyStateOpacityAnim2 = useRef(new Animated.Value(0)).current;
+  
+  // FAB spring entrance animation
+  const fabScaleAnim = useRef(new Animated.Value(0)).current;
+  
   const session = useAuthStore((state) => state.session);
   const clearSession = useAuthStore((state) => state.clearSession);
   
@@ -48,6 +61,52 @@ export const MainScreen = () => {
     loadTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps: loadTasks is stable Zustand action
+
+  // Empty state floating animation - Match Lovable: y: [0, -4, 0], 3s ease-in-out infinite
+  useEffect(() => {
+    // Floating animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(emptyStateYAnim, {
+          toValue: -4,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(emptyStateYAnim, {
+          toValue: 0,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ]),
+      { iterations: -1 }
+    ).start();
+    
+    // Staggered fade-in for text (match Lovable)
+    Animated.parallel([
+      Animated.timing(emptyStateOpacityAnim1, {
+        toValue: 1,
+        duration: 300,
+        delay: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(emptyStateOpacityAnim2, {
+        toValue: 1,
+        duration: 300,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [emptyStateYAnim, emptyStateOpacityAnim1, emptyStateOpacityAnim2]);
+
+  // FAB spring entrance animation - Match Lovable: spring physics entrance
+  useEffect(() => {
+    Animated.spring(fabScaleAnim, {
+      toValue: 1,
+      tension: 260,
+      friction: 20,
+      useNativeDriver: true,
+    }).start();
+  }, [fabScaleAnim]);
 
   // Pull-to-refresh handler
   const onRefresh = async () => {
@@ -131,6 +190,9 @@ export const MainScreen = () => {
     }
   };
 
+  // Note: Task completion is handled by deleting completed tasks after animation
+  // The actual status update would require a completeTask method in the store
+
   const handleDeleteTask = async (id: string) => {
     Alert.alert(
       'Delete Task',
@@ -208,67 +270,87 @@ export const MainScreen = () => {
     }
   };
 
-  const renderTaskItem = ({ item }: { item: Task }) => {
-    const renderRightActions = () => {
-      return (
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteTask(item.id)}
-        >
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
-      );
-    };
+  const handleCompleteTask = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task || task.status === 'completed') return;
+    
+    try {
+      // Update task status to completed via Supabase
+      const session = useAuthStore.getState().session;
+      if (!session?.user?.id) {
+        throw new Error('No authenticated session found');
+      }
 
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          status: 'completed',
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Refresh tasks to reflect completion
+      await loadTasks();
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error completing task:', error);
+      }
+      Alert.alert('Error', 'Failed to complete task. Please try again.');
+    }
+  };
+
+  const renderTaskItem = ({ item }: { item: Task; index: number }) => {
     return (
-      <Swipeable
-        ref={(ref) => {
+      <TaskItem
+        task={item}
+        onEdit={handleEditTask}
+        onDelete={handleDeleteTask}
+        onComplete={handleCompleteTask}
+        onSwipeableRef={(ref) => {
           if (ref) {
             swipeableRefs.current.set(item.id, ref);
           }
         }}
-        renderRightActions={renderRightActions}
-      >
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => handleEditTask(item)}
-        >
-          <View style={styles.taskItem}>
-            <Text style={styles.taskText}>{item.text}</Text>
-            <Text style={styles.taskTimestamp}>Just now</Text>
-          </View>
-        </TouchableOpacity>
-      </Swipeable>
+        styles={styles}
+      />
     );
   };
 
   return (
     <View style={styles.container}>
+      {/* Header - Match Lovable: h-[44px], border separator, menu left, settings right */}
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          accessible={true}
+          accessibilityLabel="Menu"
+          accessibilityRole="button"
+        >
+          <Text style={styles.headerIcon}>☰</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>TodoTomorrow</Text>
         <TouchableOpacity
           onPress={() => setIsSettingsVisible(true)}
-          style={styles.settingsButton}
+          style={styles.headerButton}
           accessible={true}
           accessibilityLabel="Open settings"
           accessibilityRole="button"
         >
-          <Text style={styles.settingsIcon}>⚙️</Text>
+          <Text style={styles.headerIcon}>⚙️</Text>
         </TouchableOpacity>
       </View>
-      {session?.user?.email && (
-        <Text style={styles.email}>Signed in as: {session.user.email}</Text>
-      )}
       
       <View style={styles.content}>
         {isLoading && tasks.length === 0 && !refreshing ? (
           // Only show spinner on initial load when there are no tasks
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color={colors.primary} />
         ) : (
           <FlatList
             data={tasks}
             keyExtractor={(item) => item.id}
-            renderItem={renderTaskItem}
+            renderItem={({ item, index }) => renderTaskItem({ item, index })}
             contentContainerStyle={
               tasks.length === 0 && !isLoading
                 ? styles.emptyListContainer
@@ -281,15 +363,44 @@ export const MainScreen = () => {
                   <Text style={styles.errorHint}>Pull down to retry</Text>
                 </View>
               ) : (
-                <Text style={styles.emptyState}>🌅 Add your first task</Text>
+                <View style={styles.emptyStateContainer}>
+                  {/* Match Lovable EmptyState: Moon icon with floating animation */}
+                  <Animated.View 
+                    style={[
+                      styles.emptyStateIconContainer,
+                      {
+                        transform: [{ translateY: emptyStateYAnim }],
+                      },
+                    ]}
+                  >
+                    <Text style={styles.emptyStateIcon}>🌙</Text>
+                  </Animated.View>
+                  {/* Match Lovable text layout: Two separate lines with staggered fade-in */}
+                  <Animated.Text 
+                    style={[
+                      styles.emptyStateLine1,
+                      { opacity: emptyStateOpacityAnim1 },
+                    ]}
+                  >
+                    Tap <Text style={styles.emptyStatePlus}>+</Text> to add
+                  </Animated.Text>
+                  <Animated.Text 
+                    style={[
+                      styles.emptyStateLine2,
+                      { opacity: emptyStateOpacityAnim2 },
+                    ]}
+                  >
+                    your first task
+                  </Animated.Text>
+                </View>
               )
             }
             refreshControl={
               <RefreshControl 
                 refreshing={refreshing} 
                 onRefresh={onRefresh}
-                tintColor="#2563eb"
-                colors={["#2563eb"]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             scrollEnabled={true}
@@ -313,16 +424,42 @@ export const MainScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddTask}
-        accessible={true}
-        accessibilityLabel="Add task"
-        accessibilityRole="button"
+      {/* Floating Action Button - Match Lovable: spring entrance, tap animation */}
+      <Animated.View
+        style={[
+          styles.fab,
+          {
+            transform: [{ scale: fabScaleAnim }],
+          },
+        ]}
       >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.fabInner}
+          onPress={handleAddTask}
+          onPressIn={() => {
+            setFabPressed(true);
+            Animated.timing(fabScaleAnim, {
+              toValue: 0.95,
+              duration: 100,
+              useNativeDriver: true,
+            }).start();
+          }}
+          onPressOut={() => {
+            setFabPressed(false);
+            Animated.spring(fabScaleAnim, {
+              toValue: 1,
+              tension: 260,
+              friction: 20,
+              useNativeDriver: true,
+            }).start();
+          }}
+          accessible={true}
+          accessibilityLabel="Add task"
+          accessibilityRole="button"
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Bottom Sheet Modal */}
       <Modal
@@ -450,48 +587,75 @@ export const MainScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
+    backgroundColor: colors.background,
   },
   header: {
-    marginTop: 60,
-    marginBottom: 20,
+    height: 44, // Match Lovable: h-[44px]
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.lg, // Match Lovable: px-lg
+    borderBottomWidth: 1,
+    borderBottomColor: colors.separator, // Match Lovable: border-b border-separator
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000',
+    ...typography.bodyLarge, // Match Lovable: text-body-large (NOT titleMedium)
+    fontWeight: '600', // Match Lovable: font-semibold
+    color: colors.textPrimary,
   },
-  settingsButton: {
-    padding: 8,
+  headerButton: {
+    padding: spacing.sm, // Match Lovable: p-2
+    marginHorizontal: -spacing.sm, // Match Lovable: -ml-2, -mr-2
+    borderRadius: spacing.radiusLg, // Match Lovable: rounded-lg (for hover state)
   },
-  settingsIcon: {
-    fontSize: 24,
-  },
-  email: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 20,
-    textAlign: 'center',
+  headerIcon: {
+    fontSize: 24, // Match Lovable: w-6 h-6
+    color: colors.textPrimary,
   },
   content: {
     flex: 1,
   },
-  emptyState: {
-    fontSize: 18,
-    color: '#666',
+  emptyListContainer: {
+    flexGrow: 1,
+    minHeight: '60%', // Match Lovable: min-h-[60vh]
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing['2xl'] as number, // Match Lovable: px-2xl
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateIconContainer: {
+    marginBottom: spacing.lg, // Match Lovable spacing
+  },
+  emptyStateIcon: {
+    fontSize: 48, // Match Lovable: w-12 h-12
+    color: colors.textTertiary,
+  },
+  emptyStateLine1: {
+    ...typography.bodyLarge,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
+  emptyStateLine2: {
+    ...typography.bodyLarge,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  emptyStatePlus: {
+    color: colors.primary,
+    fontWeight: '600', // Match Lovable: font-semibold
+  },
   footer: {
-    marginBottom: 40,
+    marginBottom: spacing.xl * 2, // 40px
+    paddingHorizontal: spacing['2xl'] as number, // 24px
   },
   signOutButton: {
-    backgroundColor: '#dc2626',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.destructive,
+    padding: spacing.lg, // 16px
+    borderRadius: spacing.radiusSm,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 50,
@@ -500,31 +664,29 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   signOutButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: colors.background,
+    ...typography.bodyLarge,
     fontWeight: '600',
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: 80, // Match Lovable: bottom-[80px]
+    right: spacing.lg, // Match Lovable: right-lg
+    width: 56, // Match Lovable: w-14 (14 * 4 = 56px)
+    height: 56, // Match Lovable: h-14
+    borderRadius: 28,
+  },
+  fabInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    ...colors.shadowFab, // Match Lovable: shadow-fab
   },
   fabText: {
-    color: '#fff',
+    color: colors.background,
     fontSize: 28,
     fontWeight: '300',
     lineHeight: 32,
@@ -549,33 +711,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.xl, // 20px
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    ...typography.titleMedium,
+    fontSize: 20, // Override to 20px for modal title
+    color: colors.textPrimary,
   },
   modalCloseButton: {
     fontSize: 24,
-    color: '#666',
+    color: colors.textSecondary,
     fontWeight: '300',
   },
   taskInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
+    borderColor: colors.separator,
+    borderRadius: spacing.radiusSm,
+    padding: spacing.lg, // 16px
+    ...typography.bodyLarge,
     minHeight: 100,
     textAlignVertical: 'top',
-    color: '#000',
-    marginBottom: 20,
+    color: colors.textPrimary,
+    marginBottom: spacing.xl, // 20px
   },
   addTaskButton: {
-    backgroundColor: '#2563eb',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    padding: spacing.lg, // 16px
+    borderRadius: spacing.radiusSm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -583,65 +745,107 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addTaskButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: colors.background,
+    ...typography.bodyLarge,
     fontWeight: '600',
   },
   addTaskButtonTextDisabled: {
-    color: '#ccc',
+    color: colors.textTertiary,
   },
   taskList: {
-    paddingVertical: 10,
+    paddingTop: spacing.md, // Match Lovable: pt-md
+    paddingHorizontal: spacing.lg, // Match Lovable: px-lg
+    paddingBottom: spacing.md,
   },
-  emptyListContainer: {
-    flexGrow: 1,
-    minHeight: '100%',
-    justifyContent: 'center',
+  taskCardContainer: {
+    marginBottom: 8, // Match Lovable: space-y-2 (8px gap)
+  },
+  taskCard: {
+    backgroundColor: colors.card, // Match Lovable: bg-card
+    borderRadius: spacing.radiusLg, // Match Lovable: rounded-lg
+    overflow: 'hidden',
+    ...colors.shadowSm, // Match Lovable: shadow-soft-sm
+  },
+  taskCardContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md, // Match Lovable: gap-md
+    padding: spacing.lg, // Match Lovable: p-lg
+  },
+  checkboxContainer: {
+    marginTop: 2, // Match Lovable: mt-[2px]
+    flexShrink: 0,
+  },
+  checkbox: {
+    width: 24, // Match Lovable: w-6
+    height: 24, // Match Lovable: h-6
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.textTertiary, // Match Lovable: border-text-tertiary
     alignItems: 'center',
-    paddingVertical: 40,
+    justifyContent: 'center',
   },
-  taskItem: {
-    backgroundColor: '#f9f9f9',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+  checkmark: {
+    fontSize: 16,
+    color: colors.background,
+    fontWeight: 'bold',
+  },
+  taskContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  taskTextContainer: {
+    position: 'relative',
   },
   taskText: {
-    fontSize: 16,
-    color: '#000',
-    marginBottom: 4,
+    ...typography.bodyLarge,
+    color: colors.textPrimary,
+  },
+  taskTextCompleted: {
+    color: colors.textTertiary,
+    textDecorationLine: 'line-through',
+  },
+  strikethrough: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '50%',
+    height: 2,
+    backgroundColor: colors.textTertiary,
+    transformOrigin: 'left',
   },
   taskTimestamp: {
-    fontSize: 12,
-    color: '#888',
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginTop: 4, // Match Lovable: mt-1
   },
   errorContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: spacing.xl, // 20px
   },
   errorText: {
-    fontSize: 16,
-    color: '#dc2626',
+    ...typography.bodyLarge,
+    color: colors.destructive,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm, // 8px
   },
   errorHint: {
-    fontSize: 14,
-    color: '#888',
+    ...typography.body,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   deleteButton: {
-    backgroundColor: '#dc2626',
+    backgroundColor: colors.destructive,
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
     height: '100%',
-    borderRadius: 8,
+    borderRadius: spacing.radiusSm,
   },
   deleteButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: colors.background,
+    ...typography.bodyLarge,
     fontWeight: '600',
   },
 });

@@ -4,10 +4,12 @@
 |---------|-----------|---------|-----------------|--------------|--------|
 | E1 | Foundation & Authentication | 6 stories (+ 1 enhancement) | 14 hours | None | ✅ **COMPLETE** |
 | E2 | Core Task Management | 6 stories | 16 hours | E1 complete |
-| E3 | Email Delivery System | 5 stories | 12 hours | E1, E2 complete |
-| E4 | Monetization & Payments | 8 stories | 20 hours | E1, E2, E3 complete |
-| E5 | Workflow Modes & Polish | 4 stories | 10 hours | All previous complete |
-| E6 | Design System Integration & UI Polish | 4 stories | 16 hours | Can run parallel with E3-E5 |
+| E3 | Email Delivery System | 5 stories (4 done, 1 optional) | 12 hours | E1, E2 complete | ✅ **COMPLETE** |
+| E4 | Monetization & Payments | 8 stories | 20 hours | E1, E2, E3 complete | 🔄 **READY** |
+| E5 | Workflow Modes & Polish | 4 stories | 10 hours | All previous complete | ⏳ **PENDING** |
+| E6 | Design System Integration & UI Polish | 4 stories | 16 hours | Can run parallel with E3-E5 | 🔄 **READY** |
+
+**📋 Sequencing Plan:** See `docs/development-sequencing-plan.md` for detailed execution strategy (hybrid approach: design-first + parallel execution)
 
 **Total:** 33 stories, ~88 hours development time
 
