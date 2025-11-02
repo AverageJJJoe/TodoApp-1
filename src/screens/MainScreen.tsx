@@ -17,6 +17,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { useTaskStore, Task } from '../stores/taskStore';
+import { SettingsScreen } from './SettingsScreen';
 
 export const MainScreen = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -26,6 +27,7 @@ export const MainScreen = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editTaskInput, setEditTaskInput] = useState('');
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
   const session = useAuthStore((state) => state.session);
   const clearSession = useAuthStore((state) => state.clearSession);
   
@@ -244,10 +246,19 @@ export const MainScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>TodoTomorrow</Text>
-        {session?.user?.email && (
-          <Text style={styles.email}>Signed in as: {session.user.email}</Text>
-        )}
+        <TouchableOpacity
+          onPress={() => setIsSettingsVisible(true)}
+          style={styles.settingsButton}
+          accessible={true}
+          accessibilityLabel="Open settings"
+          accessibilityRole="button"
+        >
+          <Text style={styles.settingsIcon}>⚙️</Text>
+        </TouchableOpacity>
       </View>
+      {session?.user?.email && (
+        <Text style={styles.email}>Signed in as: {session.user.email}</Text>
+      )}
       
       <View style={styles.content}>
         {isLoading && tasks.length === 0 && !refreshing ? (
@@ -422,6 +433,16 @@ export const MainScreen = () => {
           </TouchableOpacity>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Settings Modal */}
+      <Modal
+        visible={isSettingsVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setIsSettingsVisible(false)}
+      >
+        <SettingsScreen onClose={() => setIsSettingsVisible(false)} />
+      </Modal>
     </View>
   );
 };
@@ -434,19 +455,27 @@ const styles = StyleSheet.create({
   },
   header: {
     marginTop: 60,
-    marginBottom: 40,
+    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 8,
     color: '#000',
+  },
+  settingsButton: {
+    padding: 8,
+  },
+  settingsIcon: {
+    fontSize: 24,
   },
   email: {
     fontSize: 14,
     color: '#888',
-    marginTop: 8,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
