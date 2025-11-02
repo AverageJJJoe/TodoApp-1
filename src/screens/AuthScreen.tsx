@@ -354,13 +354,36 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
               
               // Session is automatically created by Supabase client after successful verifyOtp
               // Get the session to ensure it's loaded and update store
-              const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+              // Note: Session might not be immediately available, so we'll check multiple times
+              let sessionData: any = null;
+              let sessionError: any = null;
+              let attempts = 0;
+              const maxAttempts = 3;
+              
+              while (attempts < maxAttempts && !sessionData?.session && !sessionError) {
+                const result = await supabase.auth.getSession();
+                sessionData = result.data;
+                sessionError = result.error;
+                
+                if (!sessionData?.session && !sessionError) {
+                  attempts++;
+                  if (attempts < maxAttempts) {
+                    // Wait a bit before retrying (session might be created asynchronously)
+                    await new Promise(resolve => setTimeout(resolve, 300 * attempts));
+                  }
+                }
+              }
               
               if (sessionError) {
                 if (__DEV__) {
                   console.error('❌ Session error after verification:', sessionError);
                 }
-                setErrorMessage(`Session error: ${sessionError.message}`);
+                // Check if it's the specific "Auth session missing" error
+                if (sessionError.message?.includes('Auth session missing')) {
+                  setErrorMessage('Authentication session expired. Please request a new magic link.');
+                } else {
+                  setErrorMessage(`Session error: ${sessionError.message}`);
+                }
               } else if (sessionData?.session) {
                 if (__DEV__) {
                   console.log('🎉 Session created successfully!');
@@ -616,9 +639,11 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
         No password needed.
       </Text>
 
-      {/* Temporary test buttons for debugging - REMOVE AFTER TESTING */}
+      {/* TODO: REMOVE BEFORE PRODUCTION - Dev-only debugging tools */}
+      {/* These are useful for testing auth flow but should be removed for release */}
       {__DEV__ && (
-        <>
+        <View style={styles.devToolsContainer}>
+          <Text style={styles.devToolsLabel}>Dev Tools (remove before release)</Text>
           <TouchableOpacity
             style={[styles.button, styles.testButton]}
             onPress={async () => {
@@ -633,22 +658,18 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
             <Text style={styles.buttonText}>🧪 Test Deep Link Handler</Text>
           </TouchableOpacity>
           <TextInput
-            style={[styles.input, { marginTop: 12, marginBottom: 8 }]}
+            style={[styles.input, styles.devInput]}
             placeholder="Paste Supabase verify URL or todotomorrow:// URL here"
             placeholderTextColor="#999"
             onSubmitEditing={(event) => {
-              // Also handle when user presses Enter/Submit
               const text = event.nativeEvent.text;
               if (text.trim()) {
-                // Process the pasted URL
                 const cleanedText = text.replace(/\s+/g, '');
                 processPastedUrl(cleanedText);
               }
             }}
             onChangeText={(text) => {
-              // Remove spaces (user might have added them for readability)
               const cleanedText = text.replace(/\s+/g, '');
-              // Process when text looks complete (contains key indicators)
               if (cleanedText.includes('supabase.co') || cleanedText.includes('todotomorrow://') || cleanedText.includes('token=') || (cleanedText.length > 40 && !cleanedText.includes('http'))) {
                 processPastedUrl(cleanedText);
               }
@@ -657,7 +678,6 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
           <TouchableOpacity
             style={[styles.button, styles.testButton]}
             onPress={async () => {
-              // Check if there's a session from browser auth
               const { data: { session } } = await supabase.auth.getSession();
               if (session) {
                 setSession(session);
@@ -669,7 +689,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
           >
             <Text style={styles.buttonText}>🔧 Check for Session (Dev Only)</Text>
           </TouchableOpacity>
-        </>
+        </View>
       )}
     </View>
   );
@@ -815,7 +835,27 @@ const styles = StyleSheet.create({
   },
   testButton: {
     backgroundColor: '#666',
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
+  },
+  devToolsContainer: {
+    width: '100%',
+    maxWidth: 400,
+    marginTop: spacing['3xl'],
+    paddingTop: spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+  },
+  devToolsLabel: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    fontSize: 11,
+  },
+  devInput: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+    fontSize: 13,
   },
 });
 

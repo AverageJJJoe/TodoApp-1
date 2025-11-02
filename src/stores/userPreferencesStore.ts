@@ -37,7 +37,22 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
         .from('users')
         .select('delivery_time, timezone')
         .eq('auth_id', session.user.id)
-        .single();
+        .maybeSingle();
+
+      // Handle case where user doesn't exist yet (should be created by trigger, but handle gracefully)
+      if (error?.code === 'PGRST116') {
+        // PGRST116 = no rows returned, user doesn't exist yet
+        // Use defaults - user will be created when they first interact with app
+        set({
+          preferences: {
+            delivery_time: '06:00:00',
+            timezone: 'UTC',
+          },
+          isLoading: false,
+          loadError: null,
+        });
+        return;
+      }
 
       if (error) {
         throw error;
@@ -86,32 +101,71 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
         .from('users')
         .select('id')
         .eq('auth_id', session.user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle missing records gracefully
 
-      if (userError || !user) {
-        throw new Error(`User not found: ${userError?.message || 'No user record'}`);
+      // If user doesn't exist, create it (should be handled by trigger, but fallback here)
+      let userId: number;
+      if (userError?.code === 'PGRST116' || !user) {
+        // PGRST116 = no rows returned, user doesn't exist yet
+        if (__DEV__) {
+          console.log('⚠️ User record not found in preferences store, creating one...');
+        }
+        
+        // Create user record with preferences
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert([
+            {
+              auth_id: session.user.id,
+              email: session.user.email || '',
+              delivery_time,
+              timezone,
+              // Other fields use defaults from schema
+            },
+          ])
+          .select('id')
+          .single();
+
+        if (createError || !newUser) {
+          throw new Error(`Failed to create user record: ${createError?.message || 'Unknown error'}`);
+        }
+        
+        userId = newUser.id;
+      } else if (userError) {
+        throw new Error(`User query error: ${userError.message}`);
+      } else {
+        userId = user.id;
       }
 
-      // Update user preferences in Supabase
-      const { error } = await supabase
-        .from('users')
-        .update({ 
-          delivery_time,
-          timezone,
-        })
-        .eq('id', user.id);
+      // Update user preferences in Supabase (only if user already existed)
+      if (user) {
+        const { error } = await supabase
+          .from('users')
+          .update({ 
+            delivery_time,
+            timezone,
+          })
+          .eq('id', userId);
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
       }
+      // If user was just created, preferences were set during creation
 
       // Update local store state with new preferences
-      set({
-        preferences: {
-          delivery_time,
-          timezone,
-        },
-      });
+      // (Only if we didn't create a new user - if we created, preferences are already set)
+      if (user) {
+        set({
+          preferences: {
+            delivery_time,
+            timezone,
+          },
+        });
+      } else {
+        // User was just created, load preferences to update store
+        await get().loadPreferences();
+      }
     } catch (error: any) {
       throw error;
     }

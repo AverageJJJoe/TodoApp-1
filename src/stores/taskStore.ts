@@ -43,13 +43,39 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         .from('users')
         .select('id')
         .eq('auth_id', session.user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle missing records gracefully
 
-      if (userError || !user) {
-        throw new Error(`User not found: ${userError?.message || 'No user record'}`);
+      // If user doesn't exist, create it (should be handled by trigger, but fallback here)
+      let userId: number;
+      if (userError?.code === 'PGRST116' || !user) {
+        // PGRST116 = no rows returned, user doesn't exist yet
+        if (__DEV__) {
+          console.log('⚠️ User record not found, creating one...');
+        }
+        
+        // Create user record
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert([
+            {
+              auth_id: session.user.id,
+              email: session.user.email || '',
+              // Other fields use defaults from schema
+            },
+          ])
+          .select('id')
+          .single();
+
+        if (createError || !newUser) {
+          throw new Error(`Failed to create user record: ${createError?.message || 'Unknown error'}`);
+        }
+        
+        userId = newUser.id;
+      } else if (userError) {
+        throw new Error(`User query error: ${userError.message}`);
+      } else {
+        userId = user.id;
       }
-
-      const userId = user.id;
 
       // Query tasks from Supabase
       const { data, error } = await supabase
@@ -80,41 +106,44 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       throw new Error('No authenticated session found');
     }
 
-    // Get user_id from users table, create if doesn't exist
-    let { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_id', session.user.id)
-      .single();
-
-    // If user doesn't exist, create it (should be handled by trigger, but fallback here)
-    if (userError || !user) {
-      if (__DEV__) {
-        console.log('⚠️ User record not found, creating one...');
-      }
-      
-      // Create user record
-      const { data: newUser, error: createError } = await supabase
+      // Get user_id from users table, create if doesn't exist
+      let { data: user, error: userError } = await supabase
         .from('users')
-        .insert([
-          {
-            auth_id: session.user.id,
-            email: session.user.email || '',
-            // Other fields use defaults from schema
-          },
-        ])
         .select('id')
-        .single();
+        .eq('auth_id', session.user.id)
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle missing records gracefully
 
-      if (createError || !newUser) {
-        throw new Error(`Failed to create user record: ${createError?.message || 'Unknown error'}`);
-      }
+      // If user doesn't exist, create it (should be handled by trigger, but fallback here)
+      if (userError?.code === 'PGRST116' || !user) {
+        // PGRST116 = no rows returned, user doesn't exist yet
+        if (__DEV__) {
+          console.log('⚠️ User record not found, creating one...');
+        }
+        
+        // Create user record
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert([
+            {
+              auth_id: session.user.id,
+              email: session.user.email || '',
+              // Other fields use defaults from schema
+            },
+          ])
+          .select('id')
+          .single();
 
-      user = newUser;
-      if (__DEV__) {
-        console.log('✅ User record created successfully');
+        if (createError || !newUser) {
+          throw new Error(`Failed to create user record: ${createError?.message || 'Unknown error'}`);
+        }
+
+        user = newUser;
+        if (__DEV__) {
+          console.log('✅ User record created successfully');
+        }
+      } else if (userError) {
+        throw new Error(`User query error: ${userError.message}`);
       }
-    }
 
     const userId = user.id;
 

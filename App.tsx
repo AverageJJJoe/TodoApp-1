@@ -102,6 +102,21 @@ export default function App() {
       }
 
       switch (event) {
+        case 'INITIAL_SESSION':
+          // INITIAL_SESSION fires when Supabase client initializes
+          // If there's a session, keep it; if not, don't clear existing session
+          if (session) {
+            if (__DEV__) {
+              console.log('✅ INITIAL_SESSION event - session exists, keeping it');
+            }
+            setSession(session);
+          } else {
+            if (__DEV__) {
+              console.log('ℹ️ INITIAL_SESSION event - no session, leaving store as-is');
+            }
+            // Don't clear session here - only clear on explicit SIGNED_OUT
+          }
+          break;
         case 'SIGNED_IN':
           if (session) {
             if (__DEV__) {

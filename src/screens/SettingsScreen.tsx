@@ -132,19 +132,52 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
         .from('users')
         .select('id, email')
         .eq('auth_id', currentSession.user.id)
-        .single();
+        .maybeSingle();
 
-      if (userError || !user) {
+      // If user doesn't exist, create it (should be handled by trigger, but fallback here)
+      let userId: number;
+      if (userError?.code === 'PGRST116' || !user) {
+        // PGRST116 = no rows returned, user doesn't exist yet
+        if (__DEV__) {
+          console.log('⚠️ User record not found in SettingsScreen, creating one...');
+        }
+        
+        // Create user record
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert([
+            {
+              auth_id: currentSession.user.id,
+              email: currentSession.user.email || '',
+              // Other fields use defaults from schema
+            },
+          ])
+          .select('id')
+          .single();
+
+        if (createError || !newUser) {
+          Alert.alert(
+            'Error',
+            `Failed to create user record: ${createError?.message || 'Unknown error'}`
+          );
+          setIsSendingEmail(false);
+          return;
+        }
+        
+        userId = newUser.id;
+      } else if (userError) {
         Alert.alert(
           'Error',
-          `User not found: ${userError?.message || 'No user record'}`
+          `User query error: ${userError.message}`
         );
         setIsSendingEmail(false);
         return;
+      } else {
+        userId = user.id;
       }
 
-      const userId = user.id;
-      const email = user.email;
+      // Get email (use session email as fallback if user record doesn't have it)
+      const email = user?.email || currentSession.user.email || '';
 
       // Query tasks
       const { data: tasks, error: tasksError } = await supabase
