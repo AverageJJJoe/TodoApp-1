@@ -85,6 +85,7 @@ TodoTomorrow uses a **tiered freemium launch strategy** to maximize adoption fir
 | October 14, 2025 | 1.0.1 | Renamed from Night Owl Todo to TodoTomorrow | John (PM) |
 | October 30, 2025 | 1.1 | Updated monetization strategy: tiered freemium launch, cohort tracking, grandfather status, A/B pricing tests | John (PM) |
 | October 31, 2025 | 1.2 | Restructured all stories to be 2-4 hours each, testable independently, and building sequentially | John (PM) |
+| January 27, 2025 | 1.3 | Updated Story 3.5: Changed cron frequency from "every minute" to "hourly" to align with architecture. Updated AC to reflect timezone-aware query implementation and empty state email handling. | John (PM) |
 
 ---
 
@@ -1071,15 +1072,18 @@ The following features are intentionally excluded from the 4-week MVP to maintai
 **So that** I don't have to manually send it
 
 **Acceptance Criteria:**
-1. Supabase cron job created (runs every minute)
-2. Query users: `WHERE delivery_time <= NOW() AND last_email_sent_at < TODAY`
-3. For each user: Query tasks → Send email
-4. Update: `last_email_sent_at = NOW()` after send
-5. Test: Set delivery_time to 2 minutes from now → Wait → Receive email
+1. Supabase cron job created (runs hourly via pg_cron at minute 0 of each hour)
+2. Query users: WHERE delivery_time converts to current UTC hour in their timezone AND (is_paid = true OR trial is valid) AND last_email_sent_at < 20 hours ago
+   - **Note:** Simplified summary above; see architecture docs (`docs/architecture/email-delivery-system.md`) for full timezone-aware SQL implementation details
+3. For each user: Query tasks based on workflow_mode (fresh_start: created_at > last_email_sent_at AND status = 'open', carry_over: status = 'open') → Send email
+4. Send email even if user has no tasks (empty state email: "No new tasks for today. Enjoy your morning coffee! ☕")
+5. Update: `last_email_sent_at = NOW()` after successful send
+6. Log email send in email_logs table
+7. Test: Set delivery_time to current time + 1 hour → Wait for next hour boundary → Receive email
 
 **Deliverable:** Automated email delivery
 
-**Test:** Set delivery time to current time + 2 mins → Wait → Email arrives
+**Test:** Set delivery time to current time + 1 hour (e.g., if it's 2:30pm, set to 3:00pm) → Wait for cron job at next hour boundary → Email arrives
 
 ---
 

@@ -61,5 +61,6 @@ TodoTomorrow uses a **tiered freemium launch strategy** to maximize adoption fir
 | October 14, 2025 | 1.0.1 | Renamed from Night Owl Todo to TodoTomorrow | John (PM) |
 | October 30, 2025 | 1.1 | Updated monetization strategy: tiered freemium launch, cohort tracking, grandfather status, A/B pricing tests | John (PM) |
 | October 31, 2025 | 1.2 | Restructured all stories to be 2-4 hours each, testable independently, and building sequentially | John (PM) |
+| January 27, 2025 | 1.3 | Updated Story 3.5: Changed cron frequency from "every minute" to "hourly" to align with architecture. Updated AC to reflect timezone-aware query implementation and empty state email handling. | John (PM) |
 
 ---
