@@ -347,25 +347,25 @@
 
 ---
 
-### Story 3.3: SendGrid Integration
+### Story 3.3: Resend Email Integration
 **Estimated Time:** 3 hours  
 **Dependencies:** Story 3.2
 
 **As a** developer  
-**I want to** integrate SendGrid for email sending  
-**So that** emails can be delivered reliably
+**I want to** integrate Resend for email sending  
+**So that** emails can be delivered reliably with high inbox rates and zero cost for MVP
 
 **Acceptance Criteria:**
-1. SendGrid account created (free tier)
+1. Resend account created (free tier: 100 emails/day unlimited total)
 2. Sender email verified: `hello@todotomorrow.com` (or temp email for MVP)
 3. Supabase Edge Function created: `send-email`
 4. Function accepts: `{ to, subject, html }`
-5. Function calls SendGrid API with template
+5. Function calls Resend API with email content
 6. Test: Manually invoke function → Receive test email
 
-**Deliverable:** Working Edge Function that sends email
+**Deliverable:** Working Edge Function that sends email via Resend
 
-**Test:** Call function with test data → Email received in inbox
+**Test:** Call function with test data → Email received in inbox (high deliverability)
 
 ---
 

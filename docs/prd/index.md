@@ -51,7 +51,7 @@
     - [Epic 3: Email Delivery System (Week 2, Days 3-5)](./7-epic-details-restructured.md#epic-3-email-delivery-system-week-2-days-3-5)
       - [Story 3.1: User Preferences - Delivery Time](./7-epic-details-restructured.md#story-31-user-preferences-delivery-time)
       - [Story 3.2: Email Template - HTML Design](./7-epic-details-restructured.md#story-32-email-template-html-design)
-      - [Story 3.3: SendGrid Integration](./7-epic-details-restructured.md#story-33-sendgrid-integration)
+      - [Story 3.3: Resend Email Integration](./7-epic-details-restructured.md#story-33-resend-email-integration)
       - [Story 3.4: Manual "Send Now" Button (Testing)](./7-epic-details-restructured.md#story-34-manual-send-now-button-testing)
       - [Story 3.5: Automated Cron Job](./7-epic-details-restructured.md#story-35-automated-cron-job)
     - [Epic 4: Monetization & Payments (Week 2, Day 5 + Week 3)](./7-epic-details-restructured.md#epic-4-monetization-payments-week-2-day-5-week-3)

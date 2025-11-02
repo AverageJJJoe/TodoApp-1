@@ -21,7 +21,7 @@ The email delivery system is the core innovation—automated batched email at us
 │    │  └─ carry_over: status IN ('open', 'completed')          │
 │    ├─ Skip if no tasks                                         │
 │    ├─ Render email template                                    │
-│    ├─ Send via SendGrid                                        │
+    │    ├─ Send via Resend                                           │
 │    ├─ Log send in email_logs table                             │
 │    └─ Update user.last_email_sent_at = NOW()                  │
 │ 4. Handle failures & retry logic                               │
@@ -80,8 +80,8 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY')!
-const SENDGRID_FROM_EMAIL = 'team@todotomorrow.app'
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
+const RESEND_FROM_EMAIL = 'hello@todotomorrow.com'
 
 interface EmailUser {
   id: string
@@ -207,24 +207,30 @@ async function sendEmail(
   html: string
 ): Promise<string | null> {
   try {
-    const response = await axios.post('https://api.sendgrid.com/v3/mail/send', {
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: SENDGRID_FROM_EMAIL, name: 'TodoTomorrow' },
-      subject,
-      content: [{ type: 'text/html', value: html }],
-      mail_settings: {
-        sandbox_mode: { enable: false }
-      }
-    }, {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${SENDGRID_API_KEY}`
-      }
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: RESEND_FROM_EMAIL,
+        to: [to],
+        subject,
+        html
+      })
     })
 
-    // SendGrid returns message ID in header
-    return response.headers['x-message-id'] || null
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(`Resend API error: ${JSON.stringify(error)}`)
+    }
+
+    // Resend returns message ID in response body
+    const data = await response.json()
+    return data.id || null
   } catch (error) {
-    console.error('SendGrid error:', error)
+    console.error('Resend error:', error)
     return null
   }
 }
@@ -253,7 +259,7 @@ async function recordEmailSent(
       user_id: userId,
       recipient_email: recipientEmail,
       subject: `Your ${taskCount} Todo${taskCount !== 1 ? 's' : ''} for Today`,
-      sendgrid_message_id: messageId,
+      resend_message_id: messageId,
       task_count: taskCount,
       status: messageId ? 'sent' : 'failed'
     })
@@ -363,10 +369,10 @@ SELECT cron.unschedule('send-daily-emails-hourly');
 
 ## Email Deliverability Strategy (Target: 95%+)
 
-**SendGrid Configuration:**
-1. Verify sender domain (DNS DKIM/SPF records)
-2. Enable authentication: SPF, DKIM, DMARC
-3. Warm up sending gradually (start low volume, increase over days)
+**Resend Configuration:**
+1. Verify sender email (required for MVP)
+2. Post-MVP: Verify sender domain (DNS DKIM/SPF records) for better branding
+3. Resend provides pristine IPs and high deliverability out of the box (no warm-up needed)
 
 **Email Content Best Practices:**
 - Plain, professional HTML with inline CSS
@@ -380,10 +386,12 @@ SELECT cron.unschedule('send-daily-emails-hourly');
 - Alert if `consecutive_failures > 3`
 - Implement exponential backoff: retry failed sends after 1h, 4h, 24h
 - Manual intervention triggers at 5+ consecutive failures
+- Set up Resend webhooks for bounce/complaint handling (better than SendGrid for indie budgets)
 
-**SendGrid Free Tier Constraint:** 100 emails/day
-- At launch: ~5-10 active users → minimal
-- As user base grows: upgrade to paid tier ($20/month ~ 500K/month)
-- Monitor `email_logs` for daily volume
+**Resend Free Tier:** 100 emails/day (unlimited total)
+- At launch: ~5-10 active users → minimal usage
+- Beta phase: ~500 users at 20% active = ~100 emails/day → covered by free tier
+- As user base grows: Monitor daily volume, upgrade when needed
+- Better fit than SendGrid's trial-only free tier for indie budgets
 
 ---

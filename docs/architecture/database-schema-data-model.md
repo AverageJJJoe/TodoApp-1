@@ -123,7 +123,7 @@ CREATE TABLE email_logs (
   subject VARCHAR(255) NOT NULL,
   
   -- Sending info
-  sendgrid_message_id VARCHAR(255) UNIQUE DEFAULT NULL,
+  resend_message_id VARCHAR(255) UNIQUE DEFAULT NULL,
   sent_at TIMESTAMP NOT NULL DEFAULT NOW(),
   status VARCHAR(20) NOT NULL DEFAULT 'sent'
     CHECK (status IN ('sent', 'delivered', 'bounced', 'failed')),

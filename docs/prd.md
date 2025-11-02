@@ -194,7 +194,7 @@ TodoTomorrow uses a **tiered freemium launch strategy** to maximize adoption fir
 
 **NFR6:** The system shall scale to support 500+ users within Supabase free tier limits
 
-**NFR7:** Email sending shall stay within SendGrid free tier (100 emails/day) for MVP phase
+**NFR7:** Email sending shall stay within Resend free tier (100 emails/day, unlimited total) for MVP phase
 
 **NFR8:** All user data shall be stored securely with proper authentication via Supabase Auth
 
@@ -507,7 +507,7 @@ TodoTomorrow embraces Apple's design philosophy: radical simplicity with obsessi
 - Supabase Edge Functions for payment validation and email triggers
 
 **Email Delivery:**
-- SendGrid for transactional email sending
+- Resend for transactional email sending (better for indie budgets: forever free tier vs SendGrid's trial-only)
 - Custom SMTP relay via Supabase Edge Functions
 
 **Payment Processing:**
@@ -526,7 +526,7 @@ TodoTomorrow embraces Apple's design philosophy: radical simplicity with obsessi
 | Service | Purpose | Free Tier Limit | Cost After |
 |---------|---------|----------------|------------|
 | Supabase | Auth, DB, Edge Functions | 500 MB DB, 2 GB bandwidth | $25/mo |
-| SendGrid | Email delivery | 100 emails/day | $19.95/mo for 40k |
+| Resend | Email delivery | 100 emails/day (unlimited total) | Free tier covers MVP |
 | Vercel | PWA hosting | 100 GB bandwidth | $20/mo Pro |
 | Apple Developer | App Store | N/A | $99/year |
 | Google Play | Play Store | N/A | $25 one-time |
@@ -579,7 +579,7 @@ TodoTomorrow embraces Apple's design philosophy: radical simplicity with obsessi
 
 1. **Development velocity:** With Cursor AI, 1 developer can complete 15-20 hours of work per week
 2. **App Store approval:** iOS and Android approvals will take 2-3 days (not blocking launch)
-3. **Email deliverability:** SendGrid will achieve 95%+ inbox placement with proper domain configuration
+3. **Email deliverability:** Resend provides pristine IPs and will achieve 95%+ inbox placement out of the box (domain verification optional for MVP)
 4. **Payment integration:** Supabase Edge Functions can handle receipt validation for all 3 platforms
 5. **User cohort assignment:** Cohort assignment happens on signup and never changes
 6. **Trial tracking:** Trial expiration is based on `created_at` timestamp, not first task creation
@@ -1019,20 +1019,20 @@ The following features are intentionally excluded from the 4-week MVP to maintai
 
 ---
 
-#### Story 3.3: SendGrid Integration
+#### Story 3.3: Resend Email Integration
 **Estimated Time:** 3 hours  
 **Dependencies:** Story 3.2
 
 **As a** developer  
-**I want to** integrate SendGrid for email sending  
+**I want to** integrate Resend for email sending  
 **So that** emails can be delivered reliably
 
 **Acceptance Criteria:**
-1. SendGrid account created (free tier)
+1. Resend account created (free tier: 100 emails/day unlimited total)
 2. Sender email verified: `hello@todotomorrow.com` (or temp email for MVP)
 3. Supabase Edge Function created: `send-email`
 4. Function accepts: `{ to, subject, html }`
-5. Function calls SendGrid API with template
+5. Function calls Resend API with email content
 6. Test: Manually invoke function → Receive test email
 
 **Deliverable:** Working Edge Function that sends email
@@ -1441,7 +1441,7 @@ If a story is blocked:
    - Clear distinction between functional and non-functional
 
 5. **Technical Assumptions** ✅
-   - Technology stack documented (React Native, Supabase, SendGrid)
+   - Technology stack documented (React Native, Supabase, Resend)
    - Third-party service limits specified
    - Platform support defined (iOS 14+, Android 8+, modern browsers)
 
@@ -1525,7 +1525,7 @@ Key points for architecture:
 - Offline-first architecture with Supabase backend
 - Tiered freemium monetization (3-phase launch, cohort tracking, grandfather status)
 - Payment integration: Apple IAP, Google Play Billing, Stripe (with server-side validation)
-- Email delivery system: Supabase cron job + SendGrid
+- Email delivery system: Supabase cron job + Resend
 - Two workflow modes: Fresh Start (reset daily) and Carry Over (task persistence)
 
 Please create architecture.md covering:
@@ -1550,7 +1550,7 @@ The PRD is available at docs/prd.md. Let's build the technical foundation!
 
 **Week 2: Email Delivery System (Epic 2)**
 - Email template design
-- SendGrid integration
+- Resend email integration
 - Scheduled cron job
 - Fresh Start and Carry Over email logic
 
@@ -1736,7 +1736,7 @@ CREATE TABLE email_logs (
   subject VARCHAR(255) NOT NULL,
   
   -- Sending info
-  sendgrid_message_id VARCHAR(255) UNIQUE DEFAULT NULL,
+  resend_message_id VARCHAR(255) UNIQUE DEFAULT NULL,
   sent_at TIMESTAMP NOT NULL DEFAULT NOW(),
   status VARCHAR(20) NOT NULL DEFAULT 'sent'
     CHECK (status IN ('sent', 'delivered', 'bounced', 'failed')),
@@ -1925,7 +1925,7 @@ CREATE INDEX idx_email_logs_user_sent ON email_logs(user_id, sent_at DESC);
 ### Week 1 Metrics (Post-Launch, Free Phase)
 - **Downloads:** 50-100 (X audience + early adopters)
 - **DAU:** 30-60 (60% of downloads)
-- **Email open rate:** Track via SendGrid (target 80%+)
+- **Email open rate:** Track via Resend (target 80%+)
 - **Crash rate:** <1%
 - **Trial starts:** N/A (Phase 1 is free forever)
 - **Grandfather cohort size:** 50-100 users

@@ -62,7 +62,7 @@
     │  │ - Runs hourly                       ││
     │  │ - Fetches users requiring emails    ││
     │  │ - Generates content                 ││
-    │  │ - Calls SendGrid API                ││
+    │  │ - Calls Resend API                   ││
     │  └─────────────────────────────────────┘│
     │  ┌─────────────────────────────────────┐│
     │  │ Payment Webhook Handler             ││
@@ -72,7 +72,7 @@
     └────┬────────────────────────────────────┘
          │
     ┌────▼────────────┐      ┌─────────────────┐
-    │   SendGrid API  │      │ Stripe / IAP    │
+    │   Resend API    │      │ Stripe / IAP    │
     │  (Email)        │      │ (Payments)      │
     └─────────────────┘      └─────────────────┘
 ```
@@ -92,7 +92,7 @@
 - **Serverless:** Edge Functions for cron jobs
 
 **External Services:**
-- **Email:** SendGrid API (100/day free tier)
+- **Email:** Resend API (100/day free tier, unlimited total)
 - **Payments:** Stripe (PWA), Apple IAP (iOS), Google Play Billing (Android)
 - **Analytics:** Plausible (privacy-first)
 
@@ -107,7 +107,7 @@
 | **Local Storage** | AsyncStorage | Works cross-platform, simple key-value, sufficient for MVP | SQLite (overkill); WatermelonDB (learning curve) |
 | **UI Styling** | NativeWind | Tailwind CSS on React Native, consistent with web dev patterns | StyleSheet API (verbose); Styled Components (less mobile-friendly) |
 | **Backend/DB** | Supabase | PostgreSQL, built-in auth, real-time subscriptions, Edge Functions, free tier | Firebase (less control); AWS (higher complexity) |
-| **Email Service** | SendGrid | 100 emails/day free, reliable, excellent deliverability | AWS SES (more complex); Mailgun (higher cost) |
+| **Email Service** | Resend | 100 emails/day free (unlimited total), reliable, high deliverability out of box, better for indie budgets | AWS SES (more complex); Mailgun (higher cost); SendGrid (trial-only free tier) |
 | **Payments** | Stripe + IAP | Stripe for PWA simplicity, IAP for native app standards | Gumroad (limited); Paddle (less flexible) |
 
 ---
@@ -237,7 +237,7 @@ CREATE TABLE email_logs (
   subject VARCHAR(255) NOT NULL,
   
   -- Sending info
-  sendgrid_message_id VARCHAR(255) UNIQUE DEFAULT NULL,
+  resend_message_id VARCHAR(255) UNIQUE DEFAULT NULL,
   sent_at TIMESTAMP NOT NULL DEFAULT NOW(),
   status VARCHAR(20) NOT NULL DEFAULT 'sent'
     CHECK (status IN ('sent', 'delivered', 'bounced', 'failed')),
@@ -387,7 +387,7 @@ The email delivery system is the core innovation—automated batched email at us
 │    │  └─ carry_over: status IN ('open', 'completed')          │
 │    ├─ Skip if no tasks                                         │
 │    ├─ Render email template                                    │
-│    ├─ Send via SendGrid                                        │
+    │    ├─ Send via Resend                                           │
 │    ├─ Log send in email_logs table                             │
 │    └─ Update user.last_email_sent_at = NOW()                  │
 │ 4. Handle failures & retry logic                               │
@@ -446,8 +446,8 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY')!
-const SENDGRID_FROM_EMAIL = 'team@todotomorrow.app'
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
+const RESEND_FROM_EMAIL = 'hello@todotomorrow.com'
 
 interface EmailUser {
   id: string
@@ -573,24 +573,30 @@ async function sendEmail(
   html: string
 ): Promise<string | null> {
   try {
-    const response = await axios.post('https://api.sendgrid.com/v3/mail/send', {
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: SENDGRID_FROM_EMAIL, name: 'TodoTomorrow' },
-      subject,
-      content: [{ type: 'text/html', value: html }],
-      mail_settings: {
-        sandbox_mode: { enable: false }
-      }
-    }, {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${SENDGRID_API_KEY}`
-      }
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: RESEND_FROM_EMAIL,
+        to: [to],
+        subject,
+        html
+      })
     })
 
-    // SendGrid returns message ID in header
-    return response.headers['x-message-id'] || null
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(`Resend API error: ${JSON.stringify(error)}`)
+    }
+
+    // Resend returns message ID in response body
+    const data = await response.json()
+    return data.id || null
   } catch (error) {
-    console.error('SendGrid error:', error)
+    console.error('Resend error:', error)
     return null
   }
 }
@@ -619,7 +625,7 @@ async function recordEmailSent(
       user_id: userId,
       recipient_email: recipientEmail,
       subject: `Your ${taskCount} Todo${taskCount !== 1 ? 's' : ''} for Today`,
-      sendgrid_message_id: messageId,
+      resend_message_id: messageId,
       task_count: taskCount,
       status: messageId ? 'sent' : 'failed'
     })
@@ -729,10 +735,10 @@ SELECT cron.unschedule('send-daily-emails-hourly');
 
 ### Email Deliverability Strategy (Target: 95%+)
 
-**SendGrid Configuration:**
-1. Verify sender domain (DNS DKIM/SPF records)
-2. Enable authentication: SPF, DKIM, DMARC
-3. Warm up sending gradually (start low volume, increase over days)
+**Resend Configuration:**
+1. Verify sender email (required for MVP)
+2. Post-MVP: Verify sender domain (DNS DKIM/SPF records) for better branding
+3. Resend provides pristine IPs and high deliverability out of the box (no warm-up needed)
 
 **Email Content Best Practices:**
 - Plain, professional HTML with inline CSS
@@ -746,11 +752,13 @@ SELECT cron.unschedule('send-daily-emails-hourly');
 - Alert if `consecutive_failures > 3`
 - Implement exponential backoff: retry failed sends after 1h, 4h, 24h
 - Manual intervention triggers at 5+ consecutive failures
+- Set up Resend webhooks for bounce/complaint handling (better than SendGrid for indie budgets)
 
-**SendGrid Free Tier Constraint:** 100 emails/day
-- At launch: ~5-10 active users → minimal
-- As user base grows: upgrade to paid tier ($20/month ~ 500K/month)
-- Monitor `email_logs` for daily volume
+**Resend Free Tier:** 100 emails/day (unlimited total)
+- At launch: ~5-10 active users → minimal usage
+- Beta phase: ~500 users at 20% active = ~100 emails/day → covered by free tier
+- As user base grows: Monitor daily volume, upgrade when needed
+- Better fit than SendGrid's trial-only free tier for indie budgets
 
 ---
 
@@ -1484,9 +1492,9 @@ Use secure secret management via Supabase Edge Functions for all API keys and cr
 |--------|--------|-------------|
 | Task creation | <100ms | Optimistic updates + AsyncStorage |
 | Task completion animation | 600ms | Native Animated API |
-| Email delivery | <30s per batch | Parallel SendGrid calls |
+| Email delivery | <30s per batch | Parallel Resend calls |
 | Sync processing | <5s | Batch operations |
-| Email deliverability | 95%+ | SendGrid DKIM + content validation |
+| Email deliverability | 95%+ | Resend pristine IPs + content validation |
 
 ---
 
@@ -1503,7 +1511,7 @@ Use secure secret management via Supabase Edge Functions for all API keys and cr
 
 | Risk | Mitigation |
 |------|-----------|
-| **SendGrid rate limits** | Monitor volume, queue failures, upgrade plan early |
+| **Resend rate limits** | Monitor volume, queue failures, upgrade plan early (100/day free tier covers MVP) |
 | **Timezone bugs** | Comprehensive test coverage, user time verification |
 | **Offline sync conflicts** | Last-Write-Wins strategy + extensive testing |
 | **Payment fraud** | Server-side receipt validation, third-party verification |
