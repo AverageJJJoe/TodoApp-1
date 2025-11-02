@@ -23,7 +23,6 @@ import { TaskItem } from '../components/TaskItem';
 import { colors, typography, spacing } from '../design-system';
 
 export const MainScreen = () => {
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -42,7 +41,6 @@ export const MainScreen = () => {
   const fabScaleAnim = useRef(new Animated.Value(0)).current;
   
   const session = useAuthStore((state) => state.session);
-  const clearSession = useAuthStore((state) => state.clearSession);
   
   // Select store values - split selectors to avoid infinite loops
   const tasks = useTaskStore((state) => state.tasks);
@@ -120,39 +118,6 @@ export const MainScreen = () => {
       }
     } finally {
       setRefreshing(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      setIsSigningOut(true);
-      
-      // Sign out from Supabase (clears AsyncStorage automatically)
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        if (__DEV__) {
-          console.error('Error signing out:', error);
-        }
-        Alert.alert('Error', 'Failed to sign out. Please try again.');
-        setIsSigningOut(false);
-        return;
-      }
-      
-      // Clear session from Zustand store
-      clearSession();
-      
-      if (__DEV__) {
-        console.log('✅ Successfully signed out');
-      }
-      
-      // Navigation back to AuthScreen happens automatically via App.tsx session check
-    } catch (error: any) {
-      if (__DEV__) {
-        console.error('Error during sign out:', error);
-      }
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      setIsSigningOut(false);
     }
   };
 
@@ -409,20 +374,6 @@ export const MainScreen = () => {
           />
         )}
       </View>
-      
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.signOutButton, isSigningOut && styles.signOutButtonDisabled]}
-          onPress={handleSignOut}
-          disabled={isSigningOut}
-        >
-          {isSigningOut ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.signOutButtonText}>Sign Out</Text>
-          )}
-        </TouchableOpacity>
-      </View>
 
       {/* Floating Action Button - Match Lovable: spring entrance, tap animation */}
       <Animated.View
@@ -647,26 +598,6 @@ const styles = StyleSheet.create({
   emptyStatePlus: {
     color: colors.primary,
     fontWeight: '600', // Match Lovable: font-semibold
-  },
-  footer: {
-    marginBottom: spacing.xl * 2, // 40px
-    paddingHorizontal: spacing['2xl'] as number, // 24px
-  },
-  signOutButton: {
-    backgroundColor: colors.destructive,
-    padding: spacing.lg, // 16px
-    borderRadius: spacing.radiusSm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-  },
-  signOutButtonDisabled: {
-    opacity: 0.6,
-  },
-  signOutButtonText: {
-    color: colors.background,
-    ...typography.bodyLarge,
-    fontWeight: '600',
   },
   fab: {
     position: 'absolute',

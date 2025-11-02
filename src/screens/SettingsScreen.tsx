@@ -14,6 +14,7 @@ import * as Localization from 'expo-localization';
 import { useUserPreferencesStore } from '../stores/userPreferencesStore';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
+import { colors, typography, spacing } from '../design-system';
 
 interface SettingsScreenProps {
   onClose: () => void;
@@ -30,6 +31,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   const {
     preferences,
@@ -37,6 +39,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     loadPreferences,
     updatePreferences,
   } = useUserPreferencesStore();
+
+  const { session, clearSession } = useAuthStore();
+
+  // Get user email from session
+  useEffect(() => {
+    if (session?.user?.email) {
+      setUserEmail(session.user.email);
+    }
+  }, [session]);
 
   // Get system timezone on mount
   useEffect(() => {
@@ -109,8 +120,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       setIsSendingEmail(true);
 
       // Get current user session
-      const session = useAuthStore.getState().session;
-      if (!session?.user?.id) {
+      const currentSession = useAuthStore.getState().session;
+      if (!currentSession?.user?.id) {
         Alert.alert('Error', 'No authenticated session found. Please sign in.');
         setIsSendingEmail(false);
         return;
@@ -120,7 +131,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       const { data: user, error: userError } = await supabase
         .from('users')
         .select('id, email')
-        .eq('auth_id', session.user.id)
+        .eq('auth_id', currentSession.user.id)
         .single();
 
       if (userError || !user) {
@@ -133,7 +144,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       }
 
       const userId = user.id;
-      const userEmail = user.email;
+      const email = user.email;
 
       // Query tasks
       const { data: tasks, error: tasksError } = await supabase
@@ -217,7 +228,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       // Call Edge Function
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
-          to: userEmail,
+          to: email,
           subject: subject,
           html: emailHTML,
         },
@@ -287,17 +298,103 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      // Sign out from Supabase (clears AsyncStorage automatically)
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        if (__DEV__) {
+          console.error('Error signing out:', error);
+        }
+        Alert.alert('Error', 'Failed to sign out. Please try again.');
+        return;
+      }
+      
+      // Clear session from Zustand store
+      clearSession();
+      
+      if (__DEV__) {
+        console.log('✅ Successfully signed out');
+      }
+      
+      // Navigation back to AuthScreen happens automatically via App.tsx session check
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error during sign out:', error);
+      }
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    }
+  };
+
+  // Helper component for section header
+  const SectionHeader = ({ title }: { title: string }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
+    </View>
+  );
+
+  // Helper component for cell row
+  const CellRow = ({
+    label,
+    value,
+    valueColor,
+    showDisclosure,
+    onPress,
+    children,
+    isLast = false,
+  }: {
+    label?: string;
+    value?: string;
+    valueColor?: string;
+    showDisclosure?: boolean;
+    onPress?: () => void;
+    children?: React.ReactNode;
+    isLast?: boolean;
+  }) => (
+    <TouchableOpacity
+      style={[styles.cell, !isLast && styles.cellBorder]}
+      onPress={onPress}
+      disabled={!onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
+      <View style={styles.cellContent}>
+        {label && <Text style={styles.cellLabel}>{label}</Text>}
+        {children || (value && (
+          <Text style={[styles.cellValue, valueColor && { color: valueColor }]}>
+            {value}
+          </Text>
+        ))}
+      </View>
+      {showDisclosure && <Text style={styles.disclosureIndicator}>›</Text>}
+    </TouchableOpacity>
+  );
+
+  // Helper component for grouped section
+  const GroupedSection = ({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) => (
+    <View style={styles.groupedSection}>{children}</View>
+  );
+
   if (isLoading) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-          <TouchableOpacity onPress={onClose}>
+          <TouchableOpacity
+            style={styles.backButtonContainer}
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Text style={styles.backButton}>←</Text>
           </TouchableOpacity>
+          <Text style={styles.title}>Settings</Text>
+          <View style={styles.headerSpacer} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
@@ -305,31 +402,58 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
 
   return (
     <View style={styles.container}>
+      {/* Navigation Bar */}
       <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-        <TouchableOpacity onPress={onClose}>
+        <TouchableOpacity
+          style={styles.backButtonContainer}
+          onPress={onClose}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
+        <Text style={styles.title}>Settings</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Email Delivery Time</Text>
-          <Text style={styles.sectionDescription}>
-            Choose what time you want to receive your daily email
-          </Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* ACCOUNT Section */}
+        {userEmail && (
+          <>
+            <SectionHeader title="ACCOUNT" />
+            <GroupedSection>
+              <CellRow
+                label={userEmail}
+                showDisclosure={true}
+                isLast={true}
+              />
+            </GroupedSection>
+          </>
+        )}
 
-          <TouchableOpacity
-            style={styles.timePickerButton}
+        {/* DELIVERY Section */}
+        <SectionHeader title="DELIVERY" />
+        <GroupedSection>
+          <CellRow
+            label="Morning Time"
+            value={formatTime(selectedTime)}
+            valueColor={colors.primary}
+            showDisclosure={true}
             onPress={() => setShowTimePicker(true)}
-          >
-            <Text style={styles.timePickerButtonText}>
-              {formatTime(selectedTime)}
-            </Text>
-            <Text style={styles.changeTimeText}>Tap to change</Text>
-          </TouchableOpacity>
+            isLast={!selectedTimezone}
+          />
+          {selectedTimezone && (
+            <CellRow
+              label="Timezone"
+              value={selectedTimezone}
+              valueColor={colors.textSecondary}
+              isLast={true}
+            />
+          )}
+        </GroupedSection>
 
-          {showTimePicker && (
+        {/* Time Picker (iOS) */}
+        {showTimePicker && (
+          <View style={styles.timePickerContainer}>
             <DateTimePicker
               value={selectedTime}
               mode="time"
@@ -337,61 +461,61 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={handleTimeChange}
             />
-          )}
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => setShowTimePicker(false)}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
-          {Platform.OS === 'ios' && showTimePicker && (
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={() => setShowTimePicker(false)}
-            >
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Timezone</Text>
-          <Text style={styles.timezoneText}>{selectedTimezone}</Text>
-          <Text style={styles.timezoneHint}>
-            Using your device's system timezone
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Test Email</Text>
-          <Text style={styles.sectionDescription}>
-            Send a test email with your current tasks
-          </Text>
+        {/* TEST EMAIL Section */}
+        <SectionHeader title="TEST EMAIL" />
+        <GroupedSection>
           <TouchableOpacity
-            style={[
-              styles.testEmailButton,
-              isSendingEmail && styles.testEmailButtonDisabled,
-            ]}
+            style={[styles.cell, styles.cellBorder, styles.testEmailCell]}
             onPress={handleSendTestEmail}
             disabled={isSendingEmail}
+            activeOpacity={0.7}
           >
             {isSendingEmail ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.primary} />
             ) : (
-              <Text style={styles.testEmailButtonText}>Send Test Email</Text>
+              <Text style={styles.testEmailCellText}>Send Test Email</Text>
+            )}
+          </TouchableOpacity>
+        </GroupedSection>
+
+        {/* Save Button */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={isSaving}
+            activeOpacity={0.8}
+          >
+            {isSaving ? (
+              <ActivityIndicator color={colors.background} />
+            ) : (
+              <Text style={styles.saveButtonText}>Save</Text>
             )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+        {/* Sign Out Button */}
+        <View style={styles.signOutContainer}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.signOutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -399,25 +523,38 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
+    backgroundColor: colors.surface,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 40,
+    justifyContent: 'space-between',
+    height: 44,
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.lg,
+    ...colors.shadowSm,
+    paddingTop: Platform.OS === 'ios' ? 60 : 0,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000',
+  backButtonContainer: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   backButton: {
-    fontSize: 24,
-    color: '#2563eb',
+    ...typography.bodyLarge,
+    color: colors.primary,
+    fontWeight: '400',
+  },
+  title: {
+    ...typography.bodyLarge,
+    color: colors.textPrimary,
     fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 44,
   },
   content: {
     flex: 1,
@@ -427,69 +564,94 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  section: {
-    marginBottom: 32,
+  sectionHeader: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing['3xl'],
+    paddingBottom: spacing.md,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 8,
+  sectionHeaderText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: '400',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  sectionDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+  groupedSection: {
+    backgroundColor: colors.background,
+    marginHorizontal: spacing.xl,
+    borderRadius: spacing.radiusMd,
+    overflow: 'hidden',
   },
-  timePickerButton: {
-    backgroundColor: '#f9f9f9',
-    padding: 20,
-    borderRadius: 8,
-    marginTop: 12,
+  cell: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
+    justifyContent: 'space-between',
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.background,
   },
-  timePickerButtonText: {
-    fontSize: 32,
-    fontWeight: '600',
-    color: '#2563eb',
-    marginBottom: 4,
+  cellBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.separator,
   },
-  changeTimeText: {
-    fontSize: 12,
-    color: '#888',
+  cellContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cellLabel: {
+    ...typography.body,
+    color: colors.textPrimary,
+  },
+  cellValue: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  disclosureIndicator: {
+    ...typography.bodyLarge,
+    color: colors.textSecondary,
+    marginLeft: spacing.md,
+  },
+  timePickerContainer: {
+    backgroundColor: colors.background,
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    paddingVertical: spacing.lg,
+    borderRadius: spacing.radiusMd,
   },
   doneButton: {
-    backgroundColor: '#2563eb',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginHorizontal: spacing.xl,
+    borderRadius: spacing.radiusMd,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   doneButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    ...typography.bodyLarge,
+    color: colors.background,
     fontWeight: '600',
   },
-  timezoneText: {
-    fontSize: 18,
-    color: '#000',
-    marginTop: 8,
-    fontWeight: '500',
+  testEmailCell: {
+    justifyContent: 'center',
   },
-  timezoneHint: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
+  testEmailCellText: {
+    ...typography.body,
+    color: colors.textPrimary,
   },
   footer: {
-    marginBottom: 40,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing['3xl'],
+    paddingBottom: spacing['3xl'],
   },
   saveButton: {
-    backgroundColor: '#2563eb',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.lg,
+    borderRadius: spacing.radiusMd,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 50,
@@ -498,26 +660,24 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    ...typography.bodyLarge,
+    color: colors.background,
     fontWeight: '600',
   },
-  testEmailButton: {
-    backgroundColor: '#2563eb',
-    padding: 16,
-    borderRadius: 8,
+  signOutContainer: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing['3xl'],
+    paddingBottom: spacing['3xl'],
+  },
+  signOutButton: {
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 50,
-    marginTop: 12,
+    paddingVertical: spacing.lg,
   },
-  testEmailButtonDisabled: {
-    opacity: 0.6,
-  },
-  testEmailButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  signOutButtonText: {
+    ...typography.body,
+    color: colors.destructive,
+    fontWeight: '400',
   },
 });
-
