@@ -11,7 +11,39 @@ interface TaskItemProps {
   onComplete?: (id: string) => void; // Optional completion handler
   onSwipeableRef?: (ref: Swipeable | null) => void;
   styles: ReturnType<typeof StyleSheet.create>;
+  isArchive?: boolean; // Archive mode - tasks are read-only, show completed state
 }
+
+// Format completion date for archive view
+const formatCompletionDate = (completedAt: string | null): string => {
+  if (!completedAt) return 'Just now';
+  
+  const completed = new Date(completedAt);
+  const now = new Date();
+  const diffMs = now.getTime() - completed.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 1) {
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours < 1) {
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      return diffMins < 1 ? 'Just now' : `Completed ${diffMins}m ago`;
+    }
+    return `Completed ${diffHours}h ago`;
+  } else if (diffDays === 1) {
+    return 'Completed yesterday';
+  } else if (diffDays < 7) {
+    return `Completed ${diffDays}d ago`;
+  } else {
+    // Use short date format for older tasks
+    const isCurrentYear = completed.getFullYear() === now.getFullYear();
+    return `Completed ${completed.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      ...(isCurrentYear ? {} : { year: 'numeric' }),
+    })}`;
+  }
+};
 
 export const TaskItem: React.FC<TaskItemProps> = ({ 
   task, 
@@ -20,6 +52,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   onComplete,
   onSwipeableRef,
   styles: componentStyles,
+  isArchive = false,
 }) => {
   // Animation values for completion sequence (600ms total)
   const checkboxBorderAnim = useRef(new Animated.Value(0)).current;
@@ -120,7 +153,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     );
   };
 
-  const isTaskCompleted = isCompleted || task.status === 'completed';
+  const isTaskCompleted = isCompleted || task.status === 'completed' || isArchive;
+  
+  // In archive mode, always show completed state
+  const archiveCheckboxStyle = isArchive
+    ? {
+        borderColor: colors.success,
+        backgroundColor: colors.success,
+      }
+    : {};
 
   return (
     <Swipeable
@@ -147,25 +188,29 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             {/* Custom Checkbox - Match Lovable: w-6 h-6 rounded-full border-2 */}
             <TouchableOpacity
               style={componentStyles.checkboxContainer}
-              onPress={handleComplete}
-              disabled={isCompleting || isTaskCompleted}
+              onPress={isArchive ? undefined : handleComplete}
+              disabled={isCompleting || isTaskCompleted || isArchive}
             >
               <Animated.View 
                 style={[
                   componentStyles.checkbox,
-                  {
-                    borderColor: checkboxBorderColor,
-                    backgroundColor: checkboxBgColor,
-                  },
+                  isArchive
+                    ? archiveCheckboxStyle
+                    : {
+                        borderColor: checkboxBorderColor,
+                        backgroundColor: checkboxBgColor,
+                      },
                 ]}
               >
-                {/* Checkmark - Match Lovable animation */}
-                {(isCompleting || isTaskCompleted) && (
+                {/* Checkmark - Always show in archive mode, or during completion */}
+                {(isArchive || isCompleting || isTaskCompleted) && (
                   <Animated.View
-                    style={{
-                      transform: [{ scale: checkmarkScaleAnim }],
-                      opacity: checkmarkOpacityAnim,
-                    }}
+                    style={[
+                      {
+                        transform: [{ scale: isArchive ? 1 : checkmarkScaleAnim }],
+                        opacity: isArchive ? 1 : checkmarkOpacityAnim,
+                      },
+                    ]}
                   >
                     <Text style={componentStyles.checkmark}>✓</Text>
                   </Animated.View>
@@ -179,13 +224,13 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 <Text 
                   style={[
                     componentStyles.taskText,
-                    isTaskCompleted && componentStyles.taskTextCompleted,
+                    (isTaskCompleted || isArchive) && componentStyles.taskTextCompleted,
                   ]}
                 >
                   {task.text}
                 </Text>
-                {/* Strikethrough line - Match Lovable */}
-                {isCompleting && (
+                {/* Strikethrough line - Match Lovable (only during completion animation, not in archive) */}
+                {isCompleting && !isArchive && (
                   <Animated.View
                     style={[
                       componentStyles.strikethrough,
@@ -196,7 +241,13 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                   />
                 )}
               </View>
-              <Text style={componentStyles.taskTimestamp}>Just now</Text>
+              {isArchive ? (
+                <Text style={componentStyles.taskTimestampArchive}>
+                  {formatCompletionDate((task as any).completed_at || null)}
+                </Text>
+              ) : (
+                <Text style={componentStyles.taskTimestamp}>Just now</Text>
+              )}
             </View>
           </View>
         </TouchableOpacity>

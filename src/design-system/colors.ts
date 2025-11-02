@@ -61,6 +61,10 @@ export const colors = {
   border: '#C6C6C8',
   ring: '#007AFF', // primary for focus rings
   
+  // Trial Badge Colors
+  trialBg: '#FFF9E6', // hsl(48, 100%, 96%)
+  trialText: '#FF9500', // hsl(32, 100%, 50%) - same as warning
+  
   // Shadows (for React Native - using rgba format)
   shadowSm: {
     shadowColor: '#000',

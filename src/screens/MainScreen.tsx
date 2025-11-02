@@ -31,6 +31,9 @@ export const MainScreen = () => {
   const [editTaskInput, setEditTaskInput] = useState('');
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
   const [fabPressed, setFabPressed] = useState(false);
+  const [workflowMode, setWorkflowMode] = useState<'fresh_start' | 'carry_over'>('fresh_start');
+  const [activeTab, setActiveTab] = useState<'active' | 'archive'>('active');
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   
   // Empty state floating animation
   const emptyStateYAnim = useRef(new Animated.Value(0)).current;
@@ -54,11 +57,94 @@ export const MainScreen = () => {
   // Swipeable refs for closing swipe gesture after delete
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
 
-  // Load tasks on mount
+  // Load tasks and workflow mode on mount
   useEffect(() => {
     loadTasks();
+    loadWorkflowMode();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps: loadTasks is stable Zustand action
+
+  // Load workflow mode from database
+  const loadWorkflowMode = async () => {
+    try {
+      const session = useAuthStore.getState().session;
+      if (!session?.user?.id) return;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('workflow_mode')
+        .eq('auth_id', session.user.id)
+        .maybeSingle();
+
+      if (error) {
+        if (__DEV__) {
+          console.error('Error loading workflow mode:', error);
+        }
+        return;
+      }
+
+      if (data?.workflow_mode) {
+        setWorkflowMode(data.workflow_mode as 'fresh_start' | 'carry_over');
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Error loading workflow mode:', error);
+      }
+    }
+  };
+
+  // Load completed tasks when in carry_over mode and archive tab is active
+  useEffect(() => {
+    if (workflowMode === 'carry_over' && activeTab === 'archive') {
+      loadCompletedTasks();
+    }
+  }, [workflowMode, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load completed tasks for archive view
+  const loadCompletedTasks = async () => {
+    try {
+      const session = useAuthStore.getState().session;
+      if (!session?.user?.id) return;
+
+      // Get user id first
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', session.user.id)
+        .maybeSingle();
+
+      if (userError || !user) {
+        if (__DEV__) {
+          console.error('Error getting user for completed tasks:', userError);
+        }
+        return;
+      }
+
+      // Query completed tasks
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .is('deleted_at', null)
+        .order('completed_at', { ascending: false });
+
+      if (error) {
+        if (__DEV__) {
+          console.error('Error loading completed tasks:', error);
+        }
+        return;
+      }
+
+      if (data) {
+        setCompletedTasks(data as Task[]);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Error loading completed tasks:', error);
+      }
+    }
+  };
 
   // Empty state floating animation - Match Lovable: y: [0, -4, 0], 3s ease-in-out infinite
   useEffect(() => {
@@ -267,6 +353,7 @@ export const MainScreen = () => {
   };
 
   const renderTaskItem = ({ item }: { item: Task; index: number }) => {
+    const isArchiveMode = workflowMode === 'carry_over' && activeTab === 'archive';
     return (
       <TaskItem
         task={item}
@@ -279,8 +366,25 @@ export const MainScreen = () => {
           }
         }}
         styles={styles}
+        isArchive={isArchiveMode}
       />
     );
+  };
+
+  // Calculate stats for archive footer
+  const getArchiveStats = () => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const weekTasks = completedTasks.filter(task => {
+      if (!task.completed_at) return false;
+      const completedAt = new Date(task.completed_at);
+      return completedAt >= startOfWeek;
+    });
+    
+    return weekTasks.length;
   };
 
   return (
@@ -306,6 +410,46 @@ export const MainScreen = () => {
           <Text style={styles.headerIcon}>⚙️</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Tab Bar - Only show in Carry Over mode */}
+      {workflowMode === 'carry_over' && (
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            onPress={() => setActiveTab('active')}
+            style={[
+              styles.tabButton,
+              activeTab === 'active' && styles.tabButtonActive,
+            ]}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === 'active' && styles.tabButtonTextActive,
+              ]}
+            >
+              Active
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab('archive')}
+            style={[
+              styles.tabButton,
+              activeTab === 'archive' && styles.tabButtonActive,
+            ]}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === 'archive' && styles.tabButtonTextActive,
+              ]}
+            >
+              Archive
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
       
       <View style={styles.content}>
         {isLoading && tasks.length === 0 && !refreshing ? (
@@ -313,7 +457,7 @@ export const MainScreen = () => {
           <ActivityIndicator size="large" color={colors.primary} />
         ) : (
           <FlatList
-            data={tasks}
+            data={workflowMode === 'carry_over' && activeTab === 'archive' ? completedTasks : tasks}
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => renderTaskItem({ item, index })}
             contentContainerStyle={
@@ -371,19 +515,29 @@ export const MainScreen = () => {
             scrollEnabled={true}
             nestedScrollEnabled={false}
             alwaysBounceVertical={Platform.OS === 'ios'}
+            ListFooterComponent={
+              workflowMode === 'carry_over' && activeTab === 'archive' && completedTasks.length > 0 ? (
+                <View style={styles.archiveFooter}>
+                  <Text style={styles.archiveFooterText}>
+                    📊 {getArchiveStats()} tasks this week
+                  </Text>
+                </View>
+              ) : null
+            }
           />
         )}
       </View>
 
-      {/* Floating Action Button - Match Lovable: spring entrance, tap animation */}
-      <Animated.View
-        style={[
-          styles.fab,
-          {
-            transform: [{ scale: fabScaleAnim }],
-          },
-        ]}
-      >
+      {/* Floating Action Button - Match Lovable: spring entrance, tap animation - Hidden on Archive tab */}
+      {!(workflowMode === 'carry_over' && activeTab === 'archive') && (
+        <Animated.View
+          style={[
+            styles.fab,
+            {
+              transform: [{ scale: fabScaleAnim }],
+            },
+          ]}
+        >
         <TouchableOpacity
           style={styles.fabInner}
           onPress={handleAddTask}
@@ -411,6 +565,7 @@ export const MainScreen = () => {
           <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>
       </Animated.View>
+      )}
 
       {/* Bottom Sheet Modal */}
       <Modal
@@ -563,6 +718,30 @@ const styles = StyleSheet.create({
   headerIcon: {
     fontSize: 24, // Match Lovable: w-6 h-6
     color: colors.textPrimary,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    height: 44, // Match iOS segmented control: h-[44px]
+    borderTopWidth: 1,
+    borderTopColor: colors.separator,
+    backgroundColor: colors.background,
+  },
+  tabButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  tabButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  tabButtonText: {
+    ...typography.body,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  tabButtonTextActive: {
+    color: colors.primaryForeground, // White text on active tab
   },
   content: {
     flex: 1,
@@ -733,7 +912,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   taskTextCompleted: {
-    color: colors.textTertiary,
+    color: colors.separator, // Match archive design: #C6C6C8
     textDecorationLine: 'line-through',
   },
   strikethrough: {
@@ -748,7 +927,21 @@ const styles = StyleSheet.create({
   taskTimestamp: {
     ...typography.caption,
     color: colors.textTertiary,
-    marginTop: 4, // Match Lovable: mt-1
+    marginTop: spacing.xs, // Match Lovable: mt-1
+  },
+  taskTimestampArchive: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginTop: spacing.xs, // Match Lovable: mt-1
+  },
+  archiveFooter: {
+    padding: spacing.lg,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  archiveFooterText: {
+    ...typography.caption,
+    color: colors.textTertiary,
   },
   errorContainer: {
     alignItems: 'center',
