@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { colors, typography, spacing } from '../design-system';
 
@@ -138,6 +139,9 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
         style={{
           opacity: buttonOpacity,
           transform: [{ translateY: buttonTranslateY }],
+          width: '100%',
+          maxWidth: 384,
+          alignSelf: 'center',
         }}
       >
         <TouchableOpacity
@@ -171,7 +175,7 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     position: 'absolute',
-    top: spacing.lg,
+    top: Platform.OS === 'ios' ? spacing.xl : spacing.lg + 24, // Account for status bar on Android
     right: spacing.lg,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
@@ -179,6 +183,7 @@ const styles = StyleSheet.create({
     minWidth: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10, // Ensure it's above other elements
   },
   skipButtonText: {
     ...typography.caption,
@@ -206,7 +211,6 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     width: '100%',
-    maxWidth: SCREEN_WIDTH * 0.8,
     height: 50,
     backgroundColor: colors.primary,
     borderRadius: spacing.radiusSm,

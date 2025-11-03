@@ -36,6 +36,7 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
   const buttonTranslateY = useRef(new Animated.Value(10)).current;
 
   // Card selection animations (checkmarks only, border handled via style)
+  // Initialize based on default selected mode (carry-over)
   const freshStartCheckmarkScale = useRef(new Animated.Value(0)).current;
   const carryOverCheckmarkScale = useRef(new Animated.Value(1)).current;
 
@@ -94,9 +95,12 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
   }, []);
 
   const handleModeSelect = (mode: 'fresh-start' | 'carry-over') => {
-    setSelectedMode(mode);
+    // Only update if mode actually changed
+    if (selectedMode === mode) {
+      return; // Already selected, no need to update
+    }
 
-    // Animate checkmark scales
+    // Animate checkmark scales BEFORE updating state for smoother transition
     if (mode === 'fresh-start') {
       Animated.parallel([
         Animated.spring(freshStartCheckmarkScale, {
@@ -126,6 +130,8 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
         }),
       ]).start();
     }
+
+    setSelectedMode(mode);
   };
 
   return (
@@ -158,6 +164,9 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
           style={{
             opacity: freshStartCardOpacity,
             transform: [{ translateY: freshStartCardTranslateY }],
+            width: '100%',
+            maxWidth: 384,
+            alignSelf: 'center',
           }}
         >
           <TouchableOpacity
@@ -178,16 +187,19 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
             activeOpacity={0.8}
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.cardIcon}>🗓️</Text>
-              {selectedMode === 'fresh-start' && (
-                <Animated.View
-                  style={{
-                    transform: [{ scale: freshStartCheckmarkScale }],
-                  }}
-                >
-                  <Text style={styles.checkmarkIcon}>✓</Text>
-                </Animated.View>
-              )}
+              <Text style={styles.cardIcon}>📅</Text>
+              <Animated.View
+                style={{
+                  transform: [{ scale: freshStartCheckmarkScale }],
+                  opacity: freshStartCheckmarkScale.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 1],
+                  }),
+                }}
+                pointerEvents="none"
+              >
+                <Text style={styles.checkmarkIcon}>✓</Text>
+              </Animated.View>
             </View>
             <Text style={styles.cardTitle}>Fresh Start</Text>
             <Text style={styles.cardDescription}>
@@ -201,6 +213,9 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
           style={{
             opacity: carryOverCardOpacity,
             transform: [{ translateY: carryOverCardTranslateY }],
+            width: '100%',
+            maxWidth: 384,
+            alignSelf: 'center',
           }}
         >
           <TouchableOpacity
@@ -216,21 +231,25 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
                   selectedMode === 'carry-over'
                     ? colors.primaryLight
                     : colors.card,
+                marginBottom: spacing['3xl'], // More space before button, like Lovable
               },
             ]}
             activeOpacity={0.8}
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.cardIcon}>✅</Text>
-              {selectedMode === 'carry-over' && (
-                <Animated.View
-                  style={{
-                    transform: [{ scale: carryOverCheckmarkScale }],
-                  }}
-                >
-                  <Text style={styles.checkmarkIcon}>✓</Text>
-                </Animated.View>
-              )}
+              <Text style={styles.cardIcon}>✓</Text>
+              <Animated.View
+                style={{
+                  transform: [{ scale: carryOverCheckmarkScale }],
+                  opacity: carryOverCheckmarkScale.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 1],
+                  }),
+                }}
+                pointerEvents="none"
+              >
+                <Text style={styles.checkmarkIcon}>✓</Text>
+              </Animated.View>
             </View>
             <Text style={styles.cardTitle}>Carry Over</Text>
             <Text style={styles.cardDescription}>
@@ -244,6 +263,9 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
           style={{
             opacity: buttonOpacity,
             transform: [{ translateY: buttonTranslateY }],
+            width: '100%',
+            maxWidth: 384,
+            alignSelf: 'center',
           }}
         >
           <TouchableOpacity
@@ -307,11 +329,10 @@ const styles = StyleSheet.create({
   },
   modeCard: {
     width: '100%',
-    maxWidth: SCREEN_WIDTH * 0.8,
     padding: spacing.xl,
-    borderRadius: spacing.radiusLg,
+    borderRadius: spacing.radiusMd, // Match Lovable rounded-radius-md
     borderWidth: 2,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md, // Match Lovable mb-md between cards, mb-3xl before button
   },
   cardHeader: {
     flexDirection: 'row',
@@ -320,12 +341,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   cardIcon: {
-    fontSize: 32,
+    fontSize: 32, // Match Lovable w-8 h-8 (32px)
+    width: 32,
+    height: 32,
   },
   checkmarkIcon: {
-    fontSize: 24,
+    fontSize: 24, // Match Lovable w-6 h-6 (24px)
     color: colors.primary,
     fontWeight: '600',
+    width: 24,
+    height: 24,
   },
   cardTitle: {
     ...typography.bodyLarge,
@@ -339,12 +364,12 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     width: '100%',
-    maxWidth: SCREEN_WIDTH * 0.8,
     height: 50,
     backgroundColor: colors.primary,
     borderRadius: spacing.radiusSm,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 0, // Remove any margin, pagination dots handle spacing
   },
   continueButtonText: {
     ...typography.bodyLarge,

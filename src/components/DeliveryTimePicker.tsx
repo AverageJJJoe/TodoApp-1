@@ -93,7 +93,10 @@ export const DeliveryTimePicker: React.FC<DeliveryTimePickerProps> = ({
       setShowTimePicker(false);
     }
     if (date) {
-      setSelectedTime(date);
+      // Round to nearest hour (set minutes to 0) since cron job runs hourly
+      const roundedDate = new Date(date);
+      roundedDate.setMinutes(0, 0, 0);
+      setSelectedTime(roundedDate);
     }
     if (Platform.OS === 'android' && event.type === 'dismissed') {
       setShowTimePicker(false);
@@ -102,17 +105,16 @@ export const DeliveryTimePicker: React.FC<DeliveryTimePickerProps> = ({
 
   const formatTimeForDisplay = (date: Date): string => {
     const hours = date.getHours();
-    const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours % 12 || 12;
-    const displayMinutes = minutes.toString().padStart(2, '0');
-    return `${displayHours}:${displayMinutes} ${ampm}`;
+    // Always show :00 for minutes since we only allow hours
+    return `${displayHours}:00 ${ampm}`;
   };
 
   const formatTimeForDatabase = (date: Date): string => {
     const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}:00`;
+    // Always set minutes to 00 since cron job runs hourly
+    return `${hours}:00:00`;
   };
 
   const handleContinue = () => {
@@ -181,6 +183,7 @@ export const DeliveryTimePicker: React.FC<DeliveryTimePickerProps> = ({
                 mode="time"
                 is24Hour={false}
                 display="spinner"
+                minuteInterval={60}
                 onChange={handleTimeChange}
                 style={styles.timePicker}
               />
@@ -200,6 +203,7 @@ export const DeliveryTimePicker: React.FC<DeliveryTimePickerProps> = ({
               mode="time"
               is24Hour={false}
               display="default"
+              minuteInterval={60}
               onChange={handleTimeChange}
             />
           )}
@@ -221,6 +225,9 @@ export const DeliveryTimePicker: React.FC<DeliveryTimePickerProps> = ({
           style={{
             opacity: buttonOpacity,
             transform: [{ translateY: buttonTranslateY }],
+            width: '100%',
+            maxWidth: 384,
+            alignSelf: 'center',
           }}
         >
           <TouchableOpacity
@@ -255,7 +262,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? spacing.xl : spacing.lg + 24, // Account for status bar on Android
   },
   backButton: {
     padding: spacing.sm,
@@ -299,8 +306,9 @@ const styles = StyleSheet.create({
   },
   timePickerContainer: {
     width: '100%',
-    maxWidth: SCREEN_WIDTH * 0.8,
+    maxWidth: 384,
     marginBottom: spacing.xl,
+    alignSelf: 'center',
   },
   timeDisplayContainer: {
     width: '100%',
@@ -347,7 +355,6 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     width: '100%',
-    maxWidth: SCREEN_WIDTH * 0.8,
     height: 50,
     backgroundColor: colors.primary,
     borderRadius: spacing.radiusSm,

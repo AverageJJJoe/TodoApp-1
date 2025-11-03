@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
 import { Task } from '../stores/taskStore';
 import { colors, typography, spacing } from '../design-system';
 
@@ -12,6 +13,7 @@ interface TaskItemProps {
   onSwipeableRef?: (ref: Swipeable | null) => void;
   styles: ReturnType<typeof StyleSheet.create>;
   isArchive?: boolean; // Archive mode - tasks are read-only, show completed state
+  workflowMode?: 'fresh_start' | 'carry_over'; // Workflow mode - checkbox only visible in carry_over
 }
 
 // Format completion date for archive view
@@ -53,6 +55,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   onSwipeableRef,
   styles: componentStyles,
   isArchive = false,
+  workflowMode,
 }) => {
   // Animation values for completion sequence (600ms total)
   const checkboxBorderAnim = useRef(new Animated.Value(0)).current;
@@ -67,6 +70,25 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
   const handleComplete = () => {
     if (isCompleting || isCompleted || task.status === 'completed') return;
+    
+    // Trigger haptic feedback immediately on tap (0ms)
+    // Use notification style for more reliable feedback across devices
+    try {
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        // Use Success notification style for a clear, reliable vibration
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      // Fallback to impact style if notification fails
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch (fallbackError) {
+        // Silently fail if haptics aren't available (simulator, web, etc.)
+        if (__DEV__) {
+          console.log('Haptic feedback not available:', fallbackError);
+        }
+      }
+    }
     
     setIsCompleting(true);
     
@@ -185,12 +207,13 @@ export const TaskItem: React.FC<TaskItemProps> = ({
           disabled={isCompleting}
         >
           <View style={componentStyles.taskCardContent}>
-            {/* Custom Checkbox - Match Lovable: w-6 h-6 rounded-full border-2 */}
-            <TouchableOpacity
-              style={componentStyles.checkboxContainer}
-              onPress={isArchive ? undefined : handleComplete}
-              disabled={isCompleting || isTaskCompleted || isArchive}
-            >
+            {/* Custom Checkbox - Match Lovable: w-6 h-6 rounded-full border-2 - Only show in carry_over mode */}
+            {workflowMode === 'carry_over' && (
+              <TouchableOpacity
+                style={componentStyles.checkboxContainer}
+                onPress={isArchive ? undefined : handleComplete}
+                disabled={isCompleting || isTaskCompleted || isArchive}
+              >
               <Animated.View 
                 style={[
                   componentStyles.checkbox,
@@ -217,6 +240,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 )}
               </Animated.View>
             </TouchableOpacity>
+            )}
 
             {/* Task Content */}
             <View style={componentStyles.taskContent}>

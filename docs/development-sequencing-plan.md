@@ -20,8 +20,8 @@ This plan optimizes development sequencing to balance revenue priorities with te
 - ✅ **Epic 6:** Design System Integration & UI Polish (16 hours) - COMPLETE
 
 ### Next Up
-- **Epic 4:** Monetization & Payments (20 hours) - READY TO START (All dependencies met, design specs ready)
-- **Epic 5:** Workflow Modes & Polish (10 hours) - PENDING (Waits for Epic 4 completion)
+- **Epic 4:** Monetization & Payments - ✅ PARTIAL (Story 4.1 complete, Stories 4.2-4.8 deferred until Month 4+)
+- **Epic 5:** Workflow Modes & Polish (10 hours) - 🔄 **READY TO START** (All dependencies met: Epics 1-3 complete, Epic 4 Story 4.1 complete, Epic 6 complete)
 
 ---
 

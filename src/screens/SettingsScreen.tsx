@@ -8,6 +8,8 @@ import {
   Alert,
   ScrollView,
   Platform,
+  Switch,
+  StatusBar,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Localization from 'expo-localization';
@@ -37,6 +39,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [workflowMode, setWorkflowMode] = useState<'fresh_start' | 'carry_over'>('carry_over');
+  const [isLoadingWorkflowMode, setIsLoadingWorkflowMode] = useState(true);
 
   const {
     preferences,
@@ -65,6 +69,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   // Load preferences on mount
   useEffect(() => {
     loadPreferences();
+    loadWorkflowMode();
   }, [loadPreferences]);
 
   // Update selected time when preferences are loaded
@@ -80,6 +85,100 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       setSelectedTimezone(preferences.timezone);
     }
   }, [preferences]);
+
+  // Load workflow mode from database
+  const loadWorkflowMode = async () => {
+    try {
+      setIsLoadingWorkflowMode(true);
+      const currentSession = useAuthStore.getState().session;
+      if (!currentSession?.user?.id) {
+        setIsLoadingWorkflowMode(false);
+        return;
+      }
+
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('workflow_mode')
+        .eq('auth_id', currentSession.user.id)
+        .maybeSingle();
+
+      if (error) {
+        if (__DEV__) {
+          console.error('Error loading workflow mode:', error);
+        }
+        setIsLoadingWorkflowMode(false);
+        return;
+      }
+
+      if (user?.workflow_mode) {
+        setWorkflowMode(user.workflow_mode as 'fresh_start' | 'carry_over');
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Error loading workflow mode:', error);
+      }
+    } finally {
+      setIsLoadingWorkflowMode(false);
+    }
+  };
+
+  // Handle workflow mode toggle
+  const handleWorkflowModeToggle = async (value: boolean) => {
+    // value = true means "carry-over", false means "fresh-start"
+    const previousMode = workflowMode; // Store previous value for rollback
+    const newMode: 'fresh_start' | 'carry_over' = value ? 'carry_over' : 'fresh_start';
+    setWorkflowMode(newMode); // Optimistically update UI
+
+    try {
+      const currentSession = useAuthStore.getState().session;
+      if (!currentSession?.user?.id) {
+        Alert.alert('Error', 'No authenticated session found.');
+        setWorkflowMode(previousMode); // Revert on error
+        return;
+      }
+
+      // Get user id
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', currentSession.user.id)
+        .maybeSingle();
+
+      if (userError || !user) {
+        if (__DEV__) {
+          console.error('Error getting user for workflow mode update:', userError);
+        }
+        Alert.alert('Error', 'Failed to update workflow mode.');
+        setWorkflowMode(previousMode); // Revert on error
+        return;
+      }
+
+      // Update workflow mode in database
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ workflow_mode: newMode })
+        .eq('id', user.id);
+
+      if (updateError) {
+        if (__DEV__) {
+          console.error('Error updating workflow mode:', updateError);
+        }
+        Alert.alert('Error', 'Failed to update workflow mode.');
+        setWorkflowMode(previousMode); // Revert on error
+        return;
+      }
+
+      if (__DEV__) {
+        console.log('✅ Workflow mode updated to:', newMode);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Error toggling workflow mode:', error);
+      }
+      Alert.alert('Error', 'Failed to update workflow mode.');
+      setWorkflowMode(previousMode); // Revert on error
+    }
+  };
 
   // Format time for display (12-hour format)
   const formatTime = (date: Date): string => {
@@ -460,6 +559,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   if (isLoading) {
     return (
       <View style={styles.container}>
+        {/* Status bar spacing for Android */}
+        {Platform.OS === 'android' && StatusBar.currentHeight && (
+          <View style={{ height: StatusBar.currentHeight }} />
+        )}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButtonContainer}
@@ -480,6 +583,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
 
   return (
     <View style={styles.container}>
+      {/* Status bar spacing for Android */}
+      {Platform.OS === 'android' && StatusBar.currentHeight && (
+        <View style={{ height: StatusBar.currentHeight }} />
+      )}
       {/* Navigation Bar */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -527,6 +634,29 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
               isLast={true}
             />
           )}
+        </GroupedSection>
+
+        {/* WORKFLOW Section */}
+        <SectionHeader title="WORKFLOW" />
+        <GroupedSection>
+          <View style={styles.cell}>
+            <View style={styles.cellContent}>
+              <Text style={styles.cellLabel}>Mode</Text>
+              <View style={styles.workflowModeContainer}>
+                <Text style={styles.workflowModeValue}>
+                  {workflowMode === 'fresh_start' ? 'Fresh Start' : 'Carry Over'}
+                </Text>
+                <Switch
+                  value={workflowMode === 'carry_over'}
+                  onValueChange={handleWorkflowModeToggle}
+                  trackColor={{ false: colors.separator, true: colors.primary }}
+                  thumbColor={colors.background}
+                  ios_backgroundColor={colors.separator}
+                  style={styles.workflowSwitch}
+                />
+              </View>
+            </View>
+          </View>
         </GroupedSection>
 
         {/* Time Picker (iOS) */}
@@ -757,5 +887,17 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.destructive,
     fontWeight: '400',
+  },
+  workflowModeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: spacing.md,
+  },
+  workflowModeValue: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  workflowSwitch: {
+    marginLeft: spacing.sm,
   },
 });

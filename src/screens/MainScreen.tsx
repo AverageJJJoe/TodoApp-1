@@ -13,6 +13,7 @@ import {
   Platform,
   RefreshControl,
   Animated,
+  StatusBar,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { supabase } from '../lib/supabase';
@@ -336,6 +337,7 @@ export const MainScreen = () => {
         .from('tasks')
         .update({ 
           status: 'completed',
+          completed_at: new Date().toISOString(), // Set completion timestamp
           updated_at: new Date().toISOString() 
         })
         .eq('id', id);
@@ -367,6 +369,7 @@ export const MainScreen = () => {
         }}
         styles={styles}
         isArchive={isArchiveMode}
+        workflowMode={workflowMode}
       />
     );
   };
@@ -389,16 +392,13 @@ export const MainScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header - Match Lovable: h-[44px], border separator, menu left, settings right */}
+      {/* Status bar spacing for Android */}
+      {Platform.OS === 'android' && StatusBar.currentHeight && (
+        <View style={{ height: StatusBar.currentHeight }} />
+      )}
+      {/* Header - Match Lovable: h-[44px], border separator, settings right */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerButton}
-          accessible={true}
-          accessibilityLabel="Menu"
-          accessibilityRole="button"
-        >
-          <Text style={styles.headerIcon}>☰</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButton} />
         <Text style={styles.title}>TodoTomorrow</Text>
         <TouchableOpacity
           onPress={() => setIsSettingsVisible(true)}
@@ -407,7 +407,7 @@ export const MainScreen = () => {
           accessibilityLabel="Open settings"
           accessibilityRole="button"
         >
-          <Text style={styles.headerIcon}>⚙️</Text>
+          <Text style={styles.headerIcon}>⚙</Text>
         </TouchableOpacity>
       </View>
 
@@ -457,7 +457,11 @@ export const MainScreen = () => {
           <ActivityIndicator size="large" color={colors.primary} />
         ) : (
           <FlatList
-            data={workflowMode === 'carry_over' && activeTab === 'archive' ? completedTasks : tasks}
+            data={
+              workflowMode === 'carry_over' && activeTab === 'archive'
+                ? completedTasks
+                : tasks.filter((t) => t.status === 'open') // Active tab: only show open tasks
+            }
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => renderTaskItem({ item, index })}
             contentContainerStyle={
@@ -718,6 +722,8 @@ const styles = StyleSheet.create({
   headerIcon: {
     fontSize: 24, // Match Lovable: w-6 h-6
     color: colors.textPrimary,
+    fontWeight: '400',
+    lineHeight: 24,
   },
   tabBar: {
     flexDirection: 'row',

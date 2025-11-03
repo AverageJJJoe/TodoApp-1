@@ -435,11 +435,15 @@
 
 **Epic Goal:** Cohort assignment implemented (deferred: trials, paywalls, and payment processing only after traction thresholds met).
 
-**Status:** 🔄 **READY TO START** (Story 4.1 only - Stories 4.2-4.8 deferred)
+**Status:** ✅ **PARTIAL** (Story 4.1 complete - Stories 4.2-4.8 deferred until Month 4+)
 
 **Strategy Note:** Stories 4.2-4.8 (trials, paywalls, payments) are **DEFERRED** until Month 4+ when traction thresholds are met. During free launch period (Months 1-3), focus on product quality and retention validation. See `docs/monetization-decision-framework.md` for activation criteria.
 
-**Sequencing Note:** Epic 4 uses **parallel execution strategy** - backend stories (4.1-4.3, 4.7) can start immediately, UI stories (4.4-4.6, 4.8) wait for Epic 6, Story 6.4 (design specs). **However, only Story 4.1 is active during free launch period.**
+**Completion Status:**
+- ✅ **Story 4.1:** Cohort Assignment on Signup - **COMPLETE** (2025-02-11)
+- ⏸️ **Stories 4.2-4.8:** **DEFERRED** until traction thresholds met (Month 4+)
+
+**Sequencing Note:** Epic 4 uses **parallel execution strategy** - backend stories (4.1-4.3, 4.7) can start immediately, UI stories (4.4-4.6, 4.8) wait for Epic 6, Story 6.4 (design specs). **However, only Story 4.1 was active during free launch period.**
 
 ---
 
@@ -632,11 +636,21 @@
 
 **Epic Goal:** Fresh Start vs Carry Over modes, task completion, archive, final polish.
 
+**Status:** 🔄 **READY TO START** (All dependencies met: Epic 1-3 complete, Epic 4 Story 4.1 complete, Epic 6 complete)
+
+**Prerequisites:**
+- ✅ Epic 1: Foundation & Authentication - COMPLETE
+- ✅ Epic 2: Core Task Management - COMPLETE
+- ✅ Epic 3: Email Delivery System - COMPLETE
+- ✅ Epic 4: Story 4.1 (Cohort Assignment) - COMPLETE
+- ✅ Epic 6: Design System Integration - COMPLETE (Story 6.3 provides onboarding design specs)
+
 ---
 
 ### Story 5.1: Workflow Mode Selection (Onboarding)
 **Estimated Time:** 2 hours  
-**Dependencies:** Epic 1 complete
+**Dependencies:** Epic 1 complete, Story 6.3 (Onboarding Design) complete
+**Status:** 🔄 **READY** (Component exists, mode value conversion bug fix needed)
 
 **As a** first-time user  
 **I want to** choose between Fresh Start and Carry Over modes  

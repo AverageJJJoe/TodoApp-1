@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { supabase } from './src/lib/supabase';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { MainScreen } from './src/screens/MainScreen';
+import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { useAuthStore } from './src/stores/authStore';
 import { getStoredDeepLink } from './src/lib/deepLinkIntent';
 
@@ -16,6 +17,7 @@ export default function App() {
   const initializeSession = useAuthStore((state) => state.initializeSession);
   const setSession = useAuthStore((state) => state.setSession);
   const [initialDeepLink, setInitialDeepLink] = useState<string | null>(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState<boolean | null>(null);
 
   // Capture deep link at App level (catches it before AuthScreen loads)
   useEffect(() => {
@@ -161,6 +163,54 @@ export default function App() {
     };
   }, [initializeSession, setSession]);
 
+  // Check if user needs onboarding when session is available
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!session?.user?.id) {
+        setNeedsOnboarding(null);
+        return;
+      }
+
+      try {
+        const { data: user, error } = await supabase
+          .from('users')
+          .select('workflow_mode')
+          .eq('auth_id', session.user.id)
+          .maybeSingle();
+
+        if (error) {
+          if (__DEV__) {
+            console.error('Error checking onboarding status:', error);
+          }
+          // On error, assume onboarding is needed (safer default)
+          setNeedsOnboarding(true);
+          return;
+        }
+
+        // If user doesn't exist or workflow_mode is not set, show onboarding
+        if (!user || !user.workflow_mode) {
+          if (__DEV__) {
+            console.log('📋 User needs onboarding (no workflow_mode set)');
+          }
+          setNeedsOnboarding(true);
+        } else {
+          if (__DEV__) {
+            console.log('✅ User has completed onboarding');
+          }
+          setNeedsOnboarding(false);
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.error('Error checking onboarding:', error);
+        }
+        // On error, assume onboarding is needed (safer default)
+        setNeedsOnboarding(true);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [session]);
+
   // Show loading state while checking session
   if (isLoading) {
     return (
@@ -178,12 +228,33 @@ export default function App() {
   // TODO: Remove this bypass once auth is working properly
   const DEV_BYPASS_AUTH = __DEV__ && false; // Set to false to test real auth flow
 
-  // Conditional rendering based on session state
+  // Conditional rendering based on session state and onboarding status
   // Pass initial deep link to AuthScreen so it can process it
   // Wrap in GestureHandlerRootView to enable gesture handlers throughout the app
+  
+  // Show loading while checking onboarding status
+  if (session && needsOnboarding === null) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+        <StatusBar style="auto" />
+      </GestureHandlerRootView>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {DEV_BYPASS_AUTH || session ? <MainScreen /> : <AuthScreen initialDeepLink={initialDeepLink} />}
+      {DEV_BYPASS_AUTH || session ? (
+        needsOnboarding ? (
+          <OnboardingScreen onComplete={() => setNeedsOnboarding(false)} />
+        ) : (
+          <MainScreen />
+        )
+      ) : (
+        <AuthScreen initialDeepLink={initialDeepLink} />
+      )}
       <StatusBar style="auto" />
     </GestureHandlerRootView>
   );

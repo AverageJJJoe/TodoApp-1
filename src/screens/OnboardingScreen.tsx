@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { OnboardingWelcome } from '../components/OnboardingWelcome';
 import { DeliveryTimePicker } from '../components/DeliveryTimePicker';
 import { WorkflowModeSelection } from '../components/WorkflowModeSelection';
@@ -24,7 +24,6 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [slideAnim] = useState(new Animated.Value(0));
 
   const { updatePreferences } = useUserPreferencesStore();
   const { session } = useAuthStore();
@@ -39,13 +38,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   };
 
   const handleContinueFromStep1 = () => {
-    animateSlide(1);
     setCurrentStep(2);
   };
 
   const handleContinueFromStep2 = (time: string) => {
     setSelectedTime(time);
-    animateSlide(1);
     setCurrentStep(3);
   };
 
@@ -57,9 +54,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         await updatePreferences(selectedTime, timezone);
       }
 
+      // Convert hyphen format to underscore format for database
+      // Component uses: 'fresh-start' | 'carry-over'
+      // Database requires: 'fresh_start' | 'carry_over'
+      const dbMode = mode === 'fresh-start' ? 'fresh_start' : 'carry_over';
+
       // Save workflow mode to database
-      // NOTE: This will be fully implemented in Epic 5, Story 5.1
-      // For now, we'll attempt to save it
       if (session?.user?.id) {
         const { data: user, error: userError } = await supabase
           .from('users')
@@ -82,7 +82,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               {
                 auth_id: session.user.id,
                 email: session.user.email || '',
-                workflow_mode: mode, // Set workflow mode during creation
+                workflow_mode: dbMode, // Set workflow mode during creation (use underscore format)
                 // Other fields use defaults from schema
               },
             ])
@@ -136,10 +136,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           userId = user.id;
           
           // Update workflow mode for existing user
-          await supabase
+          const { error: updateError } = await supabase
             .from('users')
-            .update({ workflow_mode: mode })
+            .update({ workflow_mode: dbMode }) // Use underscore format
             .eq('id', userId);
+
+          if (updateError && __DEV__) {
+            console.error('Failed to update workflow_mode:', updateError);
+          }
         }
         
         // Note: If user creation/update fails, we still continue (graceful degradation)
@@ -162,7 +166,6 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   };
 
   const handleBack = () => {
-    animateSlide(-1);
     if (currentStep === 2) {
       setCurrentStep(1);
     } else if (currentStep === 3) {
@@ -170,56 +173,34 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     }
   };
 
-  const animateSlide = (direction: number) => {
-    Animated.timing(slideAnim, {
-      toValue: direction,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      slideAnim.setValue(0);
-    });
-  };
-
-  // Slide transition animation
-  const slideStyle = {
-    transform: [
-      {
-        translateX: slideAnim.interpolate({
-          inputRange: [-1, 0, 1],
-          outputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-        }),
-      },
-    ],
-  };
-
   return (
     <View style={styles.container}>
       {currentStep === 1 && (
-        <Animated.View style={[styles.screenContainer, slideStyle]}>
+        <View style={styles.screenContainer}>
           <OnboardingWelcome
             onContinue={handleContinueFromStep1}
             onSkip={handleSkip}
           />
-        </Animated.View>
+        </View>
       )}
 
       {currentStep === 2 && (
-        <Animated.View style={[styles.screenContainer, slideStyle]}>
+        <View style={styles.screenContainer}>
           <DeliveryTimePicker
             onContinue={handleContinueFromStep2}
             onBack={handleBack}
             onSkip={handleSkip}
           />
-        </Animated.View>
+        </View>
       )}
 
       {currentStep === 3 && (
-        <Animated.View style={[styles.screenContainer, slideStyle]}>
+        <View style={styles.screenContainer}>
           <WorkflowModeSelection
             onComplete={handleCompleteStep3}
             onBack={handleBack}
           />
-        </Animated.View>
+        </View>
       )}
     </View>
   );
