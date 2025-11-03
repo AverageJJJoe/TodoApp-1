@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from './authStore';
+import {
+  calculateWeeksSinceLaunch,
+  assignCohort,
+  getLaunchDate,
+} from '../lib/cohortAssignment';
 
 export interface Task {
   id: string;
@@ -71,6 +76,46 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         }
         
         userId = newUser.id;
+
+        // Assign cohort after user creation (idempotency check: only if still default)
+        try {
+          const launchDate = getLaunchDate();
+          if (launchDate) {
+            const { data: currentUser, error: cohortCheckError } = await supabase
+              .from('users')
+              .select('cohort')
+              .eq('id', newUser.id)
+              .maybeSingle();
+
+            if (!cohortCheckError && currentUser?.cohort === 'free_launch') {
+              const weeksSinceLaunch = calculateWeeksSinceLaunch(launchDate);
+              const cohortData = assignCohort(weeksSinceLaunch);
+
+              const { error: cohortUpdateError } = await supabase
+                .from('users')
+                .update({
+                  cohort: cohortData.cohort,
+                  grandfather_status: cohortData.grandfatherStatus,
+                  trial_started_at: cohortData.trialStartedAt?.toISOString() || null,
+                  trial_expires_at: cohortData.trialExpiresAt?.toISOString() || null,
+                })
+                .eq('id', newUser.id);
+
+              if (cohortUpdateError) {
+                if (__DEV__) {
+                  console.error('Failed to assign cohort:', cohortUpdateError);
+                }
+              } else if (__DEV__) {
+                console.log('✅ Cohort assigned:', cohortData);
+              }
+            }
+          }
+        } catch (error) {
+          // Cohort assignment failure should not block task loading
+          if (__DEV__) {
+            console.error('Failed to assign cohort:', error);
+          }
+        }
       } else if (userError) {
         throw new Error(`User query error: ${userError.message}`);
       } else {
@@ -140,6 +185,46 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         user = newUser;
         if (__DEV__) {
           console.log('✅ User record created successfully');
+        }
+
+        // Assign cohort after user creation (idempotency check: only if still default)
+        try {
+          const launchDate = getLaunchDate();
+          if (launchDate) {
+            const { data: currentUser, error: cohortCheckError } = await supabase
+              .from('users')
+              .select('cohort')
+              .eq('id', user.id)
+              .maybeSingle();
+
+            if (!cohortCheckError && currentUser?.cohort === 'free_launch') {
+              const weeksSinceLaunch = calculateWeeksSinceLaunch(launchDate);
+              const cohortData = assignCohort(weeksSinceLaunch);
+
+              const { error: cohortUpdateError } = await supabase
+                .from('users')
+                .update({
+                  cohort: cohortData.cohort,
+                  grandfather_status: cohortData.grandfatherStatus,
+                  trial_started_at: cohortData.trialStartedAt?.toISOString() || null,
+                  trial_expires_at: cohortData.trialExpiresAt?.toISOString() || null,
+                })
+                .eq('id', user.id);
+
+              if (cohortUpdateError) {
+                if (__DEV__) {
+                  console.error('Failed to assign cohort:', cohortUpdateError);
+                }
+              } else if (__DEV__) {
+                console.log('✅ Cohort assigned:', cohortData);
+              }
+            }
+          }
+        } catch (error) {
+          // Cohort assignment failure should not block user creation
+          if (__DEV__) {
+            console.error('Failed to assign cohort:', error);
+          }
         }
       } else if (userError) {
         throw new Error(`User query error: ${userError.message}`);

@@ -416,7 +416,8 @@
 
 **Acceptance Criteria:**
 1. Supabase cron job created (runs hourly via pg_cron at minute 0 of each hour)
-2. Query users: WHERE delivery_time converts to current UTC hour in their timezone AND (is_paid = true OR trial is valid) AND last_email_sent_at < 20 hours ago
+2. Query users: WHERE delivery_time converts to current UTC hour in their timezone AND (is_paid = true OR grandfather_status = true OR trial is valid) AND last_email_sent_at < 20 hours ago
+   - **Note:** During free launch (Months 1-3), all users have `grandfather_status = true`, so all receive emails. See `docs/monetization-decision-framework.md`.
    - **Note:** Simplified summary above; see architecture docs (`docs/architecture/email-delivery-system.md`) for full timezone-aware SQL implementation details
 3. For each user: Query tasks based on workflow_mode (fresh_start: created_at > last_email_sent_at AND status = 'open', carry_over: status = 'open') → Send email
 4. Send email even if user has no tasks (empty state email: "No new tasks for today. Enjoy your morning coffee! ☕")
@@ -432,41 +433,43 @@
 
 ## Epic 4: Monetization & Payments (Week 2, Day 5 + Week 3)
 
-**Epic Goal:** Trial system, paywall, and payment processing working.
+**Epic Goal:** Cohort assignment implemented (deferred: trials, paywalls, and payment processing only after traction thresholds met).
 
-**Status:** 🔄 **READY TO START**
+**Status:** 🔄 **READY TO START** (Story 4.1 only - Stories 4.2-4.8 deferred)
 
-**Sequencing Note:** Epic 4 uses **parallel execution strategy** - backend stories (4.1-4.3, 4.7) can start immediately, UI stories (4.4-4.6, 4.8) wait for Epic 6, Story 6.4 (design specs). See `docs/development-sequencing-plan.md` for detailed execution plan.
+**Strategy Note:** Stories 4.2-4.8 (trials, paywalls, payments) are **DEFERRED** until Month 4+ when traction thresholds are met. During free launch period (Months 1-3), focus on product quality and retention validation. See `docs/monetization-decision-framework.md` for activation criteria.
+
+**Sequencing Note:** Epic 4 uses **parallel execution strategy** - backend stories (4.1-4.3, 4.7) can start immediately, UI stories (4.4-4.6, 4.8) wait for Epic 6, Story 6.4 (design specs). **However, only Story 4.1 is active during free launch period.**
 
 ---
 
 ### Story 4.1: Cohort Assignment on Signup
 **Estimated Time:** 2 hours  
 **Dependencies:** Epic 1 complete
+**Status:** ✅ **COMPLETE** (Simplified for Free Until Traction strategy - 2025-02-11)
 
 **As a** system  
 **I want to** assign users to cohorts based on signup date  
-**So that** monetization strategy can be implemented
+**So that** monetization strategy can be implemented (when traction thresholds are met)
 
 **Acceptance Criteria:**
-1. Add columns to users table: `cohort`, `grandfather_status`, `trial_started_at`, `trial_expires_at`
-2. SQL migration file created
-3. After user signs up, run cohort assignment logic:
-   - Calculate weeks since launch (env var: `LAUNCH_DATE`)
-   - Weeks 4-6: `cohort = 'free_launch'`, `grandfather_status = true`, `trial_expires_at = null`
-   - Weeks 7-8: 50/50 split `early_freemium_2.99` or `early_freemium_4.99`, `trial_expires_at = NOW() + 30 days`
-   - Week 9+: `cohort = 'paid_cohort_v1'`, `trial_expires_at = NOW() + 30 days`
-4. Verify cohort saved correctly in database
+1. Verify columns exist in users table: `cohort`, `grandfather_status`, `trial_started_at`, `trial_expires_at` (columns already exist from Story 1.3)
+2. After user signs up, run cohort assignment logic:
+   - **Current Strategy (Free Until Traction):** All users assigned: `cohort = 'free_launch'`, `grandfather_status = true`, `trial_expires_at = null`, `trial_started_at = null`
+   - Original tiered monetization logic preserved in codebase comments for future re-enablement when traction thresholds are met (see `docs/monetization-decision-framework.md`)
+3. Cohort assignment runs automatically when user record is created (integrated with existing user creation points)
+4. Verify cohort saved correctly in database after signup
 
-**Deliverable:** Cohort assignment logic working
+**Deliverable:** Cohort assignment logic working (all users free forever during launch)
 
-**Test:** Sign up new user → Check database → Correct cohort assigned
+**Test:** Sign up new user → Check database → `cohort = 'free_launch'`, `grandfather_status = true`, `trial_expires_at = null`
 
 ---
 
 ### Story 4.2: Trial Days Remaining Display
 **Estimated Time:** 2 hours  
 **Dependencies:** Story 4.1
+**Status:** ⏸️ **DEFERRED** - Not needed until traction thresholds met (Month 4+). See `docs/monetization-decision-framework.md`.
 
 **As a** user  
 **I want to** see how many trial days I have left  
@@ -488,6 +491,7 @@
 ### Story 4.3: Trial Expiration Check & Gate
 **Estimated Time:** 2 hours  
 **Dependencies:** Story 4.2
+**Status:** ⏸️ **DEFERRED** - Not needed until traction thresholds met (Month 4+). See `docs/monetization-decision-framework.md`.
 
 **As a** system  
 **I want to** check if trial has expired on app open  
@@ -509,6 +513,7 @@
 ### Story 4.4: Task Limit Counter (Alternative Gate)
 **Estimated Time:** 2 hours  
 **Dependencies:** Story 4.3
+**Status:** ⏸️ **DEFERRED** - Not needed until traction thresholds met (Month 4+). See `docs/monetization-decision-framework.md`.
 
 **As a** system  
 **I want to** track how many tasks a user has created  
@@ -530,6 +535,7 @@
 ### Story 4.5: Paywall UI & Messaging
 **Estimated Time:** 3 hours  
 **Dependencies:** Story 4.4
+**Status:** ⏸️ **DEFERRED** - Not needed until traction thresholds met (Month 4+). See `docs/monetization-decision-framework.md`.
 
 **As a** trial user  
 **I want to** see clear messaging about upgrading  
@@ -553,6 +559,7 @@
 ### Story 4.6: Stripe Payment Integration (Web/PWA)
 **Estimated Time:** 4 hours  
 **Dependencies:** Story 4.5
+**Status:** ⏸️ **DEFERRED** - Not needed until traction thresholds met (Month 4+). See `docs/monetization-decision-framework.md`.
 
 **As a** web user  
 **I want to** pay via credit card  
@@ -575,6 +582,7 @@
 ### Story 4.7: Apple In-App Purchase (iOS)
 **Estimated Time:** 4 hours  
 **Dependencies:** Story 4.5
+**Status:** ⏸️ **DEFERRED** - Not needed until traction thresholds met (Month 4+). See `docs/monetization-decision-framework.md`.
 
 **As an** iOS user  
 **I want to** pay via Apple IAP  
@@ -599,6 +607,7 @@
 ### Story 4.8: Payment Status Sync & Verification
 **Estimated Time:** 3 hours  
 **Dependencies:** Stories 4.6, 4.7
+**Status:** ⏸️ **DEFERRED** - Not needed until traction thresholds met (Month 4+). See `docs/monetization-decision-framework.md`.
 
 **As a** user  
 **I want to** have my payment status verified securely  
@@ -713,7 +722,15 @@
 
 **Epic Goal:** Integrate polished Lovable designs into the existing React Native app, transforming the functional MVP into a visually polished, delightful user experience that matches Apple-level design quality.
 
-**Status:** 🔄 **READY TO START**
+**Status:** ✅ **COMPLETE** (All stories done)
+
+**Completion Summary:**
+- ✅ Story 6.1: Design System Foundation + Update Existing Screens - **Done**
+- ✅ Story 6.2: Apply Design to Settings Screen - **Done**
+- ✅ Story 6.3: Onboarding & Workflow Screens Design - **Done**
+- ✅ Story 6.4: Payment Modal & Archive Screen Design - **Done**
+
+**Epic Achievement:** ✅ Complete design system integrated throughout the app. All screens (Auth, Main, Settings, Onboarding, Archive) now match the polished Lovable design specification with consistent design tokens, animations, and iOS-native styling. Design system foundation established for future Epic 4 and Epic 5 UI work.
 
 **Sequencing Note:** Epic 6 uses **design-first approach** with parallel execution where safe. Stories 6.1-6.2 can start immediately. Stories 6.3-6.4 must complete before Epic 4/5 UI work begins. See `docs/development-sequencing-plan.md` for detailed execution plan.
 

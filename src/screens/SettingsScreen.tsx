@@ -15,6 +15,11 @@ import { useUserPreferencesStore } from '../stores/userPreferencesStore';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
 import { colors, typography, spacing } from '../design-system';
+import {
+  calculateWeeksSinceLaunch,
+  assignCohort,
+  getLaunchDate,
+} from '../lib/cohortAssignment';
 
 interface SettingsScreenProps {
   onClose: () => void;
@@ -165,6 +170,46 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
         }
         
         userId = newUser.id;
+
+        // Assign cohort after user creation (idempotency check: only if still default)
+        try {
+          const launchDate = getLaunchDate();
+          if (launchDate) {
+            const { data: currentUser, error: cohortCheckError } = await supabase
+              .from('users')
+              .select('cohort')
+              .eq('id', newUser.id)
+              .maybeSingle();
+
+            if (!cohortCheckError && currentUser?.cohort === 'free_launch') {
+              const weeksSinceLaunch = calculateWeeksSinceLaunch(launchDate);
+              const cohortData = assignCohort(weeksSinceLaunch);
+
+              const { error: cohortUpdateError } = await supabase
+                .from('users')
+                .update({
+                  cohort: cohortData.cohort,
+                  grandfather_status: cohortData.grandfatherStatus,
+                  trial_started_at: cohortData.trialStartedAt?.toISOString() || null,
+                  trial_expires_at: cohortData.trialExpiresAt?.toISOString() || null,
+                })
+                .eq('id', newUser.id);
+
+              if (cohortUpdateError) {
+                if (__DEV__) {
+                  console.error('Failed to assign cohort:', cohortUpdateError);
+                }
+              } else if (__DEV__) {
+                console.log('✅ Cohort assigned:', cohortData);
+              }
+            }
+          }
+        } catch (error) {
+          // Cohort assignment failure should not block email sending
+          if (__DEV__) {
+            console.error('Failed to assign cohort:', error);
+          }
+        }
       } else if (userError) {
         Alert.alert(
           'Error',

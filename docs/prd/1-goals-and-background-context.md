@@ -4,11 +4,11 @@
 
 1. **Launch MVP in 4 weeks** - Ship functional PWA + native apps (if approved) by Week 4
 2. **Validate product-market fit** - Achieve 300-500 downloads in Month 1 with 20% Day-30 retention
-3. **Generate early revenue** - Reach $500 cumulative net revenue by Month 3 via tiered freemium strategy
+3. **Validate monetization readiness** - Prove product-market fit (20%+ D30 retention, 500+ active users) before introducing payments
 4. **Build organic audience** - Grow X (Twitter) following through build-in-public strategy (50-100 engaged followers)
 5. **Establish competitive positioning** - Position as "the anti-Todoist" for simplicity-seeking email users
-6. **Prove monetization model** - Validate tiered pricing ($2.99 vs $4.99) converts at 10-12%+ rate
-7. **Maximize adoption through free launch** - Remove price friction at launch, then introduce freemium in Phase 2
+6. **Prove product-market fit first** - Validate 20%+ D30 retention and 500+ active users before monetization
+7. **Maximize adoption through free launch** - Focus on product quality and retention, defer payment complexity until traction proven
 
 ## 1.2 Background Context
 
@@ -27,31 +27,39 @@ TodoTomorrow solves a problem experienced by email-native knowledge workers: cap
 
 ## 1.3 Monetization Strategy Overview
 
-TodoTomorrow uses a **tiered freemium launch strategy** to maximize adoption first, then capture revenue through data-driven pricing:
+TodoTomorrow uses a **"Free Until Traction" strategy** to prioritize product-market fit validation before introducing monetization complexity:
 
-**Phase 1 (Weeks 4-6):** Launch completely FREE
-- Remove all payment friction
-- Build habit formation in first users
-- Create testimonial cohort (grandfather'd forever)
-- Target: 200-300 downloads
+**Phase 1 (Months 1-3):** Launch completely FREE
+- No payment code, no paywalls, no trials, no limits
+- Focus 100% on product quality and retention validation
+- All users automatically grandfathered as `free_launch` cohort with `grandfather_status = true` (free forever)
+- Target: Prove product-market fit through retention, not revenue
 
-**Phase 2 (Weeks 7-8, Month 2):** Introduce freemium with A/B pricing test
-- New users: 30-day trial, then $2.99 OR $4.99 (50/50 split)
-- Early adopters: Stay free forever (grandfather status)
-- Test which price point drives higher conversion
-- Target: 10-12% conversion rate
+**Phase 2 (Month 4+, IF traction thresholds met):** Introduce one-time payment
+- Announce: "TodoMorning is now $4.99 one-time payment"
+- Grandfather ALL existing users: FREE FOREVER (goodwill + advocates)
+- New users: $4.99 immediately upon signup (no trial needed - reviews prove value)
+- Target: Sustainable revenue from proven product value
 
-**Phase 3 (Month 3+):** Scale with winning price
-- Implement winner from Phase 2 test
-- Sustain 12%+ conversion rate
-- Optional: Test $5.99 if conversion stays strong
-- Target: $500+ net revenue by Month 3
+**Traction Thresholds (Decision Framework):**
+Before adding payments, must hit **TWO or more** of these:
+- ✅ 500+ weekly active users (not downloads - ACTIVE)
+- ✅ 50+ App Store/Play Store reviews
+- ✅ 4.5+ star average rating
+- ✅ 20%+ D30 retention proven
+- ✅ Users organically asking "how do I support this?"
 
-**Cohort Strategy:**
-- `free_launch`: Early adopters, never charged (Weeks 4-6)
-- `early_freemium_2.99`: Phase 2 test group at $2.99
-- `early_freemium_4.99`: Phase 2 test group at $4.99
-- `paid_cohort_v1`: Phase 3+ users at winning price
+**Rationale:**
+If D30 retention is <10%, charging money won't fix the problem - it will hide it.
+If D30 retention is >20%, you have product-market fit - monetization is justified.
+Building payment infrastructure for $35/month revenue (100 users × 10% conversion) is premature optimization.
+
+**Future Cohort Strategy (When re-enabled):**
+Original tiered monetization logic preserved in codebase for future re-enablement:
+- `free_launch`: All launch users (grandfathered forever)
+- `paid_cohort_v1`: Post-traction users (one-time $4.99)
+
+See `docs/monetization-decision-framework.md` for detailed traction thresholds and decision process.
 
 ## 1.4 Change Log
 
@@ -62,5 +70,6 @@ TodoTomorrow uses a **tiered freemium launch strategy** to maximize adoption fir
 | October 30, 2025 | 1.1 | Updated monetization strategy: tiered freemium launch, cohort tracking, grandfather status, A/B pricing tests | John (PM) |
 | October 31, 2025 | 1.2 | Restructured all stories to be 2-4 hours each, testable independently, and building sequentially | John (PM) |
 | January 27, 2025 | 1.3 | Updated Story 3.5: Changed cron frequency from "every minute" to "hourly" to align with architecture. Updated AC to reflect timezone-aware query implementation and empty state email handling. | John (PM) |
+| February 11, 2025 | 1.4 | **PIVOT:** Simplified monetization strategy to "Free Until Traction". Removed tiered freemium complexity. Updated Goals 3, 6, 7. Focus shifted to product-market fit validation before monetization. Original strategy preserved in codebase for future re-enablement. | John (PM) |
 
 ---
