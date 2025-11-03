@@ -198,6 +198,10 @@ export const MainScreen = () => {
     setRefreshing(true);
     try {
       await loadTasks();
+      // If in archive tab, also refresh completed tasks
+      if (workflowMode === 'carry_over' && activeTab === 'archive') {
+        await loadCompletedTasks();
+      }
     } catch (error) {
       // Error is already handled in loadTasks and set in loadError state
       if (__DEV__) {
@@ -375,16 +379,24 @@ export const MainScreen = () => {
   };
 
   // Calculate stats for archive footer
+  // Week starts on Monday (day 0 = Sunday, so Monday = day 1)
   const getArchiveStats = () => {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+    // Calculate Monday: if today is Sunday (0), go back 6 days; otherwise go back (day - 1) days
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday is start of week
+    startOfWeek.setDate(now.getDate() - daysToSubtract);
     startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+    endOfWeek.setHours(23, 59, 59, 999);
     
     const weekTasks = completedTasks.filter(task => {
       if (!task.completed_at) return false;
       const completedAt = new Date(task.completed_at);
-      return completedAt >= startOfWeek;
+      return completedAt >= startOfWeek && completedAt <= endOfWeek;
     });
     
     return weekTasks.length;
@@ -465,7 +477,10 @@ export const MainScreen = () => {
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => renderTaskItem({ item, index })}
             contentContainerStyle={
-              tasks.length === 0 && !isLoading
+              ((workflowMode === 'carry_over' && activeTab === 'archive'
+                ? completedTasks.length === 0
+                : tasks.filter((t) => t.status === 'open').length === 0)
+                && !isLoading)
                 ? styles.emptyListContainer
                 : styles.taskList
             }
@@ -474,6 +489,18 @@ export const MainScreen = () => {
                 <View style={styles.errorContainer}>
                   <Text style={styles.errorText}>{loadError}</Text>
                   <Text style={styles.errorHint}>Pull down to retry</Text>
+                </View>
+              ) : workflowMode === 'carry_over' && activeTab === 'archive' ? (
+                <View style={styles.emptyStateContainer}>
+                  {/* Archive empty state */}
+                  <Animated.Text 
+                    style={[
+                      styles.emptyStateLine1,
+                      { opacity: emptyStateOpacityAnim1 },
+                    ]}
+                  >
+                    No completed tasks yet! 🎉
+                  </Animated.Text>
                 </View>
               ) : (
                 <View style={styles.emptyStateContainer}>

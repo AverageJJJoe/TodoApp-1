@@ -185,11 +185,8 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       }
     : {};
 
-  return (
-    <Swipeable
-      ref={onSwipeableRef || undefined}
-      renderRightActions={renderRightActions}
-    >
+  // Task content - same for both archive and active modes
+  const taskContent = (
       <Animated.View 
         style={[
           componentStyles.taskCardContainer,
@@ -202,9 +199,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         {/* Task Card - Match Lovable: bg-card rounded-lg shadow-soft-sm */}
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => !isCompleting && onEdit(task)}
+          onPress={() => !isCompleting && !isArchive && onEdit(task)}
           style={componentStyles.taskCard}
-          disabled={isCompleting}
+          disabled={isCompleting || isArchive}
         >
           <View style={componentStyles.taskCardContent}>
             {/* Custom Checkbox - Match Lovable: w-6 h-6 rounded-full border-2 - Only show in carry_over mode */}
@@ -276,6 +273,18 @@ export const TaskItem: React.FC<TaskItemProps> = ({
           </View>
         </TouchableOpacity>
       </Animated.View>
+  );
+
+  // In archive mode, disable swipe-to-delete and wrap in plain View
+  // In active mode, wrap in Swipeable for swipe-to-delete
+  return isArchive ? (
+    <View>{taskContent}</View>
+  ) : (
+    <Swipeable
+      ref={onSwipeableRef || undefined}
+      renderRightActions={renderRightActions}
+    >
+      {taskContent}
     </Swipeable>
   );
 };

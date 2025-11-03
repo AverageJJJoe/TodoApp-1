@@ -123,12 +123,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       }
 
       // Query tasks from Supabase
+      // Order by created_at ascending (oldest first) so newest tasks appear at the bottom
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', userId)
         .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) {
         throw error;
@@ -313,9 +314,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Success: Task already removed from local state
     } catch (error: any) {
       // Rollback: Restore task to list
+      // Sort by created_at ascending (oldest first) to match loadTasks ordering
       set((state) => ({
         tasks: [...state.tasks, taskToDelete].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         ),
       }));
       throw error; // Re-throw for UI error handling
