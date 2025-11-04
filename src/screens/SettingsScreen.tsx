@@ -323,13 +323,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       // Get email (use session email as fallback if user record doesn't have it)
       const email = user?.email || currentSession.user.email || '';
 
-      // Query tasks
+      // Query tasks - only include open tasks (exclude completed, archived, deleted)
       const { data: tasks, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', userId)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+        .eq('status', 'open') // Only open tasks (excludes 'completed' and 'archived')
+        .is('deleted_at', null) // Exclude soft-deleted tasks
+        .is('archived_at', null) // Explicitly exclude archived tasks
+        .is('completed_at', null) // Explicitly exclude completed tasks
+        .order('created_at', { ascending: true }); // Match email order (oldest first)
 
       if (tasksError) {
         Alert.alert('Error', `Failed to load tasks: ${tasksError.message}`);

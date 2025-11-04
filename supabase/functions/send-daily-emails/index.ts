@@ -19,8 +19,6 @@ interface EmailUser {
 interface Task {
   id: string;
   text: string;
-  priority: string | null;
-  due_date: string | null;
   created_at: string;
 }
 
@@ -113,6 +111,12 @@ Deno.serve(async (req: Request) => {
     );
   }
 
+  // Check for test mode via query parameter or header (bypass timezone check for testing)
+  const url = new URL(req.url);
+  const testModeParam = url.searchParams.get('test');
+  const testModeHeader = req.headers.get('x-test-mode');
+  const testMode = testModeParam === 'true' || testModeHeader === 'true';
+
   try {
     // Get environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -161,36 +165,60 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     // Task 2: Query eligible users (Option B: Fetch all, filter in JavaScript for MVP)
-    console.log('Fetching eligible users...');
+    console.log(`🔍 Fetching eligible users... (testMode: ${testMode})`);
     const { data: allUsers, error: usersError } = await supabase
       .from('users')
       .select('id, email, delivery_time, timezone, workflow_mode, last_email_sent_at, is_paid, trial_started_at, trial_tasks_count')
       .is('deleted_at', null);
 
     if (usersError) {
-      console.error('Error fetching users:', usersError);
+      console.error('❌ Error fetching users:', usersError);
       throw new Error(`Failed to fetch users: ${usersError.message}`);
     }
 
+    console.log(`📊 Database query returned ${allUsers?.length || 0} users (before filtering)`);
+    if (allUsers && allUsers.length > 0) {
+      console.log(`📋 Sample user:`, {
+        email: allUsers[0].email,
+        delivery_time: allUsers[0].delivery_time,
+        timezone: allUsers[0].timezone,
+        workflow_mode: allUsers[0].workflow_mode
+      });
+    }
+
     // Filter users in JavaScript (MVP simplicity - Option B)
+    // NOTE: Payment/trial check removed - app is "Free Until Traction" strategy
+    // All users are eligible for emails regardless of payment status
     const eligibleUsers = (allUsers || []).filter((user: EmailUser) => {
       // Check deleted_at (already filtered in query, but double-check)
-      // Check payment/trial status
-      if (!user.is_paid && !isTrialValid(user)) {
-        return false;
-      }
       // Check timezone matching (current hour in user's timezone matches delivery hour)
-      if (!shouldSendEmailNow(user)) {
+      // Skip timezone check in test mode
+      if (!testMode && !shouldSendEmailNow(user)) {
         return false;
       }
       // Check if enough time has passed since last email (20 hours)
-      if (!canSendEmailAgain(user.last_email_sent_at)) {
+      // Skip cooldown check in test mode
+      if (!testMode && !canSendEmailAgain(user.last_email_sent_at)) {
         return false;
       }
       return true;
     }) as EmailUser[];
 
-    console.log(`Found ${eligibleUsers.length} eligible users`);
+    if (testMode) {
+      console.log(`🧪 TEST MODE ACTIVE: Bypassing timezone/cooldown checks.`);
+      console.log(`📈 Found ${eligibleUsers.length} eligible users out of ${allUsers?.length || 0} total users.`);
+      if (eligibleUsers.length === 0 && (allUsers?.length || 0) > 0) {
+        console.error(`⚠️ WARNING: Test mode is active but 0 users eligible. This shouldn't happen - all users should pass in test mode!`);
+      }
+    } else {
+      console.log(`⏰ Normal mode: Found ${eligibleUsers.length} eligible users (timezone/delivery_time matched, 20h cooldown passed)`);
+      if (allUsers && allUsers.length > 0) {
+        const filteredOut = allUsers.length - eligibleUsers.length;
+        if (filteredOut > 0) {
+          console.log(`🔍 Filtered out ${filteredOut} users (likely timezone/delivery_time mismatch or cooldown period)`);
+        }
+      }
+    }
 
     // Read template file once (before processing users for efficiency)
     let template: string;
@@ -229,26 +257,58 @@ Deno.serve(async (req: Request) => {
 
       try {
         // Task 3: Query tasks based on workflow_mode
+        // Only include open tasks that are not deleted, not completed, and not archived
+        // Apply filters at database level for efficiency, then verify in JavaScript as safety net
         let tasksQuery = supabase
           .from('tasks')
-          .select('id, text, priority, due_date, created_at')
+          .select('id, text, created_at, status, completed_at, archived_at, deleted_at')
           .eq('user_id', user.id)
-          .eq('status', 'open');
+          .eq('status', 'open') // CRITICAL: Only open tasks (excludes 'completed' and 'archived')
+          .is('deleted_at', null) // Exclude soft-deleted tasks
+          .is('archived_at', null) // Explicitly exclude archived tasks
+          .is('completed_at', null); // Explicitly exclude completed tasks
 
         // Apply workflow_mode filter
-        if (user.workflow_mode === 'fresh_start' && user.last_email_sent_at) {
-          tasksQuery = tasksQuery.gt('created_at', user.last_email_sent_at);
-        }
-        // carry_over: already filtered to status = 'open' only
+        // Fresh Start: Get ALL open tasks (not just new ones) - all tasks will be included before archiving
+        // Carry Over: Already filtered to status = 'open' only (includes all open tasks)
+        // Note: Fresh Start no longer filters by created_at > last_email_sent_at to ensure all tasks are included before archiving
 
-        const { data: tasks, error: tasksError } = await tasksQuery.order('created_at', { ascending: false });
+        const { data: tasks, error: tasksError } = await tasksQuery.order('created_at', { ascending: true });
 
         if (tasksError) {
           console.error(`Error fetching tasks for user ${user.id}:`, tasksError);
           throw new Error(`Failed to fetch tasks: ${tasksError.message}`);
         }
 
-        const userTasks = (tasks || []) as Task[];
+        // Double-check filter in JavaScript as safety net (catches any edge cases or data inconsistencies)
+        const userTasks = ((tasks || []) as any[]).filter((task: any) => {
+          const isOpen = task.status === 'open';
+          const notCompleted = !task.completed_at;
+          const notArchived = !task.archived_at;
+          const notDeleted = !task.deleted_at;
+          
+          const isValid = isOpen && notCompleted && notArchived && notDeleted;
+          
+          if (!isValid) {
+            console.error(`⚠️ CRITICAL: Task "${task.text}" passed database filters but failed JS filter! status: ${task.status}, completed_at: ${task.completed_at}, archived_at: ${task.archived_at}, deleted_at: ${task.deleted_at}`);
+          }
+          
+          return isValid;
+        }) as Task[];
+
+        // Log if any tasks were filtered out (should not happen if database filters work correctly)
+        if (tasks && tasks.length > userTasks.length) {
+          console.error(`🚨 User ${user.id}: Database query returned ${tasks.length} tasks, but JS filter removed ${tasks.length - userTasks.length} invalid tasks! This indicates a database query issue.`);
+          console.error(`Invalid tasks:`, tasks.filter((t: any) => {
+            return t.status !== 'open' || t.completed_at || t.archived_at || t.deleted_at;
+          }).map((t: any) => ({
+            text: t.text,
+            status: t.status,
+            completed_at: t.completed_at,
+            archived_at: t.archived_at,
+            deleted_at: t.deleted_at
+          })));
+        }
 
         // Task 4: Generate email HTML from template
 
@@ -259,10 +319,20 @@ Deno.serve(async (req: Request) => {
           taskListHTML = '<li style="padding: 8px 0; border-bottom: 1px solid #eee;">No new tasks for today. Enjoy your morning coffee! ☕</li>';
         } else {
           taskListHTML = userTasks
-            .map(
-              (task) =>
-                `<li style="padding: 8px 0; border-bottom: 1px solid #eee;">${escapeHTML(task.text)}</li>`
-            )
+            .map((task) => {
+              const taskText = escapeHTML(task.text);
+              
+              // Carry Over mode: Add "(from yesterday)" indicator for old tasks
+              let indicator = '';
+              if (user.workflow_mode === 'carry_over' && user.last_email_sent_at) {
+                const isOldTask = new Date(task.created_at) < new Date(user.last_email_sent_at);
+                if (isOldTask) {
+                  indicator = '<span style="color: #999; font-size: 12px;"> (from yesterday)</span>';
+                }
+              }
+              
+              return `<li style="padding: 8px 0; border-bottom: 1px solid #eee;">${taskText}${indicator}</li>`;
+            })
             .join('');
         }
 
@@ -297,6 +367,26 @@ Deno.serve(async (req: Request) => {
 
         const messageId = resendData.id || null;
         console.log(`Email sent to ${user.email}, message ID: ${messageId}`);
+
+        // Fresh Start mode: Archive all open tasks after email sent successfully
+        if (user.workflow_mode === 'fresh_start') {
+          const { error: archiveError } = await supabase
+            .from('tasks')
+            .update({
+              archived_at: new Date().toISOString(),
+              status: 'archived',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', user.id)
+            .eq('status', 'open'); // Only archive open tasks (don't touch completed tasks)
+
+          if (archiveError) {
+            console.error(`Error archiving tasks for user ${user.id}:`, archiveError);
+            // Don't throw - log but continue (email already sent successfully)
+          } else {
+            console.log(`Archived all open tasks for Fresh Start user ${user.id}`);
+          }
+        }
 
         // Task 6: Update database after successful send
         const now = new Date().toISOString();
