@@ -636,7 +636,15 @@
 
 **Epic Goal:** Fresh Start vs Carry Over modes, task completion, archive, final polish.
 
-**Status:** 🔄 **READY TO START** (All dependencies met: Epic 1-3 complete, Epic 4 Story 4.1 complete, Epic 6 complete)
+**Status:** ✅ **COMPLETE** (All stories done - 2025-11-04)
+
+**Completion Summary:**
+- ✅ Story 5.1: Workflow Mode Selection (Onboarding) - **Done**
+- ✅ Story 5.2: Task Completion UI (Carry Over Mode) - **Done**
+- ✅ Story 5.3: Archive View (Carry Over Mode) - **Done**
+- ✅ Story 5.4: Email Delivery - Mode-Specific Logic - **Done** (2025-11-04)
+
+**Epic Achievement:** ✅ Complete workflow mode implementation. Users can select Fresh Start or Carry Over modes during onboarding, switch modes in Settings, complete tasks in Carry Over mode with animations, view completed tasks in Archive, and receive mode-specific emails (Fresh Start archives tasks after email, Carry Over shows "(from yesterday)" indicators).
 
 **Prerequisites:**
 - ✅ Epic 1: Foundation & Authentication - COMPLETE
@@ -650,7 +658,7 @@
 ### Story 5.1: Workflow Mode Selection (Onboarding)
 **Estimated Time:** 2 hours  
 **Dependencies:** Epic 1 complete, Story 6.3 (Onboarding Design) complete
-**Status:** 🔄 **READY** (Component exists, mode value conversion bug fix needed)
+**Status:** ✅ **DONE**
 
 **As a** first-time user  
 **I want to** choose between Fresh Start and Carry Over modes  
@@ -672,6 +680,7 @@
 ### Story 5.2: Task Completion UI (Carry Over Mode)
 **Estimated Time:** 3 hours  
 **Dependencies:** Story 5.1
+**Status:** ✅ **DONE**
 
 **As a** Carry Over mode user  
 **I want to** mark tasks as complete with a checkbox  
@@ -693,6 +702,7 @@
 ### Story 5.3: Archive View (Carry Over Mode)
 **Estimated Time:** 2 hours  
 **Dependencies:** Story 5.2
+**Status:** ✅ **DONE**
 
 **As a** Carry Over mode user  
 **I want to** view completed tasks in Archive  
@@ -714,6 +724,7 @@
 ### Story 5.4: Email Delivery - Mode-Specific Logic
 **Estimated Time:** 3 hours  
 **Dependencies:** Stories 5.1, 5.3, Epic 3 complete
+**Status:** ✅ **DONE** (2025-11-04)
 
 **As a** user  
 **I want to** receive emails formatted for my workflow mode  
@@ -1007,5 +1018,45 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 - Visual inspection: Archive screen matches Lovable Archive design
 - Animations feel smooth and intentional
 - Design system used consistently
+
+---
+
+## Epic 7: Pre-Launch Polish (Pre-Launch)
+
+**Epic Goal:** Final polish and cleanup before production launch - remove development tools, add logo, update messaging.
+
+**Status:** 🔄 **IN PROGRESS** (Story 7.1 in progress)
+
+**Completion Summary:**
+- 🔄 Story 7.1: Pre-Launch - Magic Link Screen Polish - **In Progress**
+
+**Epic Achievement:** _To be updated upon completion_
+
+**Prerequisites:**
+- ✅ Epic 1: Foundation & Authentication - COMPLETE
+- ✅ Epic 2: Core Task Management - COMPLETE
+- ✅ Epic 3: Email Delivery System - COMPLETE
+- ✅ Epic 4: Story 4.1 (Cohort Assignment) - COMPLETE
+- ✅ Epic 5: Workflow Modes & Polish - COMPLETE
+- ✅ Epic 6: Design System Integration - COMPLETE
+
+---
+
+### Story 7.1: Pre-Launch - Magic Link Screen Polish
+**Estimated Time:** 1-2 hours  
+**Dependencies:** Epic 1-6 complete
+
+**As a** user  
+**I want to** see a polished, professional Magic Link screen without development tools  
+**So that** my first impression of the app is clean and production-ready
+
+**Acceptance Criteria:**
+1. Replace emoji logo (🌅) with TodoTomorrow logo image from `lovable-reference/src/assets/logo.png`
+2. Remove all dev tools section completely (remove `{__DEV__ && (` wrapper and all dev tools code)
+3. Update tagline from "Evening brain dump, morning clarity." to "Capture on the go"
+
+**Deliverable:** Production-ready Magic Link screen with logo, updated tagline, and no dev tools
+
+**Test:** Launch app → Verify logo displays (not emoji), no dev tools visible, tagline shows "Capture on the go"
 
 ---

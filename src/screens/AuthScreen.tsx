@@ -449,52 +449,6 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
     return emailRegex.test(emailToValidate);
   };
 
-  const processPastedUrl = (cleanedText: string) => {
-    // If it's the Supabase verification URL, extract token and construct deep link
-    if (cleanedText.includes('supabase.co/auth/v1/verify') && cleanedText.includes('token=')) {
-      if (__DEV__) {
-        console.log('📋 Processing Supabase verification URL:', cleanedText);
-      }
-      try {
-        // Extract token from Supabase URL
-        const urlObj = new URL(cleanedText);
-        const token = urlObj.searchParams.get('token');
-        const type = urlObj.searchParams.get('type') || 'email';
-        
-        if (token) {
-          const deepLinkUrl = `todotomorrow://auth/callback?token=${token}&type=${type}`;
-          if (__DEV__) {
-            console.log('🔨 Constructed deep link from Supabase URL:', deepLinkUrl);
-          }
-          handleDeepLink(deepLinkUrl);
-        } else {
-          setErrorMessage('Could not extract token from URL');
-        }
-      } catch (err: any) {
-        if (__DEV__) {
-          console.error('❌ Error parsing Supabase URL:', err);
-        }
-        setErrorMessage('Invalid URL format');
-      }
-    }
-    // If pasted text is already a deep link URL
-    else if (cleanedText.includes('todotomorrow://') || cleanedText.includes('token=')) {
-      if (__DEV__) {
-        console.log('📋 Processing pasted deep link URL:', cleanedText);
-      }
-      handleDeepLink(cleanedText);
-    } 
-    // If it's just a token (long string)
-    else if (cleanedText.length > 20 && !cleanedText.includes('http')) {
-      // Assume it's a token - construct URL
-      const constructedUrl = `todotomorrow://auth/callback?token=${cleanedText}&type=email`;
-      if (__DEV__) {
-        console.log('🔨 Constructed URL from token:', constructedUrl);
-      }
-      handleDeepLink(constructedUrl);
-    }
-  };
-
   const handleSendMagicLink = async () => {
     // Reset messages
     setSuccessMessage('');
@@ -567,7 +521,11 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
     <View style={styles.container}>
       {/* Logo/Icon - Match Lovable: 120px size with spring animation feel */}
       <View style={styles.logoContainer}>
-        <Text style={styles.logo}>🌅</Text>
+        <Image 
+          source={require('../../assets/logo.png')} 
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Title - Match Lovable exactly */}
@@ -575,7 +533,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
 
       {/* Subtitle - Match Lovable line breaks */}
       <Text style={styles.subtitle}>
-        Evening brain dump,{'\n'}morning clarity.
+        Capture on the go
       </Text>
 
       {/* Email Input - Match Lovable: 2px border, proper focus states */}
@@ -639,58 +597,6 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
         No password needed.
       </Text>
 
-      {/* TODO: REMOVE BEFORE PRODUCTION - Dev-only debugging tools */}
-      {/* These are useful for testing auth flow but should be removed for release */}
-      {__DEV__ && (
-        <View style={styles.devToolsContainer}>
-          <Text style={styles.devToolsLabel}>Dev Tools (remove before release)</Text>
-          <TouchableOpacity
-            style={[styles.button, styles.testButton]}
-            onPress={async () => {
-              // Test deep link handler with fake token
-              const testUrl = 'todotomorrow://auth/callback?token=test123&type=email';
-              if (__DEV__) {
-                console.log('🧪 Testing deep link handler with:', testUrl);
-              }
-              handleDeepLink(testUrl);
-            }}
-          >
-            <Text style={styles.buttonText}>🧪 Test Deep Link Handler</Text>
-          </TouchableOpacity>
-          <TextInput
-            style={[styles.input, styles.devInput]}
-            placeholder="Paste Supabase verify URL or todotomorrow:// URL here"
-            placeholderTextColor="#999"
-            onSubmitEditing={(event) => {
-              const text = event.nativeEvent.text;
-              if (text.trim()) {
-                const cleanedText = text.replace(/\s+/g, '');
-                processPastedUrl(cleanedText);
-              }
-            }}
-            onChangeText={(text) => {
-              const cleanedText = text.replace(/\s+/g, '');
-              if (cleanedText.includes('supabase.co') || cleanedText.includes('todotomorrow://') || cleanedText.includes('token=') || (cleanedText.length > 40 && !cleanedText.includes('http'))) {
-                processPastedUrl(cleanedText);
-              }
-            }}
-          />
-          <TouchableOpacity
-            style={[styles.button, styles.testButton]}
-            onPress={async () => {
-              const { data: { session } } = await supabase.auth.getSession();
-              if (session) {
-                setSession(session);
-                setSuccessMessage('Session found! Navigating to MainScreen...');
-              } else {
-                setErrorMessage('No session found. Complete authentication first, or the token may have expired.');
-              }
-            }}
-          >
-            <Text style={styles.buttonText}>🔧 Check for Session (Dev Only)</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 };
@@ -710,11 +616,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logo: {
-    fontSize: 120,
+  logoImage: {
     width: 120,
     height: 120,
-    textAlign: 'center',
   },
   // Title - Match Lovable text-title-large
   title: {
@@ -832,30 +736,6 @@ const styles = StyleSheet.create({
   successEmail: {
     fontWeight: '600',
     color: colors.textPrimary,
-  },
-  testButton: {
-    backgroundColor: '#666',
-    marginTop: spacing.sm,
-  },
-  devToolsContainer: {
-    width: '100%',
-    maxWidth: 400,
-    marginTop: spacing['3xl'],
-    paddingTop: spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: colors.separator,
-  },
-  devToolsLabel: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-    fontSize: 11,
-  },
-  devInput: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-    fontSize: 13,
   },
 });
 
