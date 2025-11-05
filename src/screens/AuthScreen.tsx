@@ -7,6 +7,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
@@ -518,86 +520,91 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Logo/Icon - Match Lovable: 120px size with spring animation feel */}
-      <View style={styles.logoContainer}>
-        <Image 
-          source={require('../../assets/logo.png')} 
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
+    >
+      <View style={styles.content}>
+        {/* Logo/Icon - Match Lovable: 120px size with spring animation feel */}
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../../assets/logo.png')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
 
-      {/* Title - Match Lovable exactly */}
-      <Text style={styles.title}>TodoTomorrow</Text>
+        {/* Title - Match Lovable exactly */}
+        <Text style={styles.title}>TodoTomorrow</Text>
 
-      {/* Subtitle - Match Lovable line breaks */}
-      <Text style={styles.subtitle}>
-        Capture on the go
-      </Text>
+        {/* Subtitle - Match Lovable line breaks */}
+        <Text style={styles.subtitle}>
+          Capture on the go
+        </Text>
 
-      {/* Email Input - Match Lovable: 2px border, proper focus states */}
-      <View style={styles.inputWrapper}>
-        <TextInput
+        {/* Email Input - Match Lovable: 2px border, proper focus states */}
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={[
+              styles.input,
+              email && !validateEmail(email) && styles.inputError,
+              email && validateEmail(email) && styles.inputValid,
+              isInputFocused && !email && styles.inputFocused,
+            ]}
+            placeholder="name@email.com"
+            placeholderTextColor={colors.textTertiary}
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setErrorMessage('');
+              setSuccessMessage('');
+            }}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoFocus
+            editable={!isLoading}
+          />
+        </View>
+
+        {/* Error Message */}
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
+
+        {/* Submit Button - Match Lovable with icon space */}
+        <TouchableOpacity
           style={[
-            styles.input,
-            email && !validateEmail(email) && styles.inputError,
-            email && validateEmail(email) && styles.inputValid,
-            isInputFocused && !email && styles.inputFocused,
+            styles.button,
+            (!validateEmail(email) || isLoading) && styles.buttonDisabled,
           ]}
-          placeholder="name@email.com"
-          placeholderTextColor={colors.textTertiary}
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            setErrorMessage('');
-            setSuccessMessage('');
-          }}
-          onFocus={() => setIsInputFocused(true)}
-          onBlur={() => setIsInputFocused(false)}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoFocus
-          editable={!isLoading}
-        />
+          onPress={handleSendMagicLink}
+          disabled={!validateEmail(email) || isLoading}
+          activeOpacity={0.8}
+        >
+          {isLoading ? (
+            <>
+              <ActivityIndicator size="small" color={colors.background} style={{ marginRight: spacing.sm }} />
+              <Text style={styles.buttonText}>Sending...</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.buttonIcon}>✉</Text>
+              <Text style={styles.buttonText}>Send Magic Link</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* Helper Text - Match Lovable exactly */}
+        <Text style={styles.helperText}>
+          We'll email you a secure login link.{'\n'}
+          No password needed.
+        </Text>
       </View>
-
-      {/* Error Message */}
-      {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
-      ) : null}
-
-      {/* Submit Button - Match Lovable with icon space */}
-      <TouchableOpacity
-        style={[
-          styles.button,
-          (!validateEmail(email) || isLoading) && styles.buttonDisabled,
-        ]}
-        onPress={handleSendMagicLink}
-        disabled={!validateEmail(email) || isLoading}
-        activeOpacity={0.8}
-      >
-        {isLoading ? (
-          <>
-            <ActivityIndicator size="small" color={colors.background} style={{ marginRight: spacing.sm }} />
-            <Text style={styles.buttonText}>Sending...</Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.buttonIcon}>✉</Text>
-            <Text style={styles.buttonText}>Send Magic Link</Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      {/* Helper Text - Match Lovable exactly */}
-      <Text style={styles.helperText}>
-        We'll email you a secure login link.{'\n'}
-        No password needed.
-      </Text>
-
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -605,10 +612,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
     paddingHorizontal: spacing['2xl'] as number,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: '100%',
   },
   // Logo - Match Lovable: 120px size (w-[120px] h-[120px])
   logoContainer: {

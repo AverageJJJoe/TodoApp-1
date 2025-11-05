@@ -513,7 +513,7 @@ export const MainScreen = () => {
                       },
                     ]}
                   >
-                    <Text style={styles.emptyStateIcon}>🌙</Text>
+                    <Text style={styles.emptyStateIcon}>⚡</Text>
                   </Animated.View>
                   {/* Match Lovable text layout: Two separate lines with staggered fade-in */}
                   <Animated.Text 
@@ -522,7 +522,7 @@ export const MainScreen = () => {
                       { opacity: emptyStateOpacityAnim1 },
                     ]}
                   >
-                    Tap <Text style={styles.emptyStatePlus}>+</Text> to add
+                    Tap <Text style={styles.emptyStatePlus}>+</Text> to capture your first task
                   </Animated.Text>
                   <Animated.Text 
                     style={[
@@ -530,7 +530,7 @@ export const MainScreen = () => {
                       { opacity: emptyStateOpacityAnim2 },
                     ]}
                   >
-                    your first task
+                    Add from anywhere - we'll deliver it tomorrow morning.
                   </Animated.Text>
                 </View>
               )

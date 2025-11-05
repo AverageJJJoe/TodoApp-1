@@ -104,7 +104,7 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
           },
         ]}
       >
-        🌙
+        ⚡
       </Animated.Text>
 
       {/* Headline with fade-in animation */}
@@ -115,7 +115,7 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
         }}
       >
         <Text style={styles.headline}>
-          Capture tonight,{'\n'}conquer tomorrow
+          Capture anywhere.{'\n'}Morning delivery.
         </Text>
       </Animated.View>
 
@@ -130,7 +130,7 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
         ]}
       >
         <Text style={styles.bodyText}>
-          No more midnight todo list panic. Just add tasks before bed.
+          Add tasks on the move.{'\n'}{'\n'}Get them in your inbox when you need them.
         </Text>
       </Animated.View>
 
