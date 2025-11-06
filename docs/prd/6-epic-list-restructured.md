@@ -8,11 +8,11 @@
 | E4 | Monetization & Payments | 8 stories (1 done, 7 deferred) | 20 hours | E1, E2, E3 complete | ✅ **PARTIAL** (Story 4.1 complete, 4.2-4.8 deferred until Month 4+) |
 | E5 | Workflow Modes & Polish | 4 stories | 10 hours | E4 Story 4.1 complete | ✅ **COMPLETE** |
 | E6 | Design System Integration & UI Polish | 4 stories | 16 hours | Can run parallel with E3-E5 | ✅ **COMPLETE** |
-| E7 | Pre-Launch Polish | 1 story | 1-2 hours | E1-E6 complete | 🔄 **IN PROGRESS** |
+| E7 | Pre-Launch Polish | 9 stories (4 done, 4 approved, 1 deferred) | 15-20 hours | E1-E6 complete | 🔄 **IN PROGRESS** |
 
 **📋 Sequencing Plan:** See `docs/development-sequencing-plan.md` for detailed execution strategy (hybrid approach: design-first + parallel execution)
 
-**Total:** 34 stories, ~89-90 hours development time
+**Total:** 42 stories, ~104-111 hours development time
 
 **Note:** Story 1.2.5 (Testing Framework Setup) was added to ensure test infrastructure is established early.
 

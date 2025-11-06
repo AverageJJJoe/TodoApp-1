@@ -11,15 +11,16 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- Create cron job: runs every hour at minute 0 (1:00, 2:00, 3:00, etc.)
 -- Schedule pattern: '0 * * * *' = minute 0 of every hour, every day
--- Note: http_post function may need pg_net extension enabled, or may be net.http_post depending on Supabase version
+-- Note: http_post function requires net schema prefix: net.http_post()
+-- CRITICAL: Must use schema-qualified function name and proper named parameters
 SELECT cron.schedule(
   'send-daily-emails-hourly',
   '0 * * * *', -- every hour at minute 0
   $$
-  SELECT http_post(
-    'https://zrnjxrtgrommlhexbpde.supabase.co/functions/v1/send-daily-emails',
-    '{}',
-    'Bearer ef8d9c7b-4a21-4f56-9e3a-2b8c1d6e5f7a'
+  SELECT net.http_post(
+    url := 'https://zrnjxrtgrommlhexbpde.supabase.co/functions/v1/send-daily-emails',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer ef8d9c7b-4a21-4f56-9e3a-2b8c1d6e5f7a"}'::jsonb,
+    body := '{}'::jsonb
   )
   $$
 );

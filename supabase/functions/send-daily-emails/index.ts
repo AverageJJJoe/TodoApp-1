@@ -86,8 +86,16 @@ function canSendEmailAgain(lastEmailSentAt: string | null): boolean {
 }
 
 Deno.serve(async (req: Request) => {
+  // CRITICAL: Log all incoming requests for debugging
+  console.log(`📥 [${new Date().toISOString()}] Incoming request:`, {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries()),
+  });
+
   // Handle CORS preflight requests (for manual testing)
   if (req.method === 'OPTIONS') {
+    console.log('✅ Handling OPTIONS preflight request');
     return new Response(null, {
       headers: {
         'Access-Control-Allow-Origin': '*',
@@ -99,6 +107,7 @@ Deno.serve(async (req: Request) => {
 
   // Only allow POST requests
   if (req.method !== 'POST') {
+    console.error(`❌ Invalid method: ${req.method}. Expected POST.`);
     return new Response(
       JSON.stringify({ error: 'Method not allowed. Use POST.' }, null, 2),
       {
@@ -111,11 +120,42 @@ Deno.serve(async (req: Request) => {
     );
   }
 
+  // CRITICAL: Validate authentication for cron job requests
+  const edgeFunctionSecret = Deno.env.get('EDGE_FUNCTION_SECRET');
+  const authHeader = req.headers.get('Authorization');
+  
+  if (edgeFunctionSecret) {
+    // If secret is configured, validate it
+    const expectedAuth = `Bearer ${edgeFunctionSecret}`;
+    if (authHeader !== expectedAuth) {
+      console.error('❌ Authentication failed:', {
+        received: authHeader ? 'Bearer ***' : 'missing',
+        expected: 'Bearer ***',
+      });
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized. Invalid or missing Authorization header.' }, null, 2),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+    console.log('✅ Authentication validated successfully');
+  } else {
+    // If no secret configured, log warning but allow (for development/testing)
+    console.warn('⚠️ EDGE_FUNCTION_SECRET not configured - skipping auth validation (not recommended for production)');
+  }
+
   // Check for test mode via query parameter or header (bypass timezone check for testing)
   const url = new URL(req.url);
   const testModeParam = url.searchParams.get('test');
   const testModeHeader = req.headers.get('x-test-mode');
   const testMode = testModeParam === 'true' || testModeHeader === 'true';
+  
+  console.log(`🚀 Starting email processing (testMode: ${testMode})`);
 
   try {
     // Get environment variables
@@ -465,17 +505,18 @@ Deno.serve(async (req: Request) => {
     }
 
     // Return summary
+    const summary = {
+      success: true,
+      usersProcessed: result.usersProcessed,
+      emailsSent: result.emailsSent,
+      errors: result.errors,
+    };
+    
+    console.log(`✅ Email processing complete:`, summary);
+    console.log(`📊 Summary: Processed ${result.usersProcessed} users, sent ${result.emailsSent} emails, ${result.errors.length} errors`);
+    
     return new Response(
-      JSON.stringify(
-        {
-          success: true,
-          usersProcessed: result.usersProcessed,
-          emailsSent: result.emailsSent,
-          errors: result.errors,
-        },
-        null,
-        2
-      ),
+      JSON.stringify(summary, null, 2),
       {
         status: 200,
         headers: {
@@ -486,7 +527,13 @@ Deno.serve(async (req: Request) => {
     );
   } catch (error) {
     // Handle unexpected errors
-    console.error('Unexpected error:', error);
+    console.error('❌ Unexpected error in Edge Function:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown',
+    });
+    
     return new Response(
       JSON.stringify(
         {

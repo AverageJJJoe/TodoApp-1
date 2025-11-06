@@ -503,18 +503,20 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
   if (successMessage && successMessage.includes('Check your email')) {
     return (
       <View style={styles.container}>
-        <View style={styles.successIconContainer}>
-          <View style={styles.successIconBackground}>
-            <Text style={styles.successCheckmark}>✓</Text>
+        <View style={styles.successContent}>
+          <View style={styles.successIconContainer}>
+            <View style={styles.successIconBackground}>
+              <Text style={styles.successCheckmark}>✓</Text>
+            </View>
           </View>
+          
+          <Text style={styles.successTitle}>Check your email!</Text>
+          
+          <Text style={styles.successMessage}>
+            We sent a magic link to {'\n'}
+            <Text style={styles.successEmail}>{requestedEmail || email}</Text>
+          </Text>
         </View>
-        
-        <Text style={styles.successTitle}>Check your email!</Text>
-        
-        <Text style={styles.successMessage}>
-          We sent a magic link to {'\n'}
-          <Text style={styles.successEmail}>{requestedEmail || email}</Text>
-        </Text>
       </View>
     );
   }
@@ -526,10 +528,10 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
     >
       <View style={styles.content}>
-        {/* Logo/Icon - Match Lovable: 120px size with spring animation feel */}
+        {/* Logo/Icon - Use new icon.png instead of old logo.png */}
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../../assets/logo.png')} 
+            source={require('../../assets/icon.png')} 
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -626,8 +628,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoImage: {
-    width: 120,
-    height: 120,
+    width: 100, // Reduced from 120 to create white space around logo
+    height: 100, // Reduced from 120 to create white space around logo
   },
   // Title - Match Lovable text-title-large
   title: {
@@ -712,6 +714,12 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   // Success State - Match Lovable success screen
+  successContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing['2xl'] as number,
+  },
   successIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',

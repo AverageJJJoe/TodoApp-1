@@ -714,14 +714,18 @@ Schedule the edge function to run hourly via pg_cron:
 
 ```sql
 -- Run email function every hour (adjust as needed)
+-- CRITICAL: Must use net.http_post() with schema prefix and named parameters
 SELECT cron.schedule(
   'send-daily-emails-hourly',
   '0 * * * *', -- every hour
   $$
-  SELECT http_post(
-    'https://<project>.supabase.co/functions/v1/send-daily-emails',
-    '{}',
-    'Bearer <edge-function-secret>'
+  SELECT net.http_post(
+    url := 'https://<project>.supabase.co/functions/v1/send-daily-emails',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer <edge-function-secret>'
+    ),
+    body := '{}'::jsonb
   )
   $$
 );

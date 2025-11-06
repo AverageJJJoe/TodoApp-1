@@ -52,3 +52,5 @@ CREATE POLICY "email_logs_select_own"
 -- which bypasses RLS. This is appropriate for automated email logging.
 -- Only SELECT policy is needed for users to query their own logs in future features.
 
+
+

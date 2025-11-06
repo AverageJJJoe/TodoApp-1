@@ -1023,12 +1023,20 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 
 ## Epic 7: Pre-Launch Polish (Pre-Launch)
 
-**Epic Goal:** Final polish and cleanup before production launch - remove development tools, add logo, update messaging.
+**Epic Goal:** Final polish and cleanup before production launch - remove development tools, add logo, update messaging, add essential user features (contact form, archive view, dark mode).
 
-**Status:** 🔄 **IN PROGRESS** (Story 7.1 in progress)
+**Status:** 🔄 **IN PROGRESS** (Stories 7.1-7.4 in progress/complete, Stories 7.5-7.7 & 7.9 approved, Story 7.8 deferred)
 
 **Completion Summary:**
 - 🔄 Story 7.1: Pre-Launch - Magic Link Screen Polish - **In Progress**
+- ✅ Story 7.2: Pre-Launch - App Icon & Splash Screen - **Done**
+- ✅ Story 7.3: Pre-Launch - Create Email Logs Table - **Done**
+- ✅ Story 7.4: Pre-Launch - UI Polish & Copy Updates - **Done**
+- ✅ Story 7.5: Pre-Launch - Contact Form in Settings - **Approved** (2025-01-27, PO validated v2)
+- ✅ Story 7.6: Pre-Launch - Archive Tab for Fresh Start Mode - **Approved** (2025-01-27, PO validated)
+- ✅ Story 7.7: Pre-Launch - Dark Mode Support - **Approved** (2025-01-27, PO validated v2)
+- 📝 Story 7.8: Pre-Launch - App Review Prompting - **Draft (Deferred - Post-Launch)**
+- ✅ Story 7.9: Pre-Launch - Share Extension (Share Sheet Integration) - **Approved** (2025-01-27, PO validated v2)
 
 **Epic Achievement:** _To be updated upon completion_
 
@@ -1058,5 +1066,123 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 **Deliverable:** Production-ready Magic Link screen with logo, updated tagline, and no dev tools
 
 **Test:** Launch app → Verify logo displays (not emoji), no dev tools visible, tagline shows "Capture on the go"
+
+---
+
+### Story 7.5: Pre-Launch - Contact Form in Settings
+**Estimated Time:** 2 hours  
+**Dependencies:** Epic 1-6 complete
+
+**As a** user  
+**I want to** contact the support team directly from the Settings screen  
+**So that** I can report issues, ask questions, or provide feedback without leaving the app
+
+**Acceptance Criteria:**
+1. New "SUPPORT" section added to Settings screen below "WORKFLOW" section
+2. "Contact Us" row displays in SUPPORT section with disclosure indicator
+3. Tapping "Contact Us" opens modal with form fields: Name (optional), Email (pre-filled from session), Message (required)
+4. Form submission inserts data to `contacts` table in Supabase
+5. After successful insert, Edge Function `send-email` is triggered to send notification email to support
+6. User sees success message: "Thanks! We'll get back to you soon."
+7. Form validates: Message is required (show error if empty)
+
+**Deliverable:** Contact form integrated into Settings screen
+
+**Test:** Open Settings → Tap "Contact Us" → Fill form → Submit → Verify success message and email sent
+
+---
+
+### Story 7.6: Pre-Launch - Archive Tab for Fresh Start Mode
+**Estimated Time:** 1-2 hours  
+**Dependencies:** Epic 1-6 complete
+
+**As a** Fresh Start mode user  
+**I want to** view my archived tasks in an Archive tab  
+**So that** I can still see previous tasks that were sent via email, even though they're cleared from my active list
+
+**Acceptance Criteria:**
+1. Tab bar displays in Fresh Start mode (currently only shows in Carry Over mode)
+2. Archive tab queries: `SELECT * FROM tasks WHERE user_id = ? AND status = 'archived' ORDER BY archived_at DESC`
+3. Archive tab shows archived tasks with archived timestamp
+4. Empty state: "No archived tasks yet! 📧"
+5. Archive tab is read-only (no editing, no FAB button)
+6. Active tab shows only open tasks (unchanged behavior)
+
+**Deliverable:** Archive tab enabled for Fresh Start mode users
+
+**Test:** Switch to Fresh Start mode → Verify tab bar shows → Switch to Archive tab → Verify archived tasks display
+
+---
+
+### Story 7.7: Pre-Launch - Dark Mode Support
+**Estimated Time:** 3-4 hours  
+**Dependencies:** Epic 1-6 complete
+
+**As a** user  
+**I want to** switch between light and dark themes  
+**So that** I can use the app comfortably in different lighting conditions and match my device's system preference
+
+**Acceptance Criteria:**
+1. New "APPEARANCE" section added to Settings screen below "WORKFLOW" section
+2. Appearance section shows theme selector with options: "Light", "Dark", "System" (follows system preference)
+3. Theme preference stored in user preferences store and persisted to database
+4. App applies theme colors immediately when theme changes
+5. All screens and components respect theme (use theme-aware colors from design system)
+6. Theme persists across app restarts
+7. "System" option respects device system theme (light/dark mode)
+
+**Deliverable:** Dark mode support with theme selector in Settings
+
+**Test:** Open Settings → Select "Dark" → Verify app switches to dark theme → Restart app → Verify theme persists
+
+---
+
+### Story 7.8: Pre-Launch - App Review Prompting
+**Estimated Time:** 4-5 hours  
+**Dependencies:** Epic 1-6 complete  
+**Status:** 📝 **DEFERRED - Post-Launch** (Implement after Month 1+ when engagement patterns stabilize)
+
+**As a** engaged user  
+**I want to** be prompted to review the app at the right moment  
+**So that** I can share my positive experience and help others discover the app
+
+**Acceptance Criteria:**
+1. Install `react-native-in-app-review` library
+2. Track engagement metrics: app opens, tasks added, tasks completed, days since install
+3. Implement "happiness engine" that calculates engagement score
+4. Prompt eligibility: After 2-3 days of use, 3+ sessions, engagement score > threshold (e.g., 16 points)
+5. Two-tap flow: Pre-screen ("Are you liking the app?") → Review prompt (if yes) or feedback form (if no)
+6. Cooldown: 90 days between prompts, lifetime cap: 3 prompts max
+7. Pre-screen uses fun, brand-aligned copy
+8. Review prompt uses native platform APIs (iOS SKStoreReviewController, Android In-App Review API)
+
+**Deliverable:** Smart review prompting system with engagement tracking
+
+**Test:** Simulate engaged user (2+ days, 3+ opens, score 16+) → Verify prompt eligibility → Verify pre-screen → Verify review prompt
+
+**Note:** Deferred to post-launch (Month 2+) when real engagement data is available for threshold calibration.
+
+---
+
+### Story 7.9: Pre-Launch - Share Extension (Share Sheet Integration)
+**Estimated Time:** 3-4 hours  
+**Dependencies:** Epic 1-6 complete
+
+**As a** user  
+**I want to** share links or text from other apps (Safari, Chrome, etc.) directly to TodoTomorrow  
+**So that** I can quickly add tasks from web pages, articles, or other content without manually copying and pasting
+
+**Acceptance Criteria:**
+1. TodoTomorrow appears in iOS Share Sheet when sharing URLs or text
+2. TodoTomorrow appears in Android Share Menu when sharing URLs or text
+3. Tapping TodoTomorrow in share sheet opens app (or brings to foreground)
+4. Shared content (URL or text) is captured and displayed in task creation flow
+5. User can edit shared content before creating task
+6. Shared content creates new task with pre-filled text (URL or text content)
+7. Share extension works from Safari, Chrome, Notes, and other common apps
+
+**Deliverable:** Share extension integrated, app appears in share sheets
+
+**Test:** Share URL from Safari → Verify TodoTomorrow appears → Tap it → Verify task creation modal opens with URL pre-filled
 
 ---
