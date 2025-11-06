@@ -17,6 +17,7 @@ import { useUserPreferencesStore } from '../stores/userPreferencesStore';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
 import { colors, typography, spacing } from '../design-system';
+import { ContactFormModal } from '../components/ContactFormModal';
 import {
   calculateWeeksSinceLaunch,
   assignCohort,
@@ -41,6 +42,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const [userEmail, setUserEmail] = useState<string>('');
   const [workflowMode, setWorkflowMode] = useState<'fresh_start' | 'carry_over'>('carry_over');
   const [isLoadingWorkflowMode, setIsLoadingWorkflowMode] = useState(true);
+  const [isContactModalVisible, setIsContactModalVisible] = useState(false);
 
   const {
     preferences,
@@ -217,6 +219,102 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  };
+
+  // Handle contact form submission
+  const handleContactSubmit = async (data: { name: string; email: string; message: string }) => {
+    try {
+      const currentSession = useAuthStore.getState().session;
+      
+      // Get user_id from users table (match auth_id from session)
+      let userId: string | null = null;
+      if (currentSession?.user?.id) {
+        const { data: user, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_id', currentSession.user.id)
+          .maybeSingle();
+
+        if (userError) {
+          if (__DEV__) {
+            console.error('Error getting user for contact form:', userError);
+          }
+          // Continue with anonymous contact if user lookup fails
+        } else if (user) {
+          userId = user.id;
+        }
+      }
+
+      // Insert to contacts table
+      const { error: insertError } = await supabase
+        .from('contacts')
+        .insert({
+          user_id: userId,
+          name: data.name || null,
+          email: data.email,
+          message: data.message,
+        });
+
+      if (insertError) {
+        if (__DEV__) {
+          console.error('Error inserting contact:', insertError);
+        }
+        throw new Error(`Failed to send message: ${insertError.message}`);
+      }
+
+      // Escape HTML to prevent XSS
+      const escapedName = escapeHTML(data.name || 'Not provided');
+      const escapedEmail = escapeHTML(data.email);
+      const escapedMessage = escapeHTML(data.message);
+
+      // Format email HTML with escaped contact details
+      const html = `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${escapedName}</p>
+        <p><strong>Email:</strong> ${escapedEmail}</p>
+        <p><strong>User ID:</strong> ${userId || 'Anonymous'}</p>
+        <p><strong>Message:</strong></p>
+        <p>${escapedMessage}</p>
+      `;
+
+      // Get support email (use RESEND_FROM_EMAIL env var or fallback)
+      // Note: Edge Function uses RESEND_FROM_EMAIL for 'from', but we need 'to' for support
+      const supportEmail = 'joegaleckas@gmail.com';
+
+      // Trigger Edge Function to send email
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: supportEmail,
+          subject: 'New Contact Form Submission',
+          html: html,
+        },
+      });
+
+      // Log email errors but don't fail (contact was saved to DB)
+      if (emailError) {
+        if (__DEV__) {
+          console.error('Error sending contact email:', emailError);
+        }
+        // Continue - contact was saved successfully
+      } else if (emailData?.error) {
+        if (__DEV__) {
+          console.error('Email function returned error:', emailData.error);
+        }
+        // Continue - contact was saved successfully
+      }
+
+      // Show success message
+      Alert.alert(
+        'Success',
+        "Thanks! We'll get back to you soon.",
+        [{ text: 'OK', onPress: () => setIsContactModalVisible(false) }]
+      );
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error submitting contact form:', error);
+      }
+      throw error; // Re-throw to be handled by ContactFormModal
+    }
   };
 
   const handleSendTestEmail = async () => {
@@ -662,6 +760,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
           </View>
         </GroupedSection>
 
+        {/* SUPPORT Section */}
+        <SectionHeader title="SUPPORT" />
+        <GroupedSection>
+          <CellRow
+            label="Contact Us"
+            showDisclosure={true}
+            onPress={() => setIsContactModalVisible(true)}
+            isLast={true}
+          />
+        </GroupedSection>
+
         {/* Time Picker (iOS) */}
         {showTimePicker && (
           <View style={styles.timePickerContainer}>
@@ -700,33 +809,44 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
           </TouchableOpacity>
         </GroupedSection>
 
-        {/* Save Button */}
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-            onPress={handleSave}
-            disabled={isSaving}
-            activeOpacity={0.8}
-          >
-            {isSaving ? (
-              <ActivityIndicator color={colors.background} />
-            ) : (
-              <Text style={styles.saveButtonText}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Save Button - Hide when contact modal is open */}
+        {!isContactModalVisible && (
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+              onPress={handleSave}
+              disabled={isSaving}
+              activeOpacity={0.8}
+            >
+              {isSaving ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={styles.saveButtonText}>Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {/* Sign Out Button */}
-        <View style={styles.signOutContainer}>
-          <TouchableOpacity
-            style={styles.signOutButton}
-            onPress={handleSignOut}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.signOutButtonText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Sign Out Button - Hide when contact modal is open */}
+        {!isContactModalVisible && (
+          <View style={styles.signOutContainer}>
+            <TouchableOpacity
+              style={styles.signOutButton}
+              onPress={handleSignOut}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.signOutButtonText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
+
+      {/* Contact Form Modal */}
+      <ContactFormModal
+        visible={isContactModalVisible}
+        onClose={() => setIsContactModalVisible(false)}
+        onSubmit={handleContactSubmit}
+      />
     </View>
   );
 };
