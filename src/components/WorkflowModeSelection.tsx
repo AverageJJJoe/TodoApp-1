@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 
 interface WorkflowModeSelectionProps {
   onComplete: (mode: 'fresh-start' | 'carry-over') => void;
@@ -21,9 +21,114 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
   onComplete,
   onBack,
 }) => {
+  const { colors } = useTheme();
   const [selectedMode, setSelectedMode] = useState<
     'fresh-start' | 'carry-over'
   >('carry-over');
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      minHeight: '100%',
+      backgroundColor: colors.background,
+      flex: 1,
+      flexDirection: 'column',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.lg,
+      paddingTop: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+    },
+    backButton: {
+      padding: spacing.sm,
+      minHeight: 44,
+      minWidth: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: -spacing.sm,
+    },
+    backButtonText: {
+      ...typography.bodyLarge,
+      color: colors.textPrimary,
+      fontSize: 24,
+    },
+    contentContainer: {
+      flex: 1,
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing['2xl'],
+    },
+    questionText: {
+      ...typography.titleMedium,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      marginBottom: spacing['3xl'],
+    },
+    modeCard: {
+      width: '100%',
+      padding: spacing.xl,
+      borderRadius: spacing.radiusMd,
+      borderWidth: 2,
+      marginBottom: spacing.md,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    cardIcon: {
+      fontSize: 32,
+      width: 32,
+      height: 32,
+    },
+    checkmarkIcon: {
+      fontSize: 24,
+      color: colors.primary,
+      fontWeight: '600',
+      width: 24,
+      height: 24,
+    },
+    cardTitle: {
+      ...typography.bodyLarge,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginBottom: spacing.xs,
+    },
+    cardDescription: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
+    continueButton: {
+      width: '100%',
+      height: 50,
+      backgroundColor: colors.primary,
+      borderRadius: spacing.radiusSm,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 0,
+    },
+    continueButtonText: {
+      ...typography.bodyLarge,
+      color: colors.primaryForeground,
+      fontWeight: '500',
+    },
+    paginationContainer: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.xl,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.surface,
+    },
+    dotActive: {
+      backgroundColor: colors.primary,
+    },
+  }), [colors]);
 
   // Animation values
   const questionOpacity = useRef(new Animated.Value(0)).current;
@@ -287,108 +392,4 @@ export const WorkflowModeSelection: React.FC<WorkflowModeSelectionProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    minHeight: '100%',
-    backgroundColor: colors.background,
-    flex: 1,
-    flexDirection: 'column',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
-  },
-  backButton: {
-    padding: spacing.sm,
-    minHeight: 44,
-    minWidth: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: -spacing.sm,
-  },
-  backButtonText: {
-    ...typography.bodyLarge,
-    color: colors.textPrimary,
-    fontSize: 24,
-  },
-  contentContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing['2xl'],
-  },
-  questionText: {
-    ...typography.titleMedium,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing['3xl'],
-  },
-  modeCard: {
-    width: '100%',
-    padding: spacing.xl,
-    borderRadius: spacing.radiusMd, // Match Lovable rounded-radius-md
-    borderWidth: 2,
-    marginBottom: spacing.md, // Match Lovable mb-md between cards, mb-3xl before button
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  cardIcon: {
-    fontSize: 32, // Match Lovable w-8 h-8 (32px)
-    width: 32,
-    height: 32,
-  },
-  checkmarkIcon: {
-    fontSize: 24, // Match Lovable w-6 h-6 (24px)
-    color: colors.primary,
-    fontWeight: '600',
-    width: 24,
-    height: 24,
-  },
-  cardTitle: {
-    ...typography.bodyLarge,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  cardDescription: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  continueButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: colors.primary,
-    borderRadius: spacing.radiusSm,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 0, // Remove any margin, pagination dots handle spacing
-  },
-  continueButtonText: {
-    ...typography.bodyLarge,
-    color: colors.primaryForeground,
-    fontWeight: '500',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.surface,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-  },
-});
 

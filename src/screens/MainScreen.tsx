@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,9 +21,10 @@ import { useAuthStore } from '../stores/authStore';
 import { useTaskStore, Task } from '../stores/taskStore';
 import { SettingsScreen } from './SettingsScreen';
 import { TaskItem } from '../components/TaskItem';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 
 export const MainScreen = () => {
+  const { colors } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -36,6 +37,292 @@ export const MainScreen = () => {
   const [activeTab, setActiveTab] = useState<'active' | 'archive'>('active');
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [archivedTasks, setArchivedTasks] = useState<Task[]>([]);
+  
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      height: 44, // Match Lovable: h-[44px]
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      paddingHorizontal: spacing.lg, // Match Lovable: px-lg
+      borderBottomWidth: 1,
+      borderBottomColor: colors.separator, // Match Lovable: border-b border-separator
+    },
+    title: {
+      ...typography.bodyLarge, // Match Lovable: text-body-large (NOT titleMedium)
+      fontWeight: '600', // Match Lovable: font-semibold
+      color: colors.textPrimary,
+    },
+    headerButton: {
+      padding: spacing.sm, // Match Lovable: p-2
+      marginHorizontal: -spacing.sm, // Match Lovable: -ml-2, -mr-2
+      borderRadius: spacing.radiusLg, // Match Lovable: rounded-lg (for hover state)
+    },
+    headerIcon: {
+      fontSize: 24, // Match Lovable: w-6 h-6
+      color: colors.textPrimary,
+      fontWeight: '400',
+      lineHeight: 24,
+    },
+    tabBar: {
+      flexDirection: 'row',
+      height: 44, // Match iOS segmented control: h-[44px]
+      borderTopWidth: 1,
+      borderTopColor: colors.separator,
+      backgroundColor: colors.background,
+    },
+    tabButton: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    tabButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    tabButtonText: {
+      ...typography.body,
+      fontWeight: '500',
+      color: colors.textSecondary,
+    },
+    tabButtonTextActive: {
+      color: colors.primaryForeground, // White text on active tab
+    },
+    content: {
+      flex: 1,
+    },
+    emptyListContainer: {
+      flexGrow: 1,
+      minHeight: '60%', // Match Lovable: min-h-[60vh]
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing['2xl'] as number, // Match Lovable: px-2xl
+    },
+    emptyStateContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyStateIconContainer: {
+      marginBottom: spacing.lg, // Match Lovable spacing
+    },
+    emptyStateIcon: {
+      fontSize: 48, // Match Lovable: w-12 h-12
+      color: colors.textTertiary,
+    },
+    emptyStateLine1: {
+      ...typography.bodyLarge,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    emptyStateLine2: {
+      ...typography.bodyLarge,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    emptyStatePlus: {
+      color: colors.primary,
+      fontWeight: '600', // Match Lovable: font-semibold
+    },
+    fab: {
+      position: 'absolute',
+      bottom: 80, // Match Lovable: bottom-[80px]
+      right: spacing.lg, // Match Lovable: right-lg
+      width: 56, // Match Lovable: w-14 (14 * 4 = 56px)
+      height: 56, // Match Lovable: h-14
+      borderRadius: 28,
+    },
+    fabInner: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...colors.shadowFab, // Match Lovable: shadow-fab
+    },
+    fabText: {
+      color: colors.background,
+      fontSize: 28,
+      fontWeight: '300',
+      lineHeight: 32,
+    },
+    modalOverlay: {
+      flex: 1,
+    },
+    modalOverlayInner: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 20,
+      paddingBottom: 40,
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.xl, // 20px
+    },
+    modalTitle: {
+      ...typography.titleMedium,
+      fontSize: 20, // Override to 20px for modal title
+      color: colors.textPrimary,
+    },
+    modalCloseButton: {
+      fontSize: 24,
+      color: colors.textSecondary,
+      fontWeight: '300',
+    },
+    taskInput: {
+      borderWidth: 1,
+      borderColor: colors.separator,
+      borderRadius: spacing.radiusSm,
+      padding: spacing.lg, // 16px
+      ...typography.bodyLarge,
+      minHeight: 100,
+      textAlignVertical: 'top',
+      color: colors.textPrimary,
+      marginBottom: spacing.xl, // 20px
+    },
+    addTaskButton: {
+      backgroundColor: colors.primary,
+      padding: spacing.lg, // 16px
+      borderRadius: spacing.radiusSm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addTaskButtonDisabled: {
+      opacity: 0.5,
+    },
+    addTaskButtonText: {
+      color: colors.background,
+      ...typography.bodyLarge,
+      fontWeight: '600',
+    },
+    addTaskButtonTextDisabled: {
+      color: colors.textTertiary,
+    },
+    taskList: {
+      paddingTop: spacing.md, // Match Lovable: pt-md
+      paddingHorizontal: spacing.lg, // Match Lovable: px-lg
+      paddingBottom: spacing.md,
+    },
+    taskCardContainer: {
+      marginBottom: 8, // Match Lovable: space-y-2 (8px gap)
+    },
+    taskCard: {
+      backgroundColor: colors.card, // Match Lovable: bg-card
+      borderRadius: spacing.radiusLg, // Match Lovable: rounded-lg
+      overflow: 'hidden',
+      ...colors.shadowSm, // Match Lovable: shadow-soft-sm
+    },
+    taskCardContent: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.md, // Match Lovable: gap-md
+      padding: spacing.lg, // Match Lovable: p-lg
+    },
+    checkboxContainer: {
+      marginTop: 2, // Match Lovable: mt-[2px]
+      flexShrink: 0,
+    },
+    checkbox: {
+      width: 24, // Match Lovable: w-6
+      height: 24, // Match Lovable: h-6
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.textTertiary, // Match Lovable: border-text-tertiary
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkmark: {
+      fontSize: 16,
+      color: colors.background,
+      fontWeight: 'bold',
+    },
+    taskContent: {
+      flex: 1,
+      minWidth: 0,
+    },
+    taskTextContainer: {
+      position: 'relative',
+    },
+    taskText: {
+      ...typography.bodyLarge,
+      color: colors.textPrimary,
+    },
+    taskTextCompleted: {
+      color: colors.separator, // Match archive design: #C6C6C8
+      textDecorationLine: 'line-through',
+    },
+    strikethrough: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: '50%',
+      height: 2,
+      backgroundColor: colors.textTertiary,
+      transformOrigin: 'left',
+    },
+    taskTimestamp: {
+      ...typography.caption,
+      color: colors.textTertiary,
+      marginTop: spacing.xs, // Match Lovable: mt-1
+    },
+    taskTimestampArchive: {
+      ...typography.caption,
+      color: colors.textTertiary,
+      marginTop: spacing.xs, // Match Lovable: mt-1
+    },
+    archiveFooter: {
+      padding: spacing.lg,
+      alignItems: 'center',
+      marginTop: spacing.md,
+    },
+    archiveFooterText: {
+      ...typography.caption,
+      color: colors.textTertiary,
+    },
+    errorContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl, // 20px
+    },
+    errorText: {
+      ...typography.bodyLarge,
+      color: colors.destructive,
+      textAlign: 'center',
+      marginBottom: spacing.sm, // 8px
+    },
+    errorHint: {
+      ...typography.body,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    deleteButton: {
+      backgroundColor: colors.destructive,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 80,
+      height: '100%',
+      borderRadius: spacing.radiusSm,
+    },
+    deleteButtonText: {
+      color: colors.background,
+      ...typography.bodyLarge,
+      fontWeight: '600',
+    },
+  }), [colors]);
   
   // Empty state floating animation
   const emptyStateYAnim = useRef(new Animated.Value(0)).current;
@@ -790,290 +1077,4 @@ export const MainScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    height: 44, // Match Lovable: h-[44px]
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg, // Match Lovable: px-lg
-    borderBottomWidth: 1,
-    borderBottomColor: colors.separator, // Match Lovable: border-b border-separator
-  },
-  title: {
-    ...typography.bodyLarge, // Match Lovable: text-body-large (NOT titleMedium)
-    fontWeight: '600', // Match Lovable: font-semibold
-    color: colors.textPrimary,
-  },
-  headerButton: {
-    padding: spacing.sm, // Match Lovable: p-2
-    marginHorizontal: -spacing.sm, // Match Lovable: -ml-2, -mr-2
-    borderRadius: spacing.radiusLg, // Match Lovable: rounded-lg (for hover state)
-  },
-  headerIcon: {
-    fontSize: 24, // Match Lovable: w-6 h-6
-    color: colors.textPrimary,
-    fontWeight: '400',
-    lineHeight: 24,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    height: 44, // Match iOS segmented control: h-[44px]
-    borderTopWidth: 1,
-    borderTopColor: colors.separator,
-    backgroundColor: colors.background,
-  },
-  tabButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  tabButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  tabButtonText: {
-    ...typography.body,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
-  tabButtonTextActive: {
-    color: colors.primaryForeground, // White text on active tab
-  },
-  content: {
-    flex: 1,
-  },
-  emptyListContainer: {
-    flexGrow: 1,
-    minHeight: '60%', // Match Lovable: min-h-[60vh]
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing['2xl'] as number, // Match Lovable: px-2xl
-  },
-  emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyStateIconContainer: {
-    marginBottom: spacing.lg, // Match Lovable spacing
-  },
-  emptyStateIcon: {
-    fontSize: 48, // Match Lovable: w-12 h-12
-    color: colors.textTertiary,
-  },
-  emptyStateLine1: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  emptyStateLine2: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  emptyStatePlus: {
-    color: colors.primary,
-    fontWeight: '600', // Match Lovable: font-semibold
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 80, // Match Lovable: bottom-[80px]
-    right: spacing.lg, // Match Lovable: right-lg
-    width: 56, // Match Lovable: w-14 (14 * 4 = 56px)
-    height: 56, // Match Lovable: h-14
-    borderRadius: 28,
-  },
-  fabInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...colors.shadowFab, // Match Lovable: shadow-fab
-  },
-  fabText: {
-    color: colors.background,
-    fontSize: 28,
-    fontWeight: '300',
-    lineHeight: 32,
-  },
-  modalOverlay: {
-    flex: 1,
-  },
-  modalOverlayInner: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 40,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xl, // 20px
-  },
-  modalTitle: {
-    ...typography.titleMedium,
-    fontSize: 20, // Override to 20px for modal title
-    color: colors.textPrimary,
-  },
-  modalCloseButton: {
-    fontSize: 24,
-    color: colors.textSecondary,
-    fontWeight: '300',
-  },
-  taskInput: {
-    borderWidth: 1,
-    borderColor: colors.separator,
-    borderRadius: spacing.radiusSm,
-    padding: spacing.lg, // 16px
-    ...typography.bodyLarge,
-    minHeight: 100,
-    textAlignVertical: 'top',
-    color: colors.textPrimary,
-    marginBottom: spacing.xl, // 20px
-  },
-  addTaskButton: {
-    backgroundColor: colors.primary,
-    padding: spacing.lg, // 16px
-    borderRadius: spacing.radiusSm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addTaskButtonDisabled: {
-    opacity: 0.5,
-  },
-  addTaskButtonText: {
-    color: colors.background,
-    ...typography.bodyLarge,
-    fontWeight: '600',
-  },
-  addTaskButtonTextDisabled: {
-    color: colors.textTertiary,
-  },
-  taskList: {
-    paddingTop: spacing.md, // Match Lovable: pt-md
-    paddingHorizontal: spacing.lg, // Match Lovable: px-lg
-    paddingBottom: spacing.md,
-  },
-  taskCardContainer: {
-    marginBottom: 8, // Match Lovable: space-y-2 (8px gap)
-  },
-  taskCard: {
-    backgroundColor: colors.card, // Match Lovable: bg-card
-    borderRadius: spacing.radiusLg, // Match Lovable: rounded-lg
-    overflow: 'hidden',
-    ...colors.shadowSm, // Match Lovable: shadow-soft-sm
-  },
-  taskCardContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md, // Match Lovable: gap-md
-    padding: spacing.lg, // Match Lovable: p-lg
-  },
-  checkboxContainer: {
-    marginTop: 2, // Match Lovable: mt-[2px]
-    flexShrink: 0,
-  },
-  checkbox: {
-    width: 24, // Match Lovable: w-6
-    height: 24, // Match Lovable: h-6
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.textTertiary, // Match Lovable: border-text-tertiary
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkmark: {
-    fontSize: 16,
-    color: colors.background,
-    fontWeight: 'bold',
-  },
-  taskContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-  taskTextContainer: {
-    position: 'relative',
-  },
-  taskText: {
-    ...typography.bodyLarge,
-    color: colors.textPrimary,
-  },
-  taskTextCompleted: {
-    color: colors.separator, // Match archive design: #C6C6C8
-    textDecorationLine: 'line-through',
-  },
-  strikethrough: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: '50%',
-    height: 2,
-    backgroundColor: colors.textTertiary,
-    transformOrigin: 'left',
-  },
-  taskTimestamp: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginTop: spacing.xs, // Match Lovable: mt-1
-  },
-  taskTimestampArchive: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginTop: spacing.xs, // Match Lovable: mt-1
-  },
-  archiveFooter: {
-    padding: spacing.lg,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  archiveFooterText: {
-    ...typography.caption,
-    color: colors.textTertiary,
-  },
-  errorContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl, // 20px
-  },
-  errorText: {
-    ...typography.bodyLarge,
-    color: colors.destructive,
-    textAlign: 'center',
-    marginBottom: spacing.sm, // 8px
-  },
-  errorHint: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  deleteButton: {
-    backgroundColor: colors.destructive,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    height: '100%',
-    borderRadius: spacing.radiusSm,
-  },
-  deleteButtonText: {
-    color: colors.background,
-    ...typography.bodyLarge,
-    fontWeight: '600',
-  },
-});
 

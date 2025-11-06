@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 
 interface DeliveryTimePickerProps {
   onContinue: (time: string) => void;
@@ -24,6 +24,140 @@ export const DeliveryTimePicker: React.FC<DeliveryTimePickerProps> = ({
   onBack,
   onSkip,
 }) => {
+  const { colors } = useTheme();
+  
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      minHeight: '100%',
+      backgroundColor: colors.background,
+      flex: 1,
+      flexDirection: 'column',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: spacing.lg,
+      paddingTop: Platform.OS === 'ios' ? spacing.xl : spacing.lg + 24,
+    },
+    backButton: {
+      padding: spacing.sm,
+      minHeight: 44,
+      minWidth: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: -spacing.sm,
+    },
+    backButtonText: {
+      ...typography.bodyLarge,
+      color: colors.textPrimary,
+      fontSize: 24,
+    },
+    skipButton: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      minHeight: 44,
+      minWidth: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    skipButtonText: {
+      ...typography.caption,
+      color: colors.textTertiary,
+    },
+    contentContainer: {
+      flex: 1,
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing['2xl'],
+    },
+    questionText: {
+      fontSize: 20,
+      lineHeight: 20 * 1.3,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      textAlign: 'center',
+      marginBottom: spacing['3xl'],
+    },
+    timePickerContainer: {
+      width: '100%',
+      maxWidth: 384,
+      marginBottom: spacing.xl,
+      alignSelf: 'center',
+    },
+    timeDisplayContainer: {
+      width: '100%',
+      height: 60,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: colors.surface,
+      borderWidth: 2,
+      borderColor: colors.separator,
+      borderRadius: spacing.radiusMd,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    timeDisplayText: {
+      fontSize: 36,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      textAlign: 'center',
+    },
+    iosPickerContainer: {
+      marginTop: spacing.md,
+    },
+    timePicker: {
+      height: 200,
+    },
+    doneButton: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      backgroundColor: colors.primary,
+      borderRadius: spacing.radiusSm,
+      alignItems: 'center',
+    },
+    doneButtonText: {
+      ...typography.bodyLarge,
+      color: colors.primaryForeground,
+      fontWeight: '500',
+    },
+    tipText: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing['3xl'],
+    },
+    continueButton: {
+      width: '100%',
+      height: 50,
+      backgroundColor: colors.primary,
+      borderRadius: spacing.radiusSm,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    continueButtonText: {
+      ...typography.bodyLarge,
+      color: colors.primaryForeground,
+      fontWeight: '500',
+    },
+    paginationContainer: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.xl,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.surface,
+    },
+    dotActive: {
+      backgroundColor: colors.primary,
+    },
+  }), [colors]);
+  
   const [selectedTime, setSelectedTime] = useState<Date>(() => {
     const defaultTime = new Date();
     defaultTime.setHours(6, 0, 0, 0);
@@ -249,136 +383,4 @@ export const DeliveryTimePicker: React.FC<DeliveryTimePickerProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    minHeight: '100%',
-    backgroundColor: colors.background,
-    flex: 1,
-    flexDirection: 'column',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? spacing.xl : spacing.lg + 24, // Account for status bar on Android
-  },
-  backButton: {
-    padding: spacing.sm,
-    minHeight: 44,
-    minWidth: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: -spacing.sm,
-  },
-  backButtonText: {
-    ...typography.bodyLarge,
-    color: colors.textPrimary,
-    fontSize: 24,
-  },
-  skipButton: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    minHeight: 44,
-    minWidth: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  skipButtonText: {
-    ...typography.caption,
-    color: colors.textTertiary,
-  },
-  contentContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing['2xl'],
-  },
-  questionText: {
-    fontSize: 20,
-    lineHeight: 20 * 1.3,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing['3xl'],
-  },
-  timePickerContainer: {
-    width: '100%',
-    maxWidth: 384,
-    marginBottom: spacing.xl,
-    alignSelf: 'center',
-  },
-  timeDisplayContainer: {
-    width: '100%',
-    height: 60,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.separator,
-    borderRadius: spacing.radiusMd,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  timeDisplayText: {
-    fontSize: 36,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  iosPickerContainer: {
-    marginTop: spacing.md,
-  },
-  timePicker: {
-    height: 200,
-  },
-  doneButton: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: spacing.radiusSm,
-    alignItems: 'center',
-  },
-  doneButtonText: {
-    ...typography.bodyLarge,
-    color: colors.primaryForeground,
-    fontWeight: '500',
-  },
-  tipText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing['3xl'],
-  },
-  continueButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: colors.primary,
-    borderRadius: spacing.radiusSm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    ...typography.bodyLarge,
-    color: colors.primaryForeground,
-    fontWeight: '500',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.surface,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-  },
-});
 

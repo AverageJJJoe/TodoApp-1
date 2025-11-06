@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 
 interface OnboardingWelcomeProps {
   onContinue: () => void;
@@ -21,6 +21,83 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
   onContinue,
   onSkip,
 }) => {
+  const { colors } = useTheme();
+  
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      minHeight: '100%',
+      backgroundColor: colors.background,
+      flex: 1,
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing['2xl'],
+    },
+    skipButton: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? spacing.xl : spacing.lg + 24,
+      right: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      minHeight: 44,
+      minWidth: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+    },
+    skipButtonText: {
+      ...typography.caption,
+      color: colors.textTertiary,
+    },
+    emoji: {
+      fontSize: 64,
+      marginBottom: spacing.xl,
+      textAlign: 'center',
+    },
+    headline: {
+      ...typography.titleMedium,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    bodyContainer: {
+      maxWidth: SCREEN_WIDTH * 0.8,
+      marginBottom: spacing['3xl'],
+    },
+    bodyText: {
+      ...typography.bodyLarge,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    continueButton: {
+      width: '100%',
+      height: 50,
+      backgroundColor: colors.primary,
+      borderRadius: spacing.radiusSm,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    continueButtonText: {
+      ...typography.bodyLarge,
+      color: colors.primaryForeground,
+      fontWeight: '500',
+    },
+    paginationContainer: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.xl,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.surface,
+    },
+    dotActive: {
+      backgroundColor: colors.primary,
+    },
+  }), [colors]);
+  
   // Spring animation for emoji
   const emojiScale = useRef(new Animated.Value(0)).current;
   
@@ -162,79 +239,4 @@ export const OnboardingWelcome: React.FC<OnboardingWelcomeProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    minHeight: '100%',
-    backgroundColor: colors.background,
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing['2xl'],
-  },
-  skipButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? spacing.xl : spacing.lg + 24, // Account for status bar on Android
-    right: spacing.lg,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    minHeight: 44,
-    minWidth: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10, // Ensure it's above other elements
-  },
-  skipButtonText: {
-    ...typography.caption,
-    color: colors.textTertiary,
-  },
-  emoji: {
-    fontSize: 64,
-    marginBottom: spacing.xl,
-    textAlign: 'center',
-  },
-  headline: {
-    ...typography.titleMedium,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  bodyContainer: {
-    maxWidth: SCREEN_WIDTH * 0.8,
-    marginBottom: spacing['3xl'],
-  },
-  bodyText: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  continueButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: colors.primary,
-    borderRadius: spacing.radiusSm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    ...typography.bodyLarge,
-    color: colors.primaryForeground,
-    fontWeight: '500',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.surface,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-  },
-});
 

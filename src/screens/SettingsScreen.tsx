@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,8 +15,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Localization from 'expo-localization';
 import { useUserPreferencesStore } from '../stores/userPreferencesStore';
 import { useAuthStore } from '../stores/authStore';
+import { useThemeStore } from '../stores/themeStore';
 import { supabase } from '../lib/supabase';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 import { ContactFormModal } from '../components/ContactFormModal';
 import {
   calculateWeeksSinceLaunch,
@@ -29,6 +30,7 @@ interface SettingsScreenProps {
 }
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
+  const { colors } = useTheme();
   const [selectedTime, setSelectedTime] = useState<Date>(() => {
     // Default to 06:00 AM
     const defaultTime = new Date();
@@ -43,6 +45,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const [workflowMode, setWorkflowMode] = useState<'fresh_start' | 'carry_over'>('carry_over');
   const [isLoadingWorkflowMode, setIsLoadingWorkflowMode] = useState(true);
   const [isContactModalVisible, setIsContactModalVisible] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
 
   const {
     preferences,
@@ -52,6 +55,193 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   } = useUserPreferencesStore();
 
   const { session, clearSession } = useAuthStore();
+  const { themePreference, setThemePreference } = useThemeStore();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      height: 44,
+      backgroundColor: colors.background,
+      paddingHorizontal: spacing.lg,
+      ...colors.shadowSm,
+      paddingTop: Platform.OS === 'ios' ? 60 : 0,
+    },
+    backButtonContainer: {
+      minWidth: 44,
+      minHeight: 44,
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+    },
+    backButton: {
+      ...typography.bodyLarge,
+      color: colors.primary,
+      fontWeight: '400',
+    },
+    title: {
+      ...typography.bodyLarge,
+      color: colors.textPrimary,
+      fontWeight: '600',
+      flex: 1,
+      textAlign: 'center',
+    },
+    headerSpacer: {
+      width: 44,
+    },
+    content: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    sectionHeader: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing['3xl'],
+      paddingBottom: spacing.md,
+    },
+    sectionHeaderText: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      fontWeight: '400',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    groupedSection: {
+      backgroundColor: colors.background,
+      marginHorizontal: spacing.xl,
+      borderRadius: spacing.radiusMd,
+      overflow: 'hidden',
+    },
+    cell: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      minHeight: 44,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    cellBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.separator,
+    },
+    cellContent: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    cellLabel: {
+      ...typography.body,
+      color: colors.textPrimary,
+    },
+    cellValue: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
+    disclosureIndicator: {
+      ...typography.bodyLarge,
+      color: colors.textSecondary,
+      marginLeft: spacing.md,
+    },
+    timePickerContainer: {
+      backgroundColor: colors.background,
+      marginHorizontal: spacing.xl,
+      marginTop: spacing.lg,
+      paddingVertical: spacing.lg,
+      borderRadius: spacing.radiusMd,
+    },
+    doneButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.md,
+      marginHorizontal: spacing.xl,
+      borderRadius: spacing.radiusMd,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    doneButtonText: {
+      ...typography.bodyLarge,
+      color: colors.background,
+      fontWeight: '600',
+    },
+    testEmailCell: {
+      justifyContent: 'center',
+    },
+    testEmailCellText: {
+      ...typography.body,
+      color: colors.textPrimary,
+    },
+    footer: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing['3xl'],
+      paddingBottom: spacing['3xl'],
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: spacing.lg,
+      borderRadius: spacing.radiusMd,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 50,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      ...typography.bodyLarge,
+      color: colors.background,
+      fontWeight: '600',
+    },
+    signOutContainer: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing['3xl'],
+      paddingBottom: spacing['3xl'],
+    },
+    signOutButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 50,
+      paddingVertical: spacing.lg,
+    },
+    signOutButtonText: {
+      ...typography.body,
+      color: colors.destructive,
+      fontWeight: '400',
+    },
+    workflowModeCell: {
+      flexDirection: 'column',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    workflowModeContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: spacing.md,
+    },
+    workflowModeValue: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
+    workflowModeDescription: {
+      ...typography.caption,
+      color: colors.textTertiary,
+      marginTop: spacing.xs,
+      paddingLeft: 0,
+    },
+    workflowSwitch: {
+      marginLeft: spacing.sm,
+    },
+  }), [colors]);
 
   // Get user email from session
   useEffect(() => {
@@ -795,6 +985,70 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
           </View>
         </GroupedSection>
 
+        {/* APPEARANCE Section */}
+        <SectionHeader title="APPEARANCE" />
+        <GroupedSection>
+          <CellRow
+            label="Theme"
+            value={
+              themePreference === 'light'
+                ? 'Light'
+                : themePreference === 'dark'
+                ? 'Dark'
+                : 'System'
+            }
+            valueColor={colors.primary}
+            showDisclosure={true}
+            onPress={() => {
+              if (Platform.OS === 'ios') {
+                Alert.alert(
+                  'Theme',
+                  'Choose a theme',
+                  [
+                    {
+                      text: 'Light',
+                      onPress: () => setThemePreference('light'),
+                    },
+                    {
+                      text: 'Dark',
+                      onPress: () => setThemePreference('dark'),
+                    },
+                    {
+                      text: 'System',
+                      onPress: () => setThemePreference('system'),
+                    },
+                    { text: 'Cancel', style: 'cancel' },
+                  ],
+                  { cancelable: true }
+                );
+              } else {
+                // Android - use action sheet style
+                Alert.alert(
+                  'Theme',
+                  'Choose a theme',
+                  [
+                    {
+                      text: 'Light',
+                      onPress: () => setThemePreference('light'),
+                    },
+                    {
+                      text: 'Dark',
+                      onPress: () => setThemePreference('dark'),
+                    },
+                    {
+                      text: 'System',
+                      onPress: () => setThemePreference('system'),
+                    },
+                    { text: 'Cancel', style: 'cancel' },
+                  ],
+                  { cancelable: true }
+                );
+              }
+            }}
+            isLast={true}
+          />
+        </GroupedSection>
+
         {/* SUPPORT Section */}
         <SectionHeader title="SUPPORT" />
         <GroupedSection>
@@ -885,189 +1139,3 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 44,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg,
-    ...colors.shadowSm,
-    paddingTop: Platform.OS === 'ios' ? 60 : 0,
-  },
-  backButtonContainer: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  backButton: {
-    ...typography.bodyLarge,
-    color: colors.primary,
-    fontWeight: '400',
-  },
-  title: {
-    ...typography.bodyLarge,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 44,
-  },
-  content: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sectionHeader: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing['3xl'],
-    paddingBottom: spacing.md,
-  },
-  sectionHeaderText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontWeight: '400',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  groupedSection: {
-    backgroundColor: colors.background,
-    marginHorizontal: spacing.xl,
-    borderRadius: spacing.radiusMd,
-    overflow: 'hidden',
-  },
-  cell: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 44,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  cellBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.separator,
-  },
-  cellContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cellLabel: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  cellValue: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  disclosureIndicator: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    marginLeft: spacing.md,
-  },
-  timePickerContainer: {
-    backgroundColor: colors.background,
-    marginHorizontal: spacing.xl,
-    marginTop: spacing.lg,
-    paddingVertical: spacing.lg,
-    borderRadius: spacing.radiusMd,
-  },
-  doneButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    marginHorizontal: spacing.xl,
-    borderRadius: spacing.radiusMd,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doneButtonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '600',
-  },
-  testEmailCell: {
-    justifyContent: 'center',
-  },
-  testEmailCellText: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  footer: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing['3xl'],
-    paddingBottom: spacing['3xl'],
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.lg,
-    borderRadius: spacing.radiusMd,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '600',
-  },
-  signOutContainer: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing['3xl'],
-    paddingBottom: spacing['3xl'],
-  },
-  signOutButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-    paddingVertical: spacing.lg,
-  },
-  signOutButtonText: {
-    ...typography.body,
-    color: colors.destructive,
-    fontWeight: '400',
-  },
-  workflowModeCell: {
-    flexDirection: 'column',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  workflowModeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: spacing.md,
-  },
-  workflowModeValue: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  workflowModeDescription: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginTop: spacing.xs,
-    paddingLeft: 0,
-  },
-  workflowSwitch: {
-    marginLeft: spacing.sm,
-  },
-});

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 're
 import { Swipeable } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { Task } from '../stores/taskStore';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 
 interface TaskItemProps {
   task: Task;
@@ -57,6 +57,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   isArchive = false,
   workflowMode,
 }) => {
+  const { colors } = useTheme();
   // Animation values for completion sequence (600ms total)
   const checkboxBorderAnim = useRef(new Animated.Value(0)).current;
   const checkboxBgAnim = useRef(new Animated.Value(0)).current;

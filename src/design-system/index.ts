@@ -3,7 +3,7 @@
  * Central export point for all design tokens
  */
 
-export { colors } from './colors';
+export { colors, getColors, useTheme } from './colors';
 export type { Colors } from './colors';
 
 export { typography } from './typography';

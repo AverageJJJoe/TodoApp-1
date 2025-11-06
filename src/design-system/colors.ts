@@ -4,6 +4,9 @@
  * HSL color format for React Native compatibility
  */
 
+import { useMemo } from 'react';
+import { useThemeStore } from '../stores/themeStore';
+
 // Convert HSL to hex for React Native (since RN doesn't support HSL directly)
 // HSL values from Lovable: --primary: 211 100% 50% = hsl(211, 100%, 50%) = #007AFF
 const hslToHex = (h: number, s: number, l: number): string => {
@@ -98,3 +101,57 @@ export const colors = {
 } as const;
 
 export type Colors = typeof colors;
+
+// Dark mode colors (HSL converted to hex)
+const colorsDark = {
+  backgroundDark: '#121212', // hsl(0, 0%, 7%)
+  surfaceDark: '#1A1A1A', // hsl(240, 6%, 10%)
+  textPrimaryDark: '#FAFAFA', // hsl(0, 0%, 98%)
+  textSecondaryDark: '#D6D6D6', // hsl(240, 5%, 84%)
+  textTertiaryDark: '#A6A6A6', // hsl(240, 4%, 65%)
+  separatorDark: '#292929', // hsl(240, 4%, 16%)
+  cardDark: '#1A1A1A', // hsl(240, 6%, 10%)
+  cardForegroundDark: '#FAFAFA', // hsl(0, 0%, 98%)
+  foregroundDark: '#FAFAFA', // hsl(0, 0%, 98%)
+  borderDark: '#292929', // hsl(240, 4%, 16%)
+  inputDark: '#292929', // hsl(240, 4%, 16%)
+  carriedOverDark: '#1A1A1A', // Use surfaceDark for carried over background in dark mode
+} as const;
+
+/**
+ * Get theme-aware colors
+ * @param theme - 'light' or 'dark'
+ * @returns Colors object with theme-appropriate values
+ */
+export const getColors = (theme: 'light' | 'dark'): Colors => {
+  if (theme === 'dark') {
+    return {
+      ...colors, // Keep primary, destructive, success, priority colors, shadows unchanged
+      background: colorsDark.backgroundDark,
+      foreground: colorsDark.foregroundDark,
+      textPrimary: colorsDark.textPrimaryDark,
+      textSecondary: colorsDark.textSecondaryDark,
+      textTertiary: colorsDark.textTertiaryDark,
+      surface: colorsDark.surfaceDark,
+      separator: colorsDark.separatorDark,
+      card: colorsDark.cardDark,
+      cardForeground: colorsDark.cardForegroundDark,
+      input: colorsDark.inputDark,
+      border: colorsDark.borderDark,
+      carriedOver: colorsDark.carriedOverDark,
+      // Keep primary colors unchanged (they work in both themes)
+      // Keep shadows unchanged
+    };
+  }
+  return colors; // Light mode (existing colors)
+};
+
+/**
+ * Hook to get current theme and theme-aware colors
+ * @returns Object with theme ('light' | 'dark') and colors
+ */
+export const useTheme = () => {
+  const { resolvedTheme, getColors: getColorsFromStore } = useThemeStore();
+  const themeColors = useMemo(() => getColorsFromStore(resolvedTheme), [resolvedTheme, getColorsFromStore]);
+  return { theme: resolvedTheme, colors: themeColors };
+};

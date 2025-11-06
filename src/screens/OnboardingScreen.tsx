@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { OnboardingWelcome } from '../components/OnboardingWelcome';
 import { DeliveryTimePicker } from '../components/DeliveryTimePicker';
@@ -6,7 +6,7 @@ import { WorkflowModeSelection } from '../components/WorkflowModeSelection';
 import { useUserPreferencesStore } from '../stores/userPreferencesStore';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
-import { colors } from '../design-system';
+import { useTheme } from '../design-system';
 import {
   calculateWeeksSinceLaunch,
   assignCohort,
@@ -22,11 +22,23 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   onComplete,
 }) => {
+  const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const { updatePreferences } = useUserPreferencesStore();
   const { session } = useAuthStore();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    screenContainer: {
+      flex: 1,
+      width: SCREEN_WIDTH,
+    },
+  }), [colors]);
 
   // Get system timezone (simple fallback)
   const getSystemTimezone = (): string => {
@@ -205,15 +217,4 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  screenContainer: {
-    flex: 1,
-    width: SCREEN_WIDTH,
-  },
-});
 

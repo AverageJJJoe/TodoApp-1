@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 import { useAuthStore } from '../stores/authStore';
 
 interface ContactFormModalProps {
@@ -27,7 +27,98 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { colors } = useTheme();
   const { session } = useAuthStore();
+  
+  const styles = useMemo(() => StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+    },
+    modalOverlayInner: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: spacing.xl,
+      paddingBottom: 40,
+      maxHeight: SCREEN_HEIGHT * 0.8,
+      minHeight: Math.min(500, SCREEN_HEIGHT * 0.6),
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.xl,
+    },
+    modalTitle: {
+      ...typography.titleMedium,
+      fontSize: 20,
+      color: colors.textPrimary,
+    },
+    modalCloseButton: {
+      fontSize: 24,
+      color: colors.textSecondary,
+      fontWeight: '300',
+    },
+    scrollView: {
+      maxHeight: SCREEN_HEIGHT * 0.7,
+    },
+    scrollContent: {
+      paddingBottom: spacing.md,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.separator,
+      borderRadius: spacing.radiusSm,
+      padding: spacing.lg,
+      ...typography.body,
+      color: colors.textPrimary,
+      marginBottom: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    messageInput: {
+      minHeight: 120,
+      textAlignVertical: 'top',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginTop: spacing.md,
+    },
+    button: {
+      flex: 1,
+      padding: spacing.lg,
+      borderRadius: spacing.radiusSm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 50,
+    },
+    cancelButton: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.separator,
+    },
+    cancelButtonText: {
+      ...typography.bodyLarge,
+      color: colors.textPrimary,
+      fontWeight: '600',
+    },
+    sendButton: {
+      backgroundColor: colors.primary,
+    },
+    sendButtonDisabled: {
+      opacity: 0.6,
+    },
+    sendButtonText: {
+      ...typography.bodyLarge,
+      color: colors.background,
+      fontWeight: '600',
+    },
+  }), [colors]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -193,94 +284,4 @@ export const ContactFormModal: React.FC<ContactFormModalProps> = ({
 };
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-  },
-  modalOverlayInner: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: spacing.xl,
-    paddingBottom: 40,
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    minHeight: Math.min(500, SCREEN_HEIGHT * 0.6),
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  modalTitle: {
-    ...typography.titleMedium,
-    fontSize: 20,
-    color: colors.textPrimary,
-  },
-  modalCloseButton: {
-    fontSize: 24,
-    color: colors.textSecondary,
-    fontWeight: '300',
-  },
-  scrollView: {
-    maxHeight: SCREEN_HEIGHT * 0.7,
-  },
-  scrollContent: {
-    paddingBottom: spacing.md,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.separator,
-    borderRadius: spacing.radiusSm,
-    padding: spacing.lg,
-    ...typography.body,
-    color: colors.textPrimary,
-    marginBottom: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  messageInput: {
-    minHeight: 120,
-    textAlignVertical: 'top',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  button: {
-    flex: 1,
-    padding: spacing.lg,
-    borderRadius: spacing.radiusSm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-  },
-  cancelButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.separator,
-  },
-  cancelButtonText: {
-    ...typography.bodyLarge,
-    color: colors.textPrimary,
-    fontWeight: '600',
-  },
-  sendButton: {
-    backgroundColor: colors.primary,
-  },
-  sendButtonDisabled: {
-    opacity: 0.6,
-  },
-  sendButtonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '600',
-  },
-});
 

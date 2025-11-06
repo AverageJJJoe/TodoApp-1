@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,14 @@ import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { clearStoredDeepLink } from '../lib/deepLinkIntent';
-import { colors, typography, spacing } from '../design-system';
+import { useTheme, typography, spacing } from '../design-system';
 
 interface AuthScreenProps {
   initialDeepLink?: string | null;
 }
 
 export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -29,6 +30,145 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const setSession = useAuthStore((state) => state.setSession);
   const initializeSession = useAuthStore((state) => state.initializeSession);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing['2xl'] as number,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    logoContainer: {
+      marginBottom: spacing.xl,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoImage: {
+      width: 100,
+      height: 100,
+    },
+    title: {
+      ...typography.titleLarge,
+      textAlign: 'center',
+      color: colors.textPrimary,
+      marginBottom: spacing.md,
+      maxWidth: 400,
+    },
+    subtitle: {
+      ...typography.bodyLarge,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing['3xl'],
+      maxWidth: 400,
+    },
+    inputWrapper: {
+      width: '100%',
+      maxWidth: 400,
+      marginBottom: spacing.lg,
+    },
+    input: {
+      width: '100%',
+      height: 50,
+      paddingHorizontal: spacing.lg,
+      ...typography.bodyLarge,
+      backgroundColor: colors.background,
+      borderRadius: spacing.radiusMd,
+      borderWidth: 2,
+      borderColor: colors.separator,
+      color: colors.textPrimary,
+    },
+    inputFocused: {
+      borderColor: colors.primary,
+    },
+    inputValid: {
+      borderColor: colors.primary,
+    },
+    inputError: {
+      borderColor: colors.destructive,
+    },
+    errorText: {
+      ...typography.caption,
+      color: colors.destructive,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+      maxWidth: 400,
+    },
+    button: {
+      width: '100%',
+      maxWidth: 400,
+      height: 50,
+      backgroundColor: colors.primary,
+      borderRadius: spacing.radiusSm,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      ...colors.shadowSm,
+      marginBottom: spacing.lg,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonIcon: {
+      fontSize: 20,
+      color: colors.background,
+    },
+    buttonText: {
+      ...typography.bodyLarge,
+      color: colors.background,
+      fontWeight: '500',
+    },
+    helperText: {
+      ...typography.caption,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      maxWidth: 400,
+    },
+    successContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing['2xl'] as number,
+    },
+    successIconContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xl,
+    },
+    successIconBackground: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: `${colors.success}1A`,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    successCheckmark: {
+      fontSize: 36,
+      color: colors.success,
+    },
+    successTitle: {
+      ...typography.titleMedium,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+      maxWidth: 400,
+    },
+    successMessage: {
+      ...typography.body,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      maxWidth: 400,
+    },
+    successEmail: {
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+  }), [colors]);
 
   // Basic email validation regex pattern
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -609,150 +749,4 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing['2xl'] as number,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  // Logo - Match Lovable: 120px size (w-[120px] h-[120px])
-  logoContainer: {
-    marginBottom: spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoImage: {
-    width: 100, // Reduced from 120 to create white space around logo
-    height: 100, // Reduced from 120 to create white space around logo
-  },
-  // Title - Match Lovable text-title-large
-  title: {
-    ...typography.titleLarge,
-    textAlign: 'center',
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-    maxWidth: 400, // Match Lovable max-w-sm
-  },
-  // Subtitle - Match Lovable text-body-large
-  subtitle: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing['3xl'],
-    maxWidth: 400,
-  },
-  // Input Wrapper - Match Lovable w-full max-w-sm
-  inputWrapper: {
-    width: '100%',
-    maxWidth: 400,
-    marginBottom: spacing.lg,
-  },
-  input: {
-    width: '100%',
-    height: 50,
-    paddingHorizontal: spacing.lg,
-    ...typography.bodyLarge,
-    backgroundColor: colors.background,
-    borderRadius: spacing.radiusMd,
-    borderWidth: 2, // Match Lovable border-2
-    borderColor: colors.separator,
-    color: colors.textPrimary,
-  },
-  inputFocused: {
-    borderColor: colors.primary,
-  },
-  inputValid: {
-    borderColor: colors.primary,
-  },
-  inputError: {
-    borderColor: colors.destructive,
-  },
-  errorText: {
-    ...typography.caption,
-    color: colors.destructive,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-    maxWidth: 400,
-  },
-  // Button - Match Lovable exactly
-  button: {
-    width: '100%',
-    maxWidth: 400,
-    height: 50,
-    backgroundColor: colors.primary,
-    borderRadius: spacing.radiusSm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    ...colors.shadowSm,
-    marginBottom: spacing.lg,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonIcon: {
-    fontSize: 20,
-    color: colors.background,
-  },
-  buttonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '500',
-  },
-  // Helper Text - Match Lovable text-caption
-  helperText: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    maxWidth: 400,
-  },
-  // Success State - Match Lovable success screen
-  successContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing['2xl'] as number,
-  },
-  successIconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  successIconBackground: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: `${colors.success}1A`, // 10% opacity
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successCheckmark: {
-    fontSize: 36,
-    color: colors.success,
-  },
-  successTitle: {
-    ...typography.titleMedium,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-    maxWidth: 400,
-  },
-  successMessage: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    maxWidth: 400,
-  },
-  successEmail: {
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-});
 

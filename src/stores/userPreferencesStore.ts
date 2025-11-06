@@ -5,6 +5,7 @@ import { useAuthStore } from './authStore';
 export interface UserPreferences {
   delivery_time: string; // Format: "06:00:00"
   timezone: string;       // Format: "America/New_York"
+  theme_preference?: 'light' | 'dark' | 'system'; // Theme preference
 }
 
 interface UserPreferencesStore {
@@ -12,7 +13,7 @@ interface UserPreferencesStore {
   isLoading: boolean;
   loadError: string | null;
   loadPreferences: () => Promise<void>;
-  updatePreferences: (delivery_time: string, timezone: string) => Promise<void>;
+  updatePreferences: (delivery_time: string, timezone: string, theme_preference?: 'light' | 'dark' | 'system') => Promise<void>;
 }
 
 export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) => ({
@@ -35,7 +36,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
       // Query user preferences from Supabase
       const { data, error } = await supabase
         .from('users')
-        .select('delivery_time, timezone')
+        .select('delivery_time, timezone, theme_preference')
         .eq('auth_id', session.user.id)
         .maybeSingle();
 
@@ -47,6 +48,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
           preferences: {
             delivery_time: '06:00:00',
             timezone: 'UTC',
+            theme_preference: 'system',
           },
           isLoading: false,
           loadError: null,
@@ -64,6 +66,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
           preferences: {
             delivery_time: data.delivery_time || '06:00:00',
             timezone: data.timezone || 'UTC',
+            theme_preference: (data.theme_preference as 'light' | 'dark' | 'system') || 'system',
           },
           isLoading: false,
           loadError: null,
@@ -74,6 +77,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
           preferences: {
             delivery_time: '06:00:00',
             timezone: 'UTC',
+            theme_preference: 'system',
           },
           isLoading: false,
           loadError: null,
@@ -87,7 +91,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
       throw error;
     }
   },
-  updatePreferences: async (delivery_time: string, timezone: string) => {
+  updatePreferences: async (delivery_time: string, timezone: string, theme_preference?: 'light' | 'dark' | 'system') => {
     // Get session from auth store
     const session = useAuthStore.getState().session;
     
@@ -120,6 +124,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
               email: session.user.email || '',
               delivery_time,
               timezone,
+              theme_preference: theme_preference || 'system',
               // Other fields use defaults from schema
             },
           ])
@@ -139,12 +144,17 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
 
       // Update user preferences in Supabase (only if user already existed)
       if (user) {
+        const updateData: { delivery_time: string; timezone: string; theme_preference?: string } = {
+          delivery_time,
+          timezone,
+        };
+        if (theme_preference !== undefined) {
+          updateData.theme_preference = theme_preference;
+        }
+        
         const { error } = await supabase
           .from('users')
-          .update({ 
-            delivery_time,
-            timezone,
-          })
+          .update(updateData)
           .eq('id', userId);
 
         if (error) {
@@ -160,6 +170,7 @@ export const useUserPreferencesStore = create<UserPreferencesStore>((set, get) =
           preferences: {
             delivery_time,
             timezone,
+            theme_preference: theme_preference || get().preferences?.theme_preference || 'system',
           },
         });
       } else {

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { colors, typography, spacing, shadows } from '../design-system';
+import { useTheme, typography, spacing, shadows } from '../design-system';
 
 interface TrialBadgeProps {
   daysRemaining: number;
@@ -13,8 +13,39 @@ export const TrialBadge: React.FC<TrialBadgeProps> = ({
   tasksRemaining,
   onUpgrade,
 }) => {
+  const { colors } = useTheme();
   const isLowDays = daysRemaining < 3;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      alignSelf: 'center',
+      marginBottom: spacing['2xl'],
+    },
+    badgeContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      backgroundColor: colors.trialBg,
+      borderRadius: 999,
+      ...shadows.shadowSm,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    icon: {
+      fontSize: 16,
+      color: colors.trialText,
+    },
+    text: {
+      ...typography.caption,
+      fontWeight: '500',
+      color: colors.trialText,
+    },
+  }), [colors]);
 
   // Pulse animation when days < 3
   useEffect(() => {
@@ -64,35 +95,3 @@ export const TrialBadge: React.FC<TrialBadgeProps> = ({
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    alignSelf: 'center',
-    marginBottom: spacing['2xl'],
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.trialBg,
-    borderRadius: 999, // Fully rounded (pill shape)
-    ...shadows.shadowSm,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // Note: gap property may not be supported in all React Native versions
-    // Consider using marginRight on icon if gap doesn't work
-    gap: spacing.md,
-  },
-  icon: {
-    fontSize: 16,
-    color: colors.trialText,
-  },
-  text: {
-    ...typography.caption,
-    fontWeight: '500',
-    color: colors.trialText,
-  },
-});

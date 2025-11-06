@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Animated,
   ScrollView,
 } from 'react-native';
-import { colors, typography, spacing, shadows } from '../design-system';
+import { useTheme, typography, spacing, shadows } from '../design-system';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -27,6 +27,165 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   cohort,
   onUpgrade,
 }) => {
+  const { colors } = useTheme();
+  
+  const styles = useMemo(() => StyleSheet.create({
+    backdropContainer: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg,
+    },
+    modalContent: {
+      backgroundColor: colors.background,
+      borderRadius: spacing.radiusLg,
+      width: '100%',
+      maxWidth: 400,
+      maxHeight: '90%',
+      ...shadows.shadowLg,
+    },
+    closeButton: {
+      position: 'absolute',
+      top: spacing.lg,
+      right: spacing.lg,
+      zIndex: 10,
+      padding: spacing.sm,
+      borderRadius: spacing.radiusSm,
+    },
+    closeButtonText: {
+      fontSize: 20,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    scrollContent: {
+      padding: spacing['2xl'],
+      paddingTop: spacing['3xl'],
+    },
+    iconCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: colors.primaryLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+      alignSelf: 'center',
+      marginBottom: spacing.xl,
+    },
+    iconText: {
+      fontSize: 32,
+      color: colors.primary,
+    },
+    title: {
+      ...typography.titleMedium,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    subtitle: {
+      ...typography.body,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+    },
+    subtitleBold: {
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+    pricingContainer: {
+      backgroundColor: colors.surface,
+      borderRadius: spacing.radiusMd,
+      padding: spacing.xl,
+      marginBottom: spacing.xl,
+      alignItems: 'center',
+    },
+    pricingLabel: {
+      ...typography.caption,
+      color: colors.textTertiary,
+      marginBottom: spacing.xs,
+    },
+    pricingRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      marginBottom: spacing.xs,
+    },
+    pricingAmount: {
+      ...typography.titleLarge,
+      fontWeight: '700',
+      color: colors.textPrimary,
+    },
+    pricingSuffix: {
+      ...typography.bodyLarge,
+      color: colors.textSecondary,
+      marginLeft: spacing.xs,
+    },
+    pricingCancel: {
+      ...typography.caption,
+      color: colors.textTertiary,
+    },
+    featuresContainer: {
+      marginBottom: spacing['3xl'],
+    },
+    featureItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    checkmarkCircle: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: 'rgba(52, 199, 89, 0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.md,
+    },
+    checkmark: {
+      fontSize: 12,
+      color: colors.success,
+      fontWeight: '700',
+    },
+    featureText: {
+      ...typography.body,
+      color: colors.textPrimary,
+      flex: 1,
+    },
+    primaryButton: {
+      width: '100%',
+      height: 50,
+      backgroundColor: colors.primary,
+      borderRadius: spacing.radiusSm,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    primaryButtonText: {
+      ...typography.body,
+      fontWeight: '500',
+      color: colors.primaryForeground,
+    },
+    secondaryButton: {
+      width: '100%',
+      height: 50,
+      backgroundColor: 'transparent',
+      borderRadius: spacing.radiusSm,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    secondaryButtonText: {
+      ...typography.body,
+      fontWeight: '500',
+      color: colors.textSecondary,
+    },
+  }), [colors]);
+  
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.95)).current;
   const modalTranslateY = useRef(new Animated.Value(20)).current;
@@ -232,160 +391,3 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  backdropContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  modalContent: {
-    backgroundColor: colors.background,
-    borderRadius: spacing.radiusLg,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '90%',
-    ...shadows.shadowLg,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: spacing.lg,
-    right: spacing.lg,
-    zIndex: 10,
-    padding: spacing.sm,
-    borderRadius: spacing.radiusSm,
-  },
-  closeButtonText: {
-    fontSize: 20,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  scrollContent: {
-    padding: spacing['2xl'],
-    paddingTop: spacing['3xl'],
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginBottom: spacing.xl,
-  },
-  iconText: {
-    fontSize: 32,
-    color: colors.primary,
-  },
-  title: {
-    ...typography.titleMedium,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  subtitleBold: {
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  pricingContainer: {
-    backgroundColor: colors.surface,
-    borderRadius: spacing.radiusMd,
-    padding: spacing.xl,
-    marginBottom: spacing.xl,
-    alignItems: 'center',
-  },
-  pricingLabel: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginBottom: spacing.xs,
-  },
-  pricingRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: spacing.xs,
-  },
-  pricingAmount: {
-    ...typography.titleLarge,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  pricingSuffix: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    marginLeft: spacing.xs,
-  },
-  pricingCancel: {
-    ...typography.caption,
-    color: colors.textTertiary,
-  },
-  featuresContainer: {
-    marginBottom: spacing['3xl'],
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  checkmarkCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(52, 199, 89, 0.1)', // colors.success at 10% opacity
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  checkmark: {
-    fontSize: 12,
-    color: colors.success,
-    fontWeight: '700',
-  },
-  featureText: {
-    ...typography.body,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  primaryButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: colors.primary,
-    borderRadius: spacing.radiusSm,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  primaryButtonText: {
-    ...typography.body,
-    fontWeight: '500',
-    color: colors.primaryForeground,
-  },
-  secondaryButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: 'transparent',
-    borderRadius: spacing.radiusSm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    ...typography.body,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
-});
