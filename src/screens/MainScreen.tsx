@@ -35,6 +35,7 @@ export const MainScreen = () => {
   const [workflowMode, setWorkflowMode] = useState<'fresh_start' | 'carry_over'>('fresh_start');
   const [activeTab, setActiveTab] = useState<'active' | 'archive'>('active');
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
+  const [archivedTasks, setArchivedTasks] = useState<Task[]>([]);
   
   // Empty state floating animation
   const emptyStateYAnim = useRef(new Animated.Value(0)).current;
@@ -94,10 +95,14 @@ export const MainScreen = () => {
     }
   };
 
-  // Load completed tasks when in carry_over mode and archive tab is active
+  // Load completed/archived tasks when archive tab is active
   useEffect(() => {
-    if (workflowMode === 'carry_over' && activeTab === 'archive') {
-      loadCompletedTasks();
+    if (activeTab === 'archive') {
+      if (workflowMode === 'carry_over') {
+        loadCompletedTasks();
+      } else if (workflowMode === 'fresh_start') {
+        loadArchivedTasks();
+      }
     }
   }, [workflowMode, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -143,6 +148,52 @@ export const MainScreen = () => {
     } catch (error) {
       if (__DEV__) {
         console.error('Error loading completed tasks:', error);
+      }
+    }
+  };
+
+  // Load archived tasks for archive view (Fresh Start mode)
+  const loadArchivedTasks = async () => {
+    try {
+      const session = useAuthStore.getState().session;
+      if (!session?.user?.id) return;
+
+      // Get user id first
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', session.user.id)
+        .maybeSingle();
+
+      if (userError || !user) {
+        if (__DEV__) {
+          console.error('Error getting user for archived tasks:', userError);
+        }
+        return;
+      }
+
+      // Query archived tasks
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'archived')
+        .is('deleted_at', null)
+        .order('archived_at', { ascending: false });
+
+      if (error) {
+        if (__DEV__) {
+          console.error('Error loading archived tasks:', error);
+        }
+        return;
+      }
+
+      if (data) {
+        setArchivedTasks(data as Task[]);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Error loading archived tasks:', error);
       }
     }
   };
@@ -198,9 +249,13 @@ export const MainScreen = () => {
     setRefreshing(true);
     try {
       await loadTasks();
-      // If in archive tab, also refresh completed tasks
-      if (workflowMode === 'carry_over' && activeTab === 'archive') {
-        await loadCompletedTasks();
+      // If in archive tab, also refresh completed/archived tasks
+      if (activeTab === 'archive') {
+        if (workflowMode === 'carry_over') {
+          await loadCompletedTasks();
+        } else if (workflowMode === 'fresh_start') {
+          await loadArchivedTasks();
+        }
       }
     } catch (error) {
       // Error is already handled in loadTasks and set in loadError state
@@ -359,7 +414,7 @@ export const MainScreen = () => {
   };
 
   const renderTaskItem = ({ item }: { item: Task; index: number }) => {
-    const isArchiveMode = workflowMode === 'carry_over' && activeTab === 'archive';
+    const isArchiveMode = activeTab === 'archive';
     return (
       <TaskItem
         task={item}
@@ -394,9 +449,10 @@ export const MainScreen = () => {
     endOfWeek.setHours(23, 59, 59, 999);
     
     const weekTasks = completedTasks.filter(task => {
-      if (!task.completed_at) return false;
-      const completedAt = new Date(task.completed_at);
-      return completedAt >= startOfWeek && completedAt <= endOfWeek;
+      const completedAt = (task as any).completed_at;
+      if (!completedAt) return false;
+      const completedDate = new Date(completedAt);
+      return completedDate >= startOfWeek && completedDate <= endOfWeek;
     });
     
     return weekTasks.length;
@@ -423,9 +479,8 @@ export const MainScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Tab Bar - Only show in Carry Over mode */}
-      {workflowMode === 'carry_over' && (
-        <View style={styles.tabBar}>
+      {/* Tab Bar - Show for both Fresh Start and Carry Over modes */}
+      <View style={styles.tabBar}>
           <TouchableOpacity
             onPress={() => setActiveTab('active')}
             style={[
@@ -461,7 +516,6 @@ export const MainScreen = () => {
             </Text>
           </TouchableOpacity>
         </View>
-      )}
       
       <View style={styles.content}>
         {isLoading && tasks.length === 0 && !refreshing ? (
@@ -470,15 +524,19 @@ export const MainScreen = () => {
         ) : (
           <FlatList
             data={
-              workflowMode === 'carry_over' && activeTab === 'archive'
-                ? completedTasks
+              activeTab === 'archive'
+                ? workflowMode === 'fresh_start'
+                  ? archivedTasks
+                  : completedTasks // Carry Over: show completed tasks
                 : tasks.filter((t) => t.status === 'open') // Active tab: only show open tasks
             }
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => renderTaskItem({ item, index })}
             contentContainerStyle={
-              ((workflowMode === 'carry_over' && activeTab === 'archive'
-                ? completedTasks.length === 0
+              ((activeTab === 'archive'
+                ? workflowMode === 'fresh_start'
+                  ? archivedTasks.length === 0
+                  : completedTasks.length === 0
                 : tasks.filter((t) => t.status === 'open').length === 0)
                 && !isLoading)
                 ? styles.emptyListContainer
@@ -490,7 +548,7 @@ export const MainScreen = () => {
                   <Text style={styles.errorText}>{loadError}</Text>
                   <Text style={styles.errorHint}>Pull down to retry</Text>
                 </View>
-              ) : workflowMode === 'carry_over' && activeTab === 'archive' ? (
+              ) : activeTab === 'archive' ? (
                 <View style={styles.emptyStateContainer}>
                   {/* Archive empty state */}
                   <Animated.Text 
@@ -499,7 +557,9 @@ export const MainScreen = () => {
                       { opacity: emptyStateOpacityAnim1 },
                     ]}
                   >
-                    No completed tasks yet! 🎉
+                    {workflowMode === 'fresh_start'
+                      ? 'No archived tasks yet! 📧'
+                      : 'No completed tasks yet! 🎉'}
                   </Animated.Text>
                 </View>
               ) : (
@@ -560,7 +620,7 @@ export const MainScreen = () => {
       </View>
 
       {/* Floating Action Button - Match Lovable: spring entrance, tap animation - Hidden on Archive tab */}
-      {!(workflowMode === 'carry_over' && activeTab === 'archive') && (
+      {activeTab !== 'archive' && (
         <Animated.View
           style={[
             styles.fab,
@@ -713,9 +773,19 @@ export const MainScreen = () => {
         visible={isSettingsVisible}
         animationType="slide"
         transparent={false}
-        onRequestClose={() => setIsSettingsVisible(false)}
+        onRequestClose={async () => {
+          setIsSettingsVisible(false);
+          // Reload workflow mode and tasks when settings closes (in case mode was changed)
+          await loadWorkflowMode();
+          await loadTasks();
+        }}
       >
-        <SettingsScreen onClose={() => setIsSettingsVisible(false)} />
+        <SettingsScreen onClose={async () => {
+          setIsSettingsVisible(false);
+          // Reload workflow mode and tasks when settings closes (in case mode was changed)
+          await loadWorkflowMode();
+          await loadTasks();
+        }} />
       </Modal>
     </View>
   );

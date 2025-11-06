@@ -16,30 +16,30 @@ interface TaskItemProps {
   workflowMode?: 'fresh_start' | 'carry_over'; // Workflow mode - checkbox only visible in carry_over
 }
 
-// Format completion date for archive view
-const formatCompletionDate = (completedAt: string | null): string => {
-  if (!completedAt) return 'Just now';
+// Format archive/completion date for archive view
+const formatArchiveDate = (timestamp: string | null, prefix: 'Archived' | 'Completed'): string => {
+  if (!timestamp) return 'Just now';
   
-  const completed = new Date(completedAt);
+  const date = new Date(timestamp);
   const now = new Date();
-  const diffMs = now.getTime() - completed.getTime();
+  const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays < 1) {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     if (diffHours < 1) {
       const diffMins = Math.floor(diffMs / (1000 * 60));
-      return diffMins < 1 ? 'Just now' : `Completed ${diffMins}m ago`;
+      return diffMins < 1 ? 'Just now' : `${prefix} ${diffMins}m ago`;
     }
-    return `Completed ${diffHours}h ago`;
+    return `${prefix} ${diffHours}h ago`;
   } else if (diffDays === 1) {
-    return 'Completed yesterday';
+    return `${prefix} yesterday`;
   } else if (diffDays < 7) {
-    return `Completed ${diffDays}d ago`;
+    return `${prefix} ${diffDays}d ago`;
   } else {
     // Use short date format for older tasks
-    const isCurrentYear = completed.getFullYear() === now.getFullYear();
-    return `Completed ${completed.toLocaleDateString('en-US', {
+    const isCurrentYear = date.getFullYear() === now.getFullYear();
+    return `${prefix} ${date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       ...(isCurrentYear ? {} : { year: 'numeric' }),
@@ -264,7 +264,10 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               </View>
               {isArchive ? (
                 <Text style={componentStyles.taskTimestampArchive}>
-                  {formatCompletionDate((task as any).completed_at || null)}
+                  {formatArchiveDate(
+                    (task as any).archived_at || (task as any).completed_at || null,
+                    (task as any).archived_at ? 'Archived' : 'Completed'
+                  )}
                 </Text>
               ) : (
                 <Text style={componentStyles.taskTimestamp}>Just now</Text>

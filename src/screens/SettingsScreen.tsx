@@ -531,6 +531,36 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
         return;
       }
 
+      // Fresh Start mode: Archive all open tasks after email sent successfully
+      const { data: userForMode, error: userModeError } = await supabase
+        .from('users')
+        .select('workflow_mode')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!userModeError && userForMode?.workflow_mode === 'fresh_start') {
+        const { error: archiveError } = await supabase
+          .from('tasks')
+          .update({
+            archived_at: new Date().toISOString(),
+            status: 'archived',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId)
+          .eq('status', 'open'); // Only archive open tasks
+
+        if (archiveError) {
+          if (__DEV__) {
+            console.error('Error archiving tasks after test email:', archiveError);
+          }
+          // Don't fail - email was sent successfully
+        } else {
+          if (__DEV__) {
+            console.log('✅ Archived all open tasks after test email');
+          }
+        }
+      }
+
       // Success!
       Alert.alert(
         'Success',
@@ -740,7 +770,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
         {/* WORKFLOW Section */}
         <SectionHeader title="WORKFLOW" />
         <GroupedSection>
-          <View style={styles.cell}>
+          <View style={styles.workflowModeCell}>
             <View style={styles.cellContent}>
               <Text style={styles.cellLabel}>Mode</Text>
               <View style={styles.workflowModeContainer}>
@@ -757,6 +787,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
                 />
               </View>
             </View>
+            <Text style={styles.workflowModeDescription}>
+              {workflowMode === 'fresh_start'
+                ? 'Tasks reset daily after email is sent'
+                : 'Tasks persist until you mark them complete'}
+            </Text>
           </View>
         </GroupedSection>
 
@@ -1011,6 +1046,12 @@ const styles = StyleSheet.create({
     color: colors.destructive,
     fontWeight: '400',
   },
+  workflowModeCell: {
+    flexDirection: 'column',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.background,
+  },
   workflowModeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1019,6 +1060,12 @@ const styles = StyleSheet.create({
   workflowModeValue: {
     ...typography.body,
     color: colors.textSecondary,
+  },
+  workflowModeDescription: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginTop: spacing.xs,
+    paddingLeft: 0,
   },
   workflowSwitch: {
     marginLeft: spacing.sm,
