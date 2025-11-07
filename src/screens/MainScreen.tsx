@@ -1089,7 +1089,8 @@ export const MainScreen = () => {
       </Modal>
 
       {/* Share Handler - handles share intents from other apps */}
-      <ShareHandler onShareReceived={handleShareReceived} />
+      {/* TEMPORARILY DISABLED: Native module causing crashes - will re-enable after proper testing */}
+      {/* <ShareHandler onShareReceived={handleShareReceived} /> */}
     </View>
   );
 };
