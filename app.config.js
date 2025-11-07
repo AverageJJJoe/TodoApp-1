@@ -7,14 +7,17 @@ export default {
     name: "TodoTomorrow",
     slug: "todotomorrow",
     scheme: "todotomorrow",
-    version: "1.0.1",
+    version: "1.0.4",
     orientation: "portrait",
     icon: "./assets/icon.png",
-    userInterfaceStyle: "light",
+    userInterfaceStyle: "automatic",
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#ffffff",
+      dark: {
+        backgroundColor: "#121212"
+      }
     },
     assetBundlePatterns: [
       "assets/**/*",
@@ -58,7 +61,7 @@ export default {
       ]
     },
     android: {
-      versionCode: 2,
+      versionCode: 6,
       runtimeVersion: "1.0.0",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",

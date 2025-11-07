@@ -3,14 +3,17 @@
     "name": "TodoTomorrow",
     "slug": "todotomorrow",
     "scheme": "todotomorrow",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "backgroundColor": "#121212"
+      }
     },
     "assetBundlePatterns": [
       "assets/**/*"
@@ -31,7 +34,7 @@
       ]
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"

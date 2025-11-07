@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useTaskStore, Task } from '../stores/taskStore';
 import { SettingsScreen } from './SettingsScreen';
 import { TaskItem } from '../components/TaskItem';
+import { ShareHandler, SharedData } from '../components/ShareHandler';
 import { useTheme, typography, spacing } from '../design-system';
 
 export const MainScreen = () => {
@@ -558,6 +559,18 @@ export const MainScreen = () => {
     setIsModalVisible(true);
   };
 
+  // Handle shared content from ShareHandler
+  const handleShareReceived = useCallback((sharedData: SharedData) => {
+    if (__DEV__) {
+      console.log('📤 [MainScreen] Share received:', sharedData);
+    }
+    
+    // Pre-fill task input with shared content (URL or text)
+    setTaskInput(sharedData.data);
+    // Open the task creation modal
+    setIsModalVisible(true);
+  }, []); // Empty deps - setState functions are stable
+
   const handleCloseModal = () => {
     setIsModalVisible(false);
     setTaskInput('');
@@ -1074,6 +1087,9 @@ export const MainScreen = () => {
           await loadTasks();
         }} />
       </Modal>
+
+      {/* Share Handler - handles share intents from other apps */}
+      <ShareHandler onShareReceived={handleShareReceived} />
     </View>
   );
 };
