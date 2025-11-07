@@ -24,6 +24,7 @@ import {
   assignCohort,
   getLaunchDate,
 } from '../lib/cohortAssignment';
+import Constants from 'expo-constants';
 
 interface SettingsScreenProps {
   onClose: () => void;
@@ -825,6 +826,79 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     }
   };
 
+  const handleDeleteAccountPress = () => {
+    Alert.alert(
+      'Delete Account',
+      'This action cannot be undone. All your tasks, preferences, and data will be permanently deleted.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: handleDeleteAccount,
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const currentSession = useAuthStore.getState().session;
+      if (!currentSession?.access_token) {
+        Alert.alert('Error', 'No authenticated session found. Please sign in.');
+        return;
+      }
+
+      const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+      if (!supabaseUrl) {
+        Alert.alert('Error', 'Configuration error. Please try again later.');
+        return;
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/delete-user-account`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentSession.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Check response status before parsing JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to delete account. Please try again.';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          // If response isn't JSON, use default message
+        }
+        Alert.alert('Error', errorMessage);
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Sign out and navigate to auth screen
+        await supabase.auth.signOut();
+        clearSession();
+        // Navigation handled by auth state change in App.tsx
+      } else {
+        Alert.alert('Error', result.error || 'Failed to delete account. Please try again.');
+      }
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Error deleting account:', error);
+      }
+      Alert.alert('Error', 'Failed to delete account. Please check your connection and try again.');
+    }
+  };
+
   // Helper component for section header
   const SectionHeader = ({ title }: { title: string }) => (
     <View style={styles.sectionHeader}>
@@ -837,6 +911,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     label,
     value,
     valueColor,
+    labelColor,
     showDisclosure,
     onPress,
     children,
@@ -845,6 +920,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     label?: string;
     value?: string;
     valueColor?: string;
+    labelColor?: string;
     showDisclosure?: boolean;
     onPress?: () => void;
     children?: React.ReactNode;
@@ -857,7 +933,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       activeOpacity={onPress ? 0.7 : 1}
     >
       <View style={styles.cellContent}>
-        {label && <Text style={styles.cellLabel}>{label}</Text>}
+        {label && (
+          <Text style={[styles.cellLabel, labelColor && { color: labelColor }]}>
+            {label}
+          </Text>
+        )}
         {children || (value && (
           <Text style={[styles.cellValue, valueColor && { color: valueColor }]}>
             {value}
@@ -930,6 +1010,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
               <CellRow
                 label={userEmail}
                 showDisclosure={true}
+                isLast={false}
+              />
+              <CellRow
+                label="Delete Account"
+                labelColor={colors.destructive}
+                showDisclosure={true}
+                onPress={handleDeleteAccountPress}
                 isLast={true}
               />
             </GroupedSection>
