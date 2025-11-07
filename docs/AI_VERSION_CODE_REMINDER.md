@@ -6,7 +6,16 @@
 
 **Before suggesting `eas build` command, ALWAYS:**
 
-1. **Read current version code from `app.config.js`:**
+1. **Check if native `android` directory exists:**
+   - If YES → Read from `android/app/build.gradle` (line ~95)
+   - If NO → Read from `app.config.js`
+   
+   **Gradle file (if native directory exists):**
+   ```gradle
+   versionCode X  // ← Check this value (around line 95)
+   ```
+   
+   **app.config.js (if no native directory):**
    ```javascript
    android: {
      versionCode: X,  // ← Check this value
@@ -24,8 +33,13 @@
    - **NEVER** use same or lower version code
 
 4. **Update version code BEFORE building:**
-   - Update `android.versionCode` in `app.config.js`
-   - Update `version` in both `app.config.js` and `app.json`
+   - **If native `android` directory exists:**
+     - Update `android/app/build.gradle` → `versionCode` (line ~95)
+     - Update `versionName` in same file
+   - **If NO native directory:**
+     - Update `app.config.js` → `android.versionCode`
+     - Update `app.json` → `android.versionCode`
+   - **Verify:** `Get-Content android\app\build.gradle | Select-String "versionCode"`
    - **THEN** recommend build command
 
 5. **NEVER skip this check:**
@@ -66,8 +80,9 @@
 
 **AI:** 
 1. "Let me check the current version code first..."
-2. [Reads app.config.js]
-3. "Current version code is 2. What's the last version code uploaded to Play Console?"
+2. [Checks if android/app/build.gradle exists]
+3. [Reads android/app/build.gradle OR app.config.js]
+4. "Current version code is 3 (in Gradle file). What's the last version code uploaded to Play Console?"
 4. [User responds]
 5. "I'll update version code to 3 (higher than last upload)..."
 6. [Updates files]

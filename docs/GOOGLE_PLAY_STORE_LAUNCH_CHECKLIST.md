@@ -147,15 +147,21 @@ This document outlines all requirements and steps needed to successfully launch 
 - ✅ Splash screen: `./assets/splash.png`
 - ✅ Adaptive icon configured
 
-**⚠️ CRITICAL:** See `docs/VERSION_CODE_CHECK_BEFORE_BUILD.md` for mandatory version code check before every build!
+**⚠️ CRITICAL:** 
+- **This project has a native `android` directory!**
+- **EAS Build uses `android/app/build.gradle`, NOT `app.config.js`!**
+- See `docs/NATIVE_ANDROID_VERSION_CODE.md` for the correct process
+- See `docs/VERSION_CODE_CHECK_BEFORE_BUILD.md` for full checklist
 
 **Action Items:**
 - [ ] **⚠️ CRITICAL: Check Version Code Before Building**
   - **MANDATORY:** Check Play Console → Production → Releases to see last uploaded version code
-  - **MANDATORY:** Increment `android.versionCode` in `app.config.js` to be HIGHER than last uploaded version
-  - **MANDATORY:** Update `version` (version name) in `app.config.js` and `app.json` if needed
+  - **MANDATORY:** Update `android/app/build.gradle` → `versionCode` (line ~95) - **NOT app.config.js!**
+  - **MANDATORY:** Increment version code to be HIGHER than last uploaded version
+  - **MANDATORY:** Update `versionName` in same Gradle file
   - **Rule:** Each new build MUST have a higher version code than the previous upload
   - **Cost Warning:** Building with wrong version code wastes EAS build credits!
+  - **See:** `docs/NATIVE_ANDROID_VERSION_CODE.md` for details
 - [ ] **Verify app signing:** EAS Build handles signing automatically
 - [ ] **Test production build:** Build and test before submission
 
@@ -179,9 +185,12 @@ eas submit --platform android
 ```
 
 **⚠️ MANDATORY PRE-BUILD CHECKLIST:**
-- [ ] Check Play Console for last uploaded version code
-- [ ] Increment `android.versionCode` in `app.config.js` (must be higher)
-- [ ] Update `version` in both `app.config.js` and `app.json`
+- [ ] Check Play Console for last uploaded version code (all tracks)
+- [ ] **Update `android/app/build.gradle` → `versionCode`** (line ~95) - **NOT app.config.js!**
+- [ ] Increment version code (must be higher than last upload)
+- [ ] Update `versionName` in same Gradle file
+- [ ] Verify: `Get-Content android\app\build.gradle | Select-String "versionCode"`
+- [ ] See: `docs/NATIVE_ANDROID_VERSION_CODE.md` for details
 - [ ] See full checklist: `docs/VERSION_CODE_CHECK_BEFORE_BUILD.md`
 
 **Pre-Build Checklist:**

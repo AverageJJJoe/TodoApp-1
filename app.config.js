@@ -17,7 +17,17 @@ export default {
       backgroundColor: "#ffffff"
     },
     assetBundlePatterns: [
-      "**/*"
+      "assets/**/*",
+      "src/**/*.png",
+      "src/**/*.jpg",
+      "src/**/*.jpeg",
+      "src/**/*.gif",
+      "src/**/*.svg",
+      "src/**/*.webp",
+      "src/**/*.ttf",
+      "src/**/*.otf",
+      "src/**/*.woff",
+      "src/**/*.woff2"
     ],
     updates: {
       url: "https://u.expo.dev/d9259efb-a198-4da8-9580-23e51504ac3b"
@@ -26,8 +36,12 @@ export default {
       policy: "appVersion"
     },
     extra: {
-      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || "https://zrnjxrtgrommlhexbpde.supabase.co",
-      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpybmp4cnRncm9tbWxoZXhicGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4ODc2OTQsImV4cCI6MjA3NzQ2MzY5NH0.8Ci--doOpAqx9FRGLH_cIF4E4xPHIKszlwp0DorSvOo",
+      // Supabase configuration - MUST be set via environment variables or EAS secrets
+      // For local development: Set in .env file (gitignored)
+      // For EAS Build: Set via EAS secrets (eas secret:create)
+      // DO NOT hardcode values here - they will be committed to git!
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       launchDate: "2025-09-15T00:00:00Z",
       eas: {
         projectId: "d9259efb-a198-4da8-9580-23e51504ac3b"

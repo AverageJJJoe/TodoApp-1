@@ -29,31 +29,43 @@
 
 ### Step 2: Check Current Version Code in Code ⚠️ **CRITICAL**
 
-**File:** `app.config.js`
+**⚠️ IMPORTANT:** If you have a native `android` directory, EAS Build uses the Gradle file, NOT `app.config.js`!
+
+**File to check:** `android/app/build.gradle`
 
 **Check current value:**
-```javascript
-android: {
-  versionCode: 2,  // ← Check this value
-  // ...
+```gradle
+defaultConfig {
+    versionCode 3  // ← Check this value (around line 95)
+    versionName "1.0.1"
 }
 ```
+
+**If NO native android directory exists:**
+- Check `app.config.js` → `android.versionCode`
 
 ### Step 3: Increment Version Code ⚠️ **CRITICAL**
 
-**Action:**
-- **MUST be higher** than last uploaded version code
-- If last was `1`, set to `2` (or higher)
-- If last was `2`, set to `3` (or higher)
-- **Rule:** New version code > Last uploaded version code
+**⚠️ CRITICAL:** Update the CORRECT file based on your project structure!
 
-**Example:**
-```javascript
-android: {
-  versionCode: 3,  // ← MUST be higher than last upload (was 2)
-  // ... rest of config
+**If you have `android/app/build.gradle` (native Android directory):**
+- **THIS FILE TAKES PRECEDENCE** - EAS Build uses Gradle directly
+- Update `android/app/build.gradle` → `versionCode` (around line 95)
+- **MUST be higher** than last uploaded version code
+
+**Example (Gradle file):**
+```gradle
+defaultConfig {
+    versionCode 3,  // ← MUST be higher than last upload (was 2)
+    versionName "1.0.2"
 }
 ```
+
+**If NO native android directory exists:**
+- Update `app.config.js` → `android.versionCode`
+- Also update `app.json` → `android.versionCode` (keep in sync)
+
+**Rule:** New version code > Last uploaded version code
 
 ### Step 4: Update Version Name (Optional but Recommended)
 
@@ -84,11 +96,13 @@ version: "1.0.2",  // ← Update this too
 
 - [ ] **Checked Play Console** for last uploaded version code (all tracks)
 - [ ] **Found highest version code** across all tracks
-- [ ] **Checked current `android.versionCode`** in `app.config.js`
-- [ ] **Incremented `android.versionCode`** (must be higher than last upload)
-- [ ] **Updated `version`** in `app.config.js` (user-facing version)
-- [ ] **Updated `version`** in `app.json` (keep in sync)
+- [ ] **Checked current `versionCode`** in correct file:
+  - If `android/app/build.gradle` exists → Check that file (line ~95)
+  - If no native android directory → Check `app.config.js`
+- [ ] **Incremented `versionCode`** in correct file (must be higher than last upload)
+- [ ] **Updated `versionName`** in same file (user-facing version)
 - [ ] **Verified no typos** in version numbers
+- [ ] **Verified version code** using PowerShell: `Get-Content android\app\build.gradle | Select-String "versionCode"`
 - [ ] **Ready to build** - version code is correct
 
 ---
@@ -121,7 +135,8 @@ version: "1.0.2",  // ← Update this too
 
 3. **Current Status (as of 2025-01-27):**
    - Version Name: `1.0.1`
-   - Version Code: `2` (in `app.config.js`)
+   - Version Code: `3` (in `android/app/build.gradle` - line 95)
+   - **⚠️ CRITICAL:** This project has a native `android` directory, so Gradle file takes precedence!
    - **Next build:** Check Play Console for last uploaded version code, then increment
 
 ---
@@ -130,13 +145,13 @@ version: "1.0.2",  // ← Update this too
 
 **Before Building:**
 
-1. ✅ Check Play Console → Production → Last version code was `2`
+1. ✅ Check Play Console → Production → Last version code was `1`
 2. ✅ Check Play Console → Testing → Internal testing → Last version code was `1`
-3. ✅ **Take highest:** `2`
-4. ✅ Open `app.config.js`
-5. ✅ Set `android.versionCode: 3` (higher than 2)
-6. ✅ Set `version: "1.0.2"` (increment version name)
-7. ✅ Update `app.json` → `"version": "1.0.2"`
+3. ✅ **Take highest:** `1`
+4. ✅ Open `android/app/build.gradle` (native directory exists!)
+5. ✅ Set `versionCode 3` (higher than 1, around line 95)
+6. ✅ Set `versionName "1.0.1"` (increment version name)
+7. ✅ **Verify:** Run `Get-Content android\app\build.gradle | Select-String "versionCode"`
 8. ✅ **Then** run: `eas build --platform android --profile production`
 
 ---
@@ -144,14 +159,16 @@ version: "1.0.2",  // ← Update this too
 ## 🎯 Quick Reference
 
 **Current Configuration (as of 2025-01-27):**
-- Version Name: `1.0.1` (in `app.config.js` and `app.json`)
-- Version Code: `2` (in `app.config.js` → `android.versionCode`)
+- Version Name: `1.0.1` (in `android/app/build.gradle`)
+- Version Code: `3` (in `android/app/build.gradle` → line 95)
+- **⚠️ CRITICAL:** Native `android` directory exists, so Gradle file takes precedence over `app.config.js`!
 
 **Next Build Should Use:**
 - Version Name: `1.0.2` (or higher)
-- Version Code: `3` (or higher, depending on what's in Play Console)
+- Version Code: `4` (or higher, depending on what's in Play Console)
 
 **⚠️ ALWAYS CHECK PLAY CONSOLE FIRST!**
+**⚠️ ALWAYS UPDATE `android/app/build.gradle` IF NATIVE DIRECTORY EXISTS!**
 
 ---
 
@@ -159,12 +176,17 @@ version: "1.0.2",  // ← Update this too
 
 **Before recommending ANY build command, MUST:**
 
-1. ✅ **Check current `android.versionCode`** in `app.config.js`
+1. ✅ **Check if native `android` directory exists**
+   - If YES → Check `android/app/build.gradle` → `versionCode` (line ~95)
+   - If NO → Check `app.config.js` → `android.versionCode`
 2. ✅ **Ask user to check Play Console** for last uploaded version code (all tracks)
 3. ✅ **Verify new version code is HIGHER** than last upload
-4. ✅ **Update version code AND version name** before building
-5. ✅ **NEVER recommend build without version code check!**
-6. ✅ **Remember:** EAS Build credits cost money - wasted builds are costly!
+4. ✅ **Update version code AND version name** in the CORRECT file:
+   - Native android directory → Update `android/app/build.gradle`
+   - No native directory → Update `app.config.js` AND `app.json`
+5. ✅ **Verify update** using PowerShell: `Get-Content android\app\build.gradle | Select-String "versionCode"`
+6. ✅ **NEVER recommend build without version code check!**
+7. ✅ **Remember:** EAS Build credits cost money - wasted builds are costly!
 
 **If user asks to build without version check:**
 - **STOP** and check version code first
@@ -188,4 +210,6 @@ version: "1.0.2",  // ← Update this too
 - This applies to ALL tracks: Production, Internal Testing, Closed Testing, Open Testing
 - **Check ALL tracks** - version codes are shared across tracks
 - **When in doubt, use a higher version code** (better safe than waste credits)
+- **⚠️ CRITICAL:** If `android/app/build.gradle` exists, it takes precedence over `app.config.js`!
+- **Always verify** the Gradle file was updated: `Get-Content android\app\build.gradle | Select-String "versionCode"`
 
