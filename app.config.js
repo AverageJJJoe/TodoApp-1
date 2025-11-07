@@ -7,7 +7,7 @@ export default {
     name: "TodoTomorrow",
     slug: "todotomorrow",
     scheme: "todotomorrow",
-    version: "1.0.4",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",
@@ -61,10 +61,10 @@ export default {
       ]
     },
     android: {
-      versionCode: 6,
+      versionCode: 7,
       runtimeVersion: "1.0.0",
       adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
+        foregroundImage: "./assets/icon.png",
         backgroundColor: "#FFFFFF"
       },
       package: "com.todotomorrow.app",
