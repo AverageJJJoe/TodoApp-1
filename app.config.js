@@ -7,7 +7,7 @@ export default {
     name: "TodoTomorrow",
     slug: "todotomorrow",
     scheme: "todotomorrow",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -19,15 +19,24 @@ export default {
     assetBundlePatterns: [
       "**/*"
     ],
+    updates: {
+      url: "https://u.expo.dev/d9259efb-a198-4da8-9580-23e51504ac3b"
+    },
+    runtimeVersion: {
+      policy: "appVersion"
+    },
     extra: {
-      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
-      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || "https://zrnjxrtgrommlhexbpde.supabase.co",
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpybmp4cnRncm9tbWxoZXhicGRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4ODc2OTQsImV4cCI6MjA3NzQ2MzY5NH0.8Ci--doOpAqx9FRGLH_cIF4E4xPHIKszlwp0DorSvOo",
       launchDate: "2025-09-15T00:00:00Z",
       eas: {
         projectId: "d9259efb-a198-4da8-9580-23e51504ac3b"
       }
     },
     ios: {
+      runtimeVersion: {
+        policy: "appVersion"
+      },
       supportsTablet: true,
       bundleIdentifier: "com.todotomorrow.app",
       associatedDomains: [
@@ -35,6 +44,8 @@ export default {
       ]
     },
     android: {
+      versionCode: 2,
+      runtimeVersion: "1.0.0",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#FFFFFF"

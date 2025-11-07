@@ -7,6 +7,20 @@
 
 ---
 
+## ⚠️ CRITICAL: Version Code Check Required Before Every Build
+
+**💰 COST WARNING:** EAS Build credits cost money. Building with wrong version code wastes credits!
+
+**Before ANY build command, ALWAYS:**
+1. Check Play Console for last uploaded version code (all tracks)
+2. Increment `android.versionCode` in `app.config.js` (must be higher)
+3. Update `version` in both `app.config.js` and `app.json`
+
+**📚 Full Checklist:** See `docs/VERSION_CODE_CHECK_BEFORE_BUILD.md`  
+**🤖 AI Reminder:** See `docs/AI_VERSION_CODE_REMINDER.md`
+
+---
+
 ## Executive Summary
 
 This document outlines all requirements and steps needed to successfully launch TodoTomorrow on the Google Play Store. Use this checklist to ensure nothing is missed before submission.
@@ -18,23 +32,23 @@ This document outlines all requirements and steps needed to successfully launch 
 ## 1. Google Play Console Account Setup
 
 ### 1.1 Developer Account
-- [ ] **Create Google Play Developer Account**
+- [x] **Create Google Play Developer Account** ✅ **COMPLETE**
   - Cost: $25 one-time fee
   - URL: https://play.google.com/console/signup
   - Required: Google account, payment method
   
-- [ ] **Complete Developer Profile**
+- [x] **Complete Developer Profile** ✅ **COMPLETE**
   - Developer name: "TodoTomorrow" (or your company name)
   - Contact email: (your support email)
   - Phone number: (optional but recommended)
   - Website: https://todotomorrow.com
   
-- [ ] **Accept Developer Distribution Agreement**
+- [x] **Accept Developer Distribution Agreement** ✅ **COMPLETE**
   - Read and accept Google Play policies
   - Complete identity verification if required
 
 ### 1.2 App Creation
-- [ ] **Create New App**
+- [x] **Create New App** ✅ **COMPLETE**
   - App name: "TodoTomorrow"
   - Default language: English (United States)
   - App or game: App
@@ -77,41 +91,41 @@ This document outlines all requirements and steps needed to successfully launch 
   ```
 
 **Graphics:**
-- [ ] **App Icon:** 512×512px PNG (already created: `assets/icon.png`)
-- [ ] **Feature Graphic:** 1024×500px PNG (required for store listing)
-- [ ] **Phone Screenshots:** At least 2, max 8
-  - Minimum: 320px height
-  - Recommended: 1080×1920px (portrait)
-  - Required screenshots:
-    1. Auth screen (magic link)
-    2. Main screen with tasks
-    3. Empty state
-    4. Settings screen
-    5. Archive view (optional)
+- [x] **App Icon:** ✅ **COMPLETE** - 512×512px PNG (`assets/icon.png`)
+- [x] **Feature Graphic:** ✅ **COMPLETE** - 1024×500px PNG (uploaded to store listing)
+- [x] **Phone Screenshots:** ✅ **COMPLETE** - Uploaded to store listing
+  - Minimum: 2 screenshots ✅
+  - Recommended: 1080×1920px (portrait) ✅
+  - Screenshots uploaded:
+    1. Auth screen (magic link) ✅
+    2. Main screen with tasks ✅
+    3. Empty state ✅
+    4. Settings screen ✅
+    5. Archive view (if applicable) ✅
 - [ ] **Tablet Screenshots:** Optional but recommended
   - Minimum: 320px height
   - Recommended: 1920×1200px (landscape) or 1200×1920px (portrait)
 
 **Categorization:**
-- [ ] **App Category:** Productivity
-- [ ] **Tags:** (optional) todo, task management, productivity, email, morning routine
-- [ ] **Content Rating:** Complete questionnaire (likely "Everyone")
+- [x] **App Category:** ✅ **COMPLETE** - Productivity
+- [x] **Tags:** ✅ **COMPLETE** - (optional) todo, task management, productivity, email, morning routine
+- [x] **Content Rating:** ✅ **COMPLETE** - Questionnaire completed (likely "Everyone")
 
 ### 2.2 Privacy & Compliance
 
 **Privacy Policy:**
-- [ ] **Privacy Policy URL:** Required for Google Play
-  - Must be publicly accessible
-  - Must cover data collection, usage, sharing
-  - Suggested URL: `https://todotomorrow.com/privacy-policy`
-  - **Status:** ⚠️ **NOT CREATED YET** - See Section 4.1
+- [x] **Privacy Policy URL:** ✅ **COMPLETE**
+  - URL: https://www.todotomorrow.com/privacy
+  - Must be publicly accessible ✅
+  - Must cover data collection, usage, sharing ✅
+  - **Status:** ✅ **CREATED AND LIVE**
 
 **Data Safety:**
-- [ ] **Complete Data Safety Section** in Play Console
-  - Declare what data is collected
-  - Declare how data is used
-  - Declare data sharing practices
-  - Required for apps that collect user data
+- [x] **Complete Data Safety Section** ✅ **COMPLETE** - Completed in Play Console
+  - Declare what data is collected ✅
+  - Declare how data is used ✅
+  - Declare data sharing practices ✅
+  - Required for apps that collect user data ✅
 
 **Permissions:**
 - [ ] **Review App Permissions**
@@ -127,13 +141,21 @@ This document outlines all requirements and steps needed to successfully launch 
 **Current Configuration:** ✅ **VERIFIED**
 - ✅ Package name: `com.todotomorrow.app`
 - ✅ App name: "TodoTomorrow"
-- ✅ Version: `1.0.0`
+- ✅ Version: `1.0.1` (in both `app.config.js` and `app.json`)
+- ✅ Version Code: `2` (in `app.config.js` → `android.versionCode`)
 - ✅ Icon: `./assets/icon.png`
 - ✅ Splash screen: `./assets/splash.png`
 - ✅ Adaptive icon configured
 
+**⚠️ CRITICAL:** See `docs/VERSION_CODE_CHECK_BEFORE_BUILD.md` for mandatory version code check before every build!
+
 **Action Items:**
-- [ ] **Verify version code:** Ensure `versionCode` is set (Expo handles this automatically)
+- [ ] **⚠️ CRITICAL: Check Version Code Before Building**
+  - **MANDATORY:** Check Play Console → Production → Releases to see last uploaded version code
+  - **MANDATORY:** Increment `android.versionCode` in `app.config.js` to be HIGHER than last uploaded version
+  - **MANDATORY:** Update `version` (version name) in `app.config.js` and `app.json` if needed
+  - **Rule:** Each new build MUST have a higher version code than the previous upload
+  - **Cost Warning:** Building with wrong version code wastes EAS build credits!
 - [ ] **Verify app signing:** EAS Build handles signing automatically
 - [ ] **Test production build:** Build and test before submission
 
@@ -146,6 +168,9 @@ This document outlines all requirements and steps needed to successfully launch 
 
 **Build Commands:**
 ```bash
+# ⚠️ CRITICAL: Check version code BEFORE building!
+# See: docs/VERSION_CODE_CHECK_BEFORE_BUILD.md
+
 # Create production build
 eas build --platform android --profile production
 
@@ -153,16 +178,23 @@ eas build --platform android --profile production
 eas submit --platform android
 ```
 
+**⚠️ MANDATORY PRE-BUILD CHECKLIST:**
+- [ ] Check Play Console for last uploaded version code
+- [ ] Increment `android.versionCode` in `app.config.js` (must be higher)
+- [ ] Update `version` in both `app.config.js` and `app.json`
+- [ ] See full checklist: `docs/VERSION_CODE_CHECK_BEFORE_BUILD.md`
+
 **Pre-Build Checklist:**
-- [ ] **Environment Variables:** Verify all secrets are in EAS secrets
-  - `EXPO_PUBLIC_SUPABASE_URL`
-  - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-  - Any other required env vars
-- [ ] **Test Build Locally:** Run preview build first
-  ```bash
-  eas build --platform android --profile preview
-  ```
-- [ ] **Install Test APK:** Test on physical Android device
+- [x] **Environment Variables:** ✅ Verified all secrets are in EAS secrets
+  - `EXPO_PUBLIC_SUPABASE_URL` ✅
+  - `EXPO_PUBLIC_SUPABASE_ANON_KEY` ✅
+  - Any other required env vars ✅
+- [x] **Production Build Created:** ✅ **COMPLETE**
+  - AAB file generated successfully
+  - Ready for testing and submission
+- [ ] **Test Production Build:** ⚠️ **NEXT STEP**
+  - Install on physical Android device
+  - Test all features thoroughly
 - [ ] **Verify All Features Work:**
   - [ ] Authentication (magic link)
   - [ ] Task creation
@@ -188,35 +220,24 @@ eas submit --platform android
 
 ## 4. Legal & Policy Documents
 
-### 4.1 Privacy Policy ⚠️ **REQUIRED - NOT CREATED**
+### 4.1 Privacy Policy ✅ **COMPLETE**
 
-**Status:** ⚠️ **MISSING** - Must be created before submission
+**Status:** ✅ **CREATED AND LIVE**
 
-**Requirements:**
-- Must be publicly accessible URL
-- Must cover:
-  - What data is collected (email addresses, tasks, preferences)
-  - How data is used (email delivery, app functionality)
-  - Data storage (Supabase)
-  - Data sharing (third-party services: Supabase, Resend)
-  - User rights (data deletion, access)
-  - Contact information for privacy inquiries
+**Privacy Policy URL:** https://www.todotomorrow.com/privacy
 
-**Suggested Content:**
-- Data collection: Email addresses, tasks, user preferences, delivery time
-- Data storage: Supabase (encrypted, secure)
-- Third-party services: Supabase (database), Resend (email delivery)
-- User rights: Can delete account, request data export
-- Contact: support@todotomorrow.com
+**Requirements:** ✅ **ALL MET**
+- ✅ Must be publicly accessible URL
+- ✅ Covers data collection, usage, sharing
+- ✅ Includes user rights and contact information
 
 **Action Items:**
-- [ ] **Create Privacy Policy document**
-  - Template: Use standard privacy policy template
-  - Host at: `https://todotomorrow.com/privacy-policy`
-  - Or use privacy policy generator (e.g., TermsFeed, iubenda)
-- [ ] **Add Privacy Policy link to app**
+- [x] **Create Privacy Policy document** ✅ **COMPLETE**
+  - Hosted at: https://www.todotomorrow.com/privacy
+- [ ] **Add Privacy Policy link to app** (Optional enhancement)
   - Settings screen → ABOUT section → Privacy Policy row
   - Currently shown in design but not implemented (Story 6.2)
+  - **Note:** Not required for Play Store submission, but nice UX enhancement
 
 ### 4.2 Terms of Service (Optional but Recommended)
 
@@ -249,28 +270,28 @@ eas submit --platform android
 - Format: PNG with transparency
 - Status: Ready
 
-**Feature Graphic:** ⚠️ **NOT CREATED**
+**Feature Graphic:** ✅ **COMPLETE**
 - Size: 1024×500px
 - Format: PNG or JPG
 - Purpose: Banner shown at top of Play Store listing
-- **Action:** Create feature graphic showcasing app
+- **Status:** ✅ Uploaded to store listing
 
-**Screenshots:** ⚠️ **NOT CREATED**
-- Minimum: 2 screenshots
+**Screenshots:** ✅ **COMPLETE**
+- Minimum: 2 screenshots ✅
 - Maximum: 8 screenshots
 - Format: PNG or JPG
-- Size: Minimum 320px height
-- Recommended: 1080×1920px (portrait)
-- **Action:** Capture screenshots from production build
+- Size: Minimum 320px height ✅
+- Recommended: 1080×1920px (portrait) ✅
+- **Status:** ✅ Uploaded to store listing
 
 **Screenshot Checklist:**
-- [ ] Auth screen (magic link entry)
-- [ ] Main screen with tasks (active tab)
-- [ ] Empty state (no tasks)
-- [ ] Settings screen
-- [ ] Archive view (if applicable)
-- [ ] Dark mode screenshot (optional but nice)
-- [ ] Onboarding screen (optional)
+- [x] Auth screen (magic link entry) ✅
+- [x] Main screen with tasks (active tab) ✅
+- [x] Empty state (no tasks) ✅
+- [x] Settings screen ✅
+- [x] Archive view (if applicable) ✅
+- [x] Dark mode screenshot (optional but nice) ✅
+- [x] Onboarding screen (optional) ✅
 
 ### 5.2 Promotional Assets (Optional)
 
@@ -321,15 +342,18 @@ eas submit --platform android
 ### 7.1 Internal Testing
 
 **Pre-Submission Testing:**
-- [ ] **Build Production APK/AAB**
+- [x] **Build Production AAB** ✅ **COMPLETE**
   ```bash
   eas build --platform android --profile production
   ```
-- [ ] **Install on Physical Device**
+  - AAB file ready for testing and submission
+- [ ] **Install on Physical Device** ⚠️ **NEXT STEP**
+  - Convert AAB to APK for testing (if needed) OR
+  - Upload to Internal Testing track in Play Console
   - Test on multiple Android versions (8.0+)
   - Test on different screen sizes
 - [ ] **Test All Features:**
-  - [ ] Authentication flow
+  - [ ] Authentication flow (magic link) ⚠️ **FIXED** - Supabase redirect URLs configured
   - [ ] Task creation
   - [ ] Task completion
   - [ ] Task deletion
@@ -365,39 +389,57 @@ eas submit --platform android
 ### 8.1 Pre-Submission Checklist
 
 **Before Submitting:**
-- [ ] All store listing fields completed
-- [ ] Privacy policy URL added and accessible
-- [ ] Content rating completed
-- [ ] Screenshots uploaded (minimum 2)
-- [ ] Feature graphic uploaded
-- [ ] App icon uploaded
-- [ ] Production build tested and verified
-- [ ] All app permissions declared
-- [ ] Data safety section completed
+- [x] All store listing fields completed ✅
+- [x] Privacy policy URL added and accessible ✅ (https://www.todotomorrow.com/privacy)
+- [x] Content rating completed ✅
+- [x] Screenshots uploaded (minimum 2) ✅
+- [x] Feature graphic uploaded ✅
+- [x] App icon uploaded ✅
+- [x] Production AAB built ✅ **COMPLETE**
+- [ ] Production build tested and verified ⚠️ **NEXT STEP**
+- [x] All app permissions declared ✅
+- [x] Data safety section completed ✅
 
 ### 8.2 Submission Steps
 
-1. [ ] **Upload AAB File**
-   - Use EAS Submit: `eas submit --platform android`
-   - Or manually upload in Play Console
-   - File: `.aab` format (not `.apk`)
+1. [ ] **Test Production Build** ⚠️ **DO THIS FIRST**
+   - Install AAB on physical device (via Internal Testing track OR convert to APK)
+   - Test all features thoroughly
+   - Verify no crashes or critical bugs
+   - **Note:** You can upload to Internal Testing track first, test, then promote to Production
 
-2. [ ] **Complete Store Listing**
-   - Fill in all required fields
-   - Upload graphics
-   - Add description
+2. [x] **Production AAB Built** ✅ **COMPLETE**
+   - AAB file ready for upload
 
-3. [ ] **Set Content Rating**
-   - Complete questionnaire
-   - Get rating certificate
+3. [x] **Complete Store Listing** ✅ **COMPLETE**
+   - All required fields filled ✅
+   - Graphics uploaded ✅
+   - Description added ✅
 
-4. [ ] **Set Pricing & Distribution**
-   - Set as free
-   - Select countries (or worldwide)
-   - Set availability
+4. [x] **Set Content Rating** ✅ **COMPLETE**
+   - Questionnaire completed ✅
+   - Rating certificate obtained ✅
 
-5. [ ] **Review & Submit**
-   - Review all information
+5. [x] **Set Pricing & Distribution** ✅ **COMPLETE**
+   - Set as free ✅
+   - Countries selected ✅
+   - Availability set ✅
+
+6. [ ] **Upload AAB File** ⚠️ **READY TO DO**
+   - Option A: Use EAS Submit (recommended):
+     ```bash
+     eas submit --platform android
+     ```
+   - Option B: Manually upload in Play Console:
+     - Go to Play Console → Your App → Production → Create new release
+     - Upload AAB file
+     - Add release notes (e.g., "Initial release of TodoTomorrow")
+   - File: `.aab` format (not `.apk`) ✅
+
+7. [ ] **Review & Submit** ⚠️ **FINAL STEP**
+   - Review all information one final time
+   - Verify privacy policy link works
+   - Check release notes
    - Submit for review
 
 ### 8.3 Post-Submission
@@ -449,37 +491,34 @@ eas submit --platform android
 
 ### ⚠️ **MUST COMPLETE BEFORE SUBMISSION:**
 
-1. **Privacy Policy** ⚠️ **CRITICAL**
-   - Create privacy policy document
-   - Host at publicly accessible URL
-   - Add URL to Play Console
+1. **Test Production Build** ⚠️ **REQUIRED - NEXT STEP**
+   - Install AAB on physical Android device
+   - Test all features thoroughly
+   - Verify no crashes or critical bugs
+   - **Tip:** Upload to Internal Testing track first, test, then promote to Production
 
-2. **Store Listing Graphics** ⚠️ **REQUIRED**
-   - Feature graphic (1024×500px)
-   - At least 2 screenshots (1080×1920px recommended)
-
-3. **Production Build** ⚠️ **REQUIRED**
-   - Build production AAB
-   - Test on physical device
-   - Verify all features work
-
-4. **Content Rating** ⚠️ **REQUIRED**
-   - Complete questionnaire
-   - Get rating certificate
-
-5. **Data Safety Section** ⚠️ **REQUIRED**
-   - Declare data collection
-   - Declare data usage
-   - Declare data sharing
+2. **Upload & Submit** ⚠️ **READY TO DO**
+   - Upload AAB to Play Console (Production track)
+   - Add release notes
+   - Submit for Google review
 
 ### ✅ **ALREADY COMPLETE:**
 
+- ✅ Google Play Developer Account setup
+- ✅ App listing created
+- ✅ Privacy Policy (https://www.todotomorrow.com/privacy)
+- ✅ Store listing graphics (feature graphic + screenshots)
+- ✅ Store listing description
+- ✅ Content rating completed
+- ✅ Data safety section completed
 - ✅ App configuration (app.json)
 - ✅ Package name (`com.todotomorrow.app`)
 - ✅ App icon (512×512px)
 - ✅ Splash screen
 - ✅ EAS Build configuration
+- ✅ **Production AAB built** ✅ **NEW**
 - ✅ Contact form (in-app support)
+- ✅ Compliance requirements met
 
 ---
 
@@ -520,17 +559,53 @@ eas submit --platform android
 ## 13. Next Steps
 
 **Immediate Actions:**
-1. ⚠️ **Create Privacy Policy** (highest priority)
-2. ⚠️ **Create Feature Graphic** (1024×500px)
-3. ⚠️ **Capture Screenshots** (at least 2, recommended 4-6)
-4. ✅ **Set up Google Play Developer Account** (if not done)
-5. ✅ **Create app listing** in Play Console
+1. ✅ **Build Production AAB** ✅ **COMPLETE**
+   ```bash
+   # ⚠️ CRITICAL: Check version code BEFORE building!
+   # See: docs/VERSION_CODE_CHECK_BEFORE_BUILD.md
+   eas build --platform android --profile production
+   ```
+   - AAB file ready! ✅
 
-**After Assets Ready:**
-1. Build production AAB
-2. Test on physical device
-3. Complete store listing
-4. Submit for review
+2. ⚠️ **Test Production Build** (NEXT STEP - HIGH PRIORITY)
+   - **Option A:** Upload to Internal Testing track in Play Console
+     - Go to Play Console → Testing → Internal testing
+     - Upload AAB file
+     - Add testers (your email)
+     - Install from Play Store (internal testing link)
+   - **Option B:** Convert AAB to APK for direct installation
+     - Use `bundletool` or online converter
+     - Install APK directly on device
+   - Test all features thoroughly:
+     - Authentication (magic link)
+     - Task CRUD operations
+     - Email delivery
+     - Settings & dark mode
+     - Archive view
+   - Verify no crashes or critical bugs
+
+3. ⚠️ **Upload AAB to Play Console** (After testing passes)
+   - **Recommended:** Use EAS Submit:
+     ```bash
+     eas submit --platform android
+     ```
+   - **Alternative:** Manually upload in Play Console:
+     - Go to Production → Create new release
+     - Upload AAB file
+     - Add release notes: "Initial release of TodoTomorrow - Capture tasks on the go and get them delivered to your inbox every morning."
+
+4. ⚠️ **Final Review & Submit** (Final step)
+   - Review all store listing information
+   - Verify privacy policy link works: https://www.todotomorrow.com/privacy
+   - Check release notes
+   - Submit for Google review
+
+**Status Summary:**
+- ✅ **Store Listing:** Complete (description, screenshots, graphics)
+- ✅ **Compliance:** Complete (privacy policy, content rating, data safety)
+- ✅ **Account Setup:** Complete (developer account, app created)
+- ✅ **Production Build:** Complete (AAB file ready)
+- ⚠️ **Testing & Submission:** Next steps (test build, then upload & submit)
 
 ---
 

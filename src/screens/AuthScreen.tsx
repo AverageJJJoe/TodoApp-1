@@ -21,7 +21,7 @@ interface AuthScreenProps {
 }
 
 export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
-  const { colors } = useTheme();
+  const { colors, theme } = useTheme();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -46,6 +46,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
       marginBottom: spacing.xl,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: colors.background,
     },
     logoImage: {
       width: 100,
@@ -668,10 +669,13 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
     >
       <View style={styles.content}>
-        {/* Logo/Icon - Use new icon.png instead of old logo.png */}
+        {/* Logo/Icon - Use logo.png for dark mode (transparent bg), icon.png for light mode */}
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../../assets/icon.png')} 
+            source={theme === 'dark' 
+              ? require('../../assets/logo.png')
+              : require('../../assets/icon.png')
+            } 
             style={styles.logoImage}
             resizeMode="contain"
           />
