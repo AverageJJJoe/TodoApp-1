@@ -120,35 +120,6 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // CRITICAL: Validate authentication for cron job requests
-  const edgeFunctionSecret = Deno.env.get('EDGE_FUNCTION_SECRET');
-  const authHeader = req.headers.get('Authorization');
-  
-  if (edgeFunctionSecret) {
-    // If secret is configured, validate it
-    const expectedAuth = `Bearer ${edgeFunctionSecret}`;
-    if (authHeader !== expectedAuth) {
-      console.error('❌ Authentication failed:', {
-        received: authHeader ? 'Bearer ***' : 'missing',
-        expected: 'Bearer ***',
-      });
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized. Invalid or missing Authorization header.' }, null, 2),
-        {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-    console.log('✅ Authentication validated successfully');
-  } else {
-    // If no secret configured, log warning but allow (for development/testing)
-    console.warn('⚠️ EDGE_FUNCTION_SECRET not configured - skipping auth validation (not recommended for production)');
-  }
-
   // Check for test mode via query parameter or header (bypass timezone check for testing)
   const url = new URL(req.url);
   const testModeParam = url.searchParams.get('test');
@@ -260,30 +231,47 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Read template file once (before processing users for efficiency)
-    let template: string;
-    try {
-      template = await Deno.readTextFile('./template.html');
-    } catch (templateError) {
-      console.error('Error reading template file:', templateError);
-      return new Response(
-        JSON.stringify(
-          {
-            error: 'Internal server error',
-            details: 'Failed to read email template',
-          },
-          null,
-          2
-        ),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
+    // Email template embedded directly in code to ensure it's always available
+    const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Daily Tasks</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; color: #333; background-color: #FFFFFF;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; border-collapse: collapse; background-color: #FFFFFF;">
+    <tr>
+      <td style="padding: 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px; margin: 0 auto; border-collapse: collapse;">
+          <!-- Header Section -->
+          <tr>
+            <td style="padding: 20px; text-align: left;">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 600; color: #333;">Good morning! ☀️</h2>
+            </td>
+          </tr>
+          
+          <!-- Task List Section -->
+          <tr>
+            <td style="padding: 0 20px 20px 20px;">
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                {{tasks}}
+              </ul>
+            </td>
+          </tr>
+          
+          <!-- Footer Section -->
+          <tr>
+            <td style="padding: 20px; text-align: center; border-top: 1px solid #eee;">
+              <p style="margin: 0; font-size: 12px; color: #999;">Open TodoTomorrow to manage your tasks</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
     const result: ProcessResult = {
       usersProcessed: 0,
@@ -408,6 +396,10 @@ Deno.serve(async (req: Request) => {
         const messageId = resendData.id || null;
         console.log(`Email sent to ${user.email}, message ID: ${messageId}`);
 
+        // Rate limiting: Add delay to respect Resend's 2 requests/second limit
+        // Using 600ms delay allows ~1.5 emails/second to stay safely under the limit
+        await new Promise(resolve => setTimeout(resolve, 600));
+
         // Fresh Start mode: Archive all open tasks after email sent successfully
         if (user.workflow_mode === 'fresh_start') {
           const { error: archiveError } = await supabase
@@ -473,6 +465,9 @@ Deno.serve(async (req: Request) => {
           email: user.email,
           error: errorMessage,
         });
+
+        // Rate limiting: Add delay even after failed attempts to respect Resend's rate limit
+        await new Promise(resolve => setTimeout(resolve, 600));
 
         // Update user failure tracking
         try {

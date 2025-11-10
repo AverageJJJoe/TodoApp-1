@@ -263,7 +263,7 @@ export const MainScreen = () => {
       color: colors.textPrimary,
     },
     taskTextCompleted: {
-      color: colors.separator, // Match archive design: #C6C6C8
+      color: colors.textSecondary, // Use textSecondary for better dark mode contrast (was separator)
       textDecorationLine: 'line-through',
     },
     strikethrough: {

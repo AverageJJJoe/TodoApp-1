@@ -2,13 +2,17 @@
 
 **⚠️ CRITICAL REMINDER FOR AI ASSISTANTS**
 
+**🚨 URGENT:** See `docs/CRITICAL_VERSION_UPDATE_REMINDER.md` - 3 build credits wasted on 2025-02-01 due to updating wrong file!
+
 ## 🚨 MANDATORY CHECK BEFORE RECOMMENDING ANY BUILD
 
 **Before suggesting `eas build` command, ALWAYS:**
 
 1. **Check if native `android` directory exists:**
-   - If YES → Read from `android/app/build.gradle` (line ~95)
-   - If NO → Read from `app.config.js`
+   - **CRITICAL:** Run `Test-Path android\app\build.gradle` first!
+   - If YES → **UPDATE `android/app/build.gradle` (line ~95)** ← EAS BUILD USES THIS!
+   - If NO → Update `app.config.js`
+   - **⚠️ WARNING:** If native directory exists, `app.config.js` versionCode is IGNORED by EAS Build!
    
    **Gradle file (if native directory exists):**
    ```gradle
@@ -34,12 +38,13 @@
 
 4. **Update version code BEFORE building:**
    - **If native `android` directory exists:**
-     - Update `android/app/build.gradle` → `versionCode` (line ~95)
-     - Update `versionName` in same file
+     - **CRITICAL:** Update `android/app/build.gradle` → `versionCode` (line ~95) ← EAS BUILD USES THIS!
+     - **CRITICAL:** Update `android/app/build.gradle` → `versionName` (line ~96)
+     - **DO NOT** rely on `app.config.js` - it's IGNORED when native directory exists!
    - **If NO native directory:**
      - Update `app.config.js` → `android.versionCode`
      - Update `app.json` → `android.versionCode`
-   - **Verify:** `Get-Content android\app\build.gradle | Select-String "versionCode"`
+   - **Verify:** `Get-Content android\app\build.gradle | Select-String "version"`
    - **THEN** recommend build command
 
 5. **NEVER skip this check:**
@@ -90,23 +95,35 @@
 
 ---
 
-## ❌ Wrong Workflow (What Happened)
+## ❌ Wrong Workflow (What Happened - 2025-02-01)
 
 **User:** "I need to rebuild"
 
 **AI:**
-1. "Run: `eas build --platform android --profile production`"
-2. [Build completes]
-3. [User tries to upload]
-4. [Error: Version code already used]
-5. [Build credit wasted]
+1. Updated `app.config.js` → `versionCode: 9` ✅
+2. Did NOT check/update `android/app/build.gradle` ❌
+3. "Run: `eas build --platform android --profile production`"
+4. [Build completes with versionCode 8 from Gradle file]
+5. [User tries to upload to Play Console]
+6. [Error: Version code 8 already used]
+7. [Build credit wasted - REPEATED 3 TIMES!]
+
+**What Actually Happened:**
+- Updated `app.config.js` 3 times (versionCode 9)
+- Never updated `android/app/build.gradle` (still had versionCode 8)
+- EAS Build used Gradle file (versionCode 8), ignored app.config.js
+- Play Console rejected all 3 builds (versionCode 8 already used)
+- **Result:** 3 build credits wasted in 2 hours
 
 **This is what we must NEVER do again!**
+
+**Key Lesson:** When native `android` directory exists, EAS Build uses Gradle file, NOT app.config.js!
 
 ---
 
 ## 📚 Reference
 
+- **🚨 CRITICAL:** `docs/CRITICAL_VERSION_UPDATE_REMINDER.md` - Read this first!
 - Full checklist: `docs/VERSION_CODE_CHECK_BEFORE_BUILD.md`
 - Play Store checklist: `docs/GOOGLE_PLAY_STORE_LAUNCH_CHECKLIST.md`
 

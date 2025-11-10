@@ -116,6 +116,7 @@ const colorsDark = {
   borderDark: '#292929', // hsl(240, 4%, 16%)
   inputDark: '#292929', // hsl(240, 4%, 16%)
   carriedOverDark: '#1A1A1A', // Use surfaceDark for carried over background in dark mode
+  primaryLightDark: '#1E2A3A', // hsl(211, 40%, 25%) - dark blue tint for selected cards in dark mode
 } as const;
 
 /**
@@ -139,6 +140,7 @@ export const getColors = (theme: 'light' | 'dark'): Colors => {
       input: colorsDark.inputDark,
       border: colorsDark.borderDark,
       carriedOver: colorsDark.carriedOverDark,
+      primaryLight: colorsDark.primaryLightDark, // Dark blue tint for selected cards in dark mode
       // Keep primary colors unchanged (they work in both themes)
       // Keep shadows unchanged
     };

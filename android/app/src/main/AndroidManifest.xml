@@ -32,9 +32,14 @@
       <intent-filter android:autoVerify="true" data-generated="true">
         <action android:name="android.intent.action.VIEW"/>
         <data android:scheme="https" android:host="todotomorrow.com" android:pathPrefix="/auth/callback"/>
-        <data android:scheme="todotomorrow" android:host="auth" android:pathPrefix="/callback"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="todotomorrow" android:pathPrefix="/auth/callback"/>
       </intent-filter>
       <intent-filter>
         <action android:name="android.intent.action.SEND"/>
