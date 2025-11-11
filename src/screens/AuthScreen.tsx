@@ -708,8 +708,16 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
       });
 
       if (error) {
-        // Show error but don't reveal whether email exists (security best practice)
-        setErrorMessage('Unable to send magic link. Please try again.');
+        // Show user-friendly error message
+        // Check for specific error types to provide better feedback
+        if (error.message?.toLowerCase().includes('rate limit')) {
+          setErrorMessage('Too many requests. Please wait a few minutes before trying again.');
+        } else if (error.message?.toLowerCase().includes('email')) {
+          setErrorMessage('Unable to send magic link. Please check your email address and try again.');
+        } else {
+          // Generic error (don't reveal whether email exists - security best practice)
+          setErrorMessage('Unable to send magic link. Please try again.');
+        }
         console.error('Magic link error:', error);
       } else {
         // Store email so we can use it during token verification
