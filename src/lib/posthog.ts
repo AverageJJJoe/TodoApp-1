@@ -14,11 +14,16 @@ export function initPostHog() {
   const apiKey = process.env.EXPO_PUBLIC_POSTHOG_KEY;
   const host = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 
+  // TEMPORARY DEBUG: Log even in production to help diagnose issue
+  // TODO: Remove production logging after PostHog is verified working
+  console.log('🔍 [PostHog Debug] Initializing PostHog...');
+  console.log('🔍 [PostHog Debug] API Key exists:', !!apiKey);
+  console.log('🔍 [PostHog Debug] API Key length:', apiKey ? apiKey.length : 0);
+  console.log('🔍 [PostHog Debug] Host:', host);
+
   // If API key is not configured, log warning and skip initialization
   if (!apiKey) {
-    if (__DEV__) {
-      console.warn('⚠️ PostHog API key not configured. Analytics disabled.');
-    }
+    console.warn('⚠️ PostHog API key not configured. Analytics disabled.');
     return;
   }
 
@@ -28,14 +33,11 @@ export function initPostHog() {
       autocapture: true, // Enable automatic event tracking (clicks, page views, etc.)
     });
 
-    if (__DEV__) {
-      console.log('✅ PostHog initialized successfully');
-    }
+    console.log('✅ PostHog initialized successfully');
+    console.log('🔍 [PostHog Debug] PostHog instance:', !!PostHog);
   } catch (error) {
     // Don't crash app if PostHog initialization fails
-    if (__DEV__) {
-      console.error('❌ Failed to initialize PostHog:', error);
-    }
+    console.error('❌ Failed to initialize PostHog:', error);
   }
 }
 
@@ -90,9 +92,8 @@ export async function identifyUser(userId: string) {
     // Identify user in PostHog
     PostHog.identify(userId, properties);
 
-    if (__DEV__) {
-      console.log('✅ PostHog user identified:', userId, properties);
-    }
+    // TEMPORARY DEBUG: Log even in production to help diagnose issue
+    console.log('✅ PostHog user identified:', userId, properties);
   } catch (error) {
     // Don't crash app if user identification fails
     if (__DEV__) {
@@ -130,23 +131,18 @@ export function trackEvent(eventName: string, properties?: Record<string, any>) 
   try {
     // Check if PostHog is initialized
     if (!process.env.EXPO_PUBLIC_POSTHOG_KEY) {
-      if (__DEV__) {
-        console.warn('⚠️ PostHog not initialized, skipping event tracking:', eventName);
-      }
+      console.warn('⚠️ PostHog not initialized, skipping event tracking:', eventName);
       return;
     }
 
     // PostHog automatically includes user_id and timestamp if user is identified
     PostHog.capture(eventName, properties || {});
 
-    if (__DEV__) {
-      console.log('📊 PostHog event tracked:', eventName, properties);
-    }
+    // TEMPORARY DEBUG: Log even in production to help diagnose issue
+    console.log('📊 PostHog event tracked:', eventName, properties);
   } catch (error) {
     // Don't crash app if event tracking fails
-    if (__DEV__) {
-      console.error('❌ Failed to track event:', eventName, error);
-    }
+    console.error('❌ Failed to track event:', eventName, error);
   }
 }
 
