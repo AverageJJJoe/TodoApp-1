@@ -2,6 +2,9 @@ import PostHog from 'posthog-react-native';
 import Constants from 'expo-constants';
 import { supabase } from './supabase';
 
+// PostHog instance - initialized in initPostHog()
+let posthogInstance: PostHog | null = null;
+
 /**
  * Initialize PostHog for product analytics and user behavior tracking
  * 
@@ -44,18 +47,19 @@ export function initPostHog() {
   }
 
   try {
-    PostHog.setup(apiKey, {
+    // Create PostHog instance using constructor (not setup method)
+    posthogInstance = new PostHog(apiKey, {
       host,
       autocapture: true, // Enable automatic event tracking (clicks, page views, etc.)
       debug: true, // Enable debug mode to see what's happening
     });
 
     console.log('✅ PostHog initialized successfully');
-    console.log('🔍 [PostHog Debug] PostHog instance:', !!PostHog);
+    console.log('🔍 [PostHog Debug] PostHog instance created:', !!posthogInstance);
     
     // Test capture immediately to verify it works
     try {
-      PostHog.capture('posthog_initialized', {
+      posthogInstance.capture('posthog_initialized', {
         timestamp: new Date().toISOString(),
         build_version: Constants.expoConfig?.version || 'unknown',
       });
@@ -103,7 +107,7 @@ export async function identifyUser(userId: string) {
         console.error('Error fetching user data for PostHog identification:', error);
       }
       // Still identify user with minimal data (userId only)
-      PostHog.identify(userId);
+      posthogInstance.identify(userId);
       return;
     }
 
@@ -119,7 +123,7 @@ export async function identifyUser(userId: string) {
     }
 
     // Identify user in PostHog
-    PostHog.identify(userId, properties);
+    posthogInstance.identify(userId, properties);
 
     // TEMPORARY DEBUG: Log even in production to help diagnose issue
     console.log('✅ PostHog user identified:', userId, properties);
@@ -136,7 +140,10 @@ export async function identifyUser(userId: string) {
  */
 export function resetPostHog() {
   try {
-    PostHog.reset();
+    if (!posthogInstance) {
+      return;
+    }
+    posthogInstance.reset();
     if (__DEV__) {
       console.log('✅ PostHog user reset');
     }
@@ -148,6 +155,12 @@ export function resetPostHog() {
 }
 
 // Export PostHog instance for use throughout app
+// Use getPostHog() to get the initialized instance
+export function getPostHog(): PostHog | null {
+  return posthogInstance;
+}
+
+// Export PostHog class for type references
 export { PostHog };
 
 /**
@@ -159,13 +172,13 @@ export { PostHog };
 export function trackEvent(eventName: string, properties?: Record<string, any>) {
   try {
     // Check if PostHog is initialized
-    if (!process.env.EXPO_PUBLIC_POSTHOG_KEY) {
+    if (!posthogInstance) {
       console.warn('⚠️ PostHog not initialized, skipping event tracking:', eventName);
       return;
     }
 
     // PostHog automatically includes user_id and timestamp if user is identified
-    PostHog.capture(eventName, properties || {});
+    posthogInstance.capture(eventName, properties || {});
 
     // TEMPORARY DEBUG: Log even in production to help diagnose issue
     console.log('📊 PostHog event tracked:', eventName, properties);
