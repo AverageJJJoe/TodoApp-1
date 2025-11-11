@@ -57,6 +57,9 @@ web-build/
 .env.test.local
 .env.production.local
 
+# Sentry configuration (contains auth tokens)
+android/sentry.properties
+
 # Temporary files
 *.log
 *.tmp
