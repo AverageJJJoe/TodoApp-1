@@ -88,10 +88,8 @@ export function initPostHog() {
 export async function identifyUser(userId: string) {
   try {
     // Check if PostHog is initialized
-    if (!process.env.EXPO_PUBLIC_POSTHOG_KEY) {
-      if (__DEV__) {
-        console.warn('⚠️ PostHog not initialized, skipping user identification');
-      }
+    if (!posthogInstance) {
+      console.warn('⚠️ PostHog not initialized, skipping user identification');
       return;
     }
 
