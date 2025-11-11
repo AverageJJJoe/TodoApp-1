@@ -1,4 +1,5 @@
 import PostHog from 'posthog-react-native';
+import Constants from 'expo-constants';
 import { supabase } from './supabase';
 
 /**
@@ -9,21 +10,36 @@ import { supabase } from './supabase';
  * - Host URL from environment variable EXPO_PUBLIC_POSTHOG_HOST (default: US)
  * - Autocapture enabled for automatic event tracking
  * - User identification via identifyUser() helper function
+ * 
+ * Note: Uses Constants.expoConfig?.extra to access env vars in production builds
  */
 export function initPostHog() {
-  const apiKey = process.env.EXPO_PUBLIC_POSTHOG_KEY;
-  const host = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
+  // Try multiple ways to get the API key (for compatibility)
+  const apiKey = 
+    process.env.EXPO_PUBLIC_POSTHOG_KEY || 
+    Constants.expoConfig?.extra?.posthogKey ||
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_POSTHOG_KEY;
+  
+  const host = 
+    process.env.EXPO_PUBLIC_POSTHOG_HOST || 
+    Constants.expoConfig?.extra?.posthogHost ||
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_POSTHOG_HOST ||
+    'https://us.i.posthog.com';
 
   // TEMPORARY DEBUG: Log even in production to help diagnose issue
   // TODO: Remove production logging after PostHog is verified working
   console.log('🔍 [PostHog Debug] Initializing PostHog...');
   console.log('🔍 [PostHog Debug] API Key exists:', !!apiKey);
   console.log('🔍 [PostHog Debug] API Key length:', apiKey ? apiKey.length : 0);
+  console.log('🔍 [PostHog Debug] API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'MISSING');
   console.log('🔍 [PostHog Debug] Host:', host);
+  console.log('🔍 [PostHog Debug] process.env.EXPO_PUBLIC_POSTHOG_KEY:', !!process.env.EXPO_PUBLIC_POSTHOG_KEY);
+  console.log('🔍 [PostHog Debug] Constants.expoConfig?.extra:', !!Constants.expoConfig?.extra);
 
   // If API key is not configured, log warning and skip initialization
   if (!apiKey) {
     console.warn('⚠️ PostHog API key not configured. Analytics disabled.');
+    console.warn('⚠️ [PostHog Debug] Checked: process.env, Constants.expoConfig.extra');
     return;
   }
 
@@ -31,13 +47,26 @@ export function initPostHog() {
     PostHog.setup(apiKey, {
       host,
       autocapture: true, // Enable automatic event tracking (clicks, page views, etc.)
+      debug: true, // Enable debug mode to see what's happening
     });
 
     console.log('✅ PostHog initialized successfully');
     console.log('🔍 [PostHog Debug] PostHog instance:', !!PostHog);
+    
+    // Test capture immediately to verify it works
+    try {
+      PostHog.capture('posthog_initialized', {
+        timestamp: new Date().toISOString(),
+        build_version: Constants.expoConfig?.version || 'unknown',
+      });
+      console.log('✅ PostHog test event sent');
+    } catch (testError) {
+      console.error('❌ PostHog test capture failed:', testError);
+    }
   } catch (error) {
     // Don't crash app if PostHog initialization fails
     console.error('❌ Failed to initialize PostHog:', error);
+    console.error('❌ Error details:', JSON.stringify(error, null, 2));
   }
 }
 

@@ -43,6 +43,12 @@ export default {
       // DO NOT hardcode values here - they will be committed to git!
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      // PostHog configuration - MUST be set via environment variables or EAS secrets
+      // For EAS Build: Set via EAS secrets (eas env:create)
+      posthogKey: process.env.EXPO_PUBLIC_POSTHOG_KEY,
+      posthogHost: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+      EXPO_PUBLIC_POSTHOG_KEY: process.env.EXPO_PUBLIC_POSTHOG_KEY, // Also expose as EXPO_PUBLIC_* for direct access
+      EXPO_PUBLIC_POSTHOG_HOST: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
       launchDate: "2025-09-15T00:00:00Z",
       eas: {
         projectId: "d9259efb-a198-4da8-9580-23e51504ac3b"
