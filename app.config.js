@@ -7,7 +7,7 @@ export default {
     name: "TodoTomorrow",
     slug: "todotomorrow",
     scheme: "todotomorrow",
-    version: "1.0.7",
+    version: "1.0.9",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",
@@ -35,7 +35,7 @@ export default {
     updates: {
       url: "https://u.expo.dev/d9259efb-a198-4da8-9580-23e51504ac3b"
     },
-    runtimeVersion: "1.0.7",
+    runtimeVersion: "1.0.9",
     extra: {
       // Supabase configuration - MUST be set via environment variables or EAS secrets
       // For local development: Set in .env file (gitignored)
@@ -55,7 +55,7 @@ export default {
       }
     },
     ios: {
-      runtimeVersion: "1.0.7",
+      runtimeVersion: "1.0.9",
       supportsTablet: true,
       bundleIdentifier: "com.todotomorrow.app",
       associatedDomains: [
@@ -63,8 +63,8 @@ export default {
       ]
     },
     android: {
-      versionCode: 9,
-      runtimeVersion: "1.0.7",
+      versionCode: 12,
+      runtimeVersion: "1.0.9",
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
         backgroundColor: "#FFFFFF"
