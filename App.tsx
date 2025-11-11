@@ -11,6 +11,15 @@ import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { useAuthStore } from './src/stores/authStore';
 import { getStoredDeepLink } from './src/lib/deepLinkIntent';
 import { ThemeProvider } from './src/components/ThemeProvider';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { initSentry } from './src/lib/sentry';
+import { initPostHog } from './src/lib/posthog';
+
+// Initialize Sentry BEFORE React renders
+initSentry();
+
+// Initialize PostHog AFTER Sentry (before React renders)
+initPostHog();
 
 export default function App() {
   const session = useAuthStore((state) => state.session);
@@ -246,20 +255,22 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        {DEV_BYPASS_AUTH || session ? (
-          needsOnboarding ? (
-            <OnboardingScreen onComplete={() => setNeedsOnboarding(false)} />
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider>
+          {DEV_BYPASS_AUTH || session ? (
+            needsOnboarding ? (
+              <OnboardingScreen onComplete={() => setNeedsOnboarding(false)} />
+            ) : (
+              <MainScreen />
+            )
           ) : (
-            <MainScreen />
-          )
-        ) : (
-          <AuthScreen initialDeepLink={initialDeepLink} />
-        )}
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </GestureHandlerRootView>
+            <AuthScreen initialDeepLink={initialDeepLink} />
+          )}
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

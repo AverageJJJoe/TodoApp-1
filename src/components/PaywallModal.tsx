@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useTheme, typography, spacing, shadows } from '../design-system';
+import { trackPaywallViewed } from '../lib/posthog';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -212,6 +213,24 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   };
 
   const pricing = getPricing();
+
+  // Track paywall_viewed event when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        trackPaywallViewed({
+          cohort: cohort || undefined,
+          days_remaining: daysRemaining,
+          tasks_remaining: tasksRemaining,
+        });
+      } catch (trackError) {
+        // Don't fail paywall display if tracking fails
+        if (__DEV__) {
+          console.error('Failed to track paywall_viewed event:', trackError);
+        }
+      }
+    }
+  }, [isOpen, cohort, daysRemaining, tasksRemaining]);
 
   // Modal animations
   useEffect(() => {

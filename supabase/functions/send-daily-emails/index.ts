@@ -396,6 +396,55 @@ Deno.serve(async (req: Request) => {
         const messageId = resendData.id || null;
         console.log(`Email sent to ${user.email}, message ID: ${messageId}`);
 
+        // Track email_sent event in PostHog
+        try {
+          const posthogApiKey = Deno.env.get('POSTHOG_API_KEY');
+          const posthogHost = Deno.env.get('POSTHOG_HOST') || 'https://us.i.posthog.com';
+          
+          if (posthogApiKey) {
+            // Fetch user's auth_id for PostHog distinct_id
+            const { data: userAuthData } = await supabase
+              .from('users')
+              .select('auth_id, cohort')
+              .eq('id', user.id)
+              .maybeSingle();
+            
+            if (userAuthData?.auth_id) {
+              // Use PostHog HTTP API to track event
+              const posthogResponse = await fetch(`${posthogHost}/capture/`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  api_key: posthogApiKey,
+                  event: 'email_sent',
+                  distinct_id: userAuthData.auth_id,
+                  properties: {
+                    user_id: userAuthData.auth_id,
+                    email: user.email,
+                    task_count: userTasks.length,
+                    workflow_mode: user.workflow_mode,
+                    cohort: userAuthData.cohort || null,
+                  },
+                }),
+              });
+              
+              if (!posthogResponse.ok) {
+                const errorText = await posthogResponse.text();
+                console.error(`PostHog tracking error for user ${user.id}:`, errorText);
+              } else {
+                console.log(`PostHog event tracked: email_sent for user ${user.id}`);
+              }
+            }
+          } else {
+            console.warn('⚠️ POSTHOG_API_KEY not configured, skipping email_sent event tracking');
+          }
+        } catch (posthogError) {
+          // Don't fail email sending if PostHog tracking fails
+          console.error(`Failed to track email_sent event for user ${user.id}:`, posthogError);
+        }
+
         // Rate limiting: Add delay to respect Resend's 2 requests/second limit
         // Using 600ms delay allows ~1.5 emails/second to stay safely under the limit
         await new Promise(resolve => setTimeout(resolve, 600));

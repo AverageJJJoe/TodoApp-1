@@ -25,6 +25,7 @@ import {
   getLaunchDate,
 } from '../lib/cohortAssignment';
 import Constants from 'expo-constants';
+import * as Sentry from '@sentry/react-native';
 
 interface SettingsScreenProps {
   onClose: () => void;
@@ -1184,6 +1185,73 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
             )}
           </TouchableOpacity>
         </GroupedSection>
+
+        {/* TEST CRASH Section - Dev Only */}
+        {__DEV__ && (
+          <>
+            <SectionHeader title="TEST CRASH" />
+            <GroupedSection>
+              <TouchableOpacity
+                style={[styles.cell, styles.cellBorder, styles.testEmailCell]}
+                onPress={() => {
+                  Alert.alert(
+                    'Test Crash',
+                    'This will crash the app to test Sentry crash reporting. Continue?',
+                    [
+                      {
+                        text: 'Cancel',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Crash App',
+                        style: 'destructive',
+                        onPress: () => {
+                          // Trigger JavaScript error
+                          throw new Error('Test crash for Sentry - This is intentional');
+                        },
+                      },
+                    ],
+                    { cancelable: true }
+                  );
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.testEmailCellText, { color: colors.destructive }]}>
+                  Trigger Test Crash
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.cell, styles.testEmailCell]}
+                onPress={() => {
+                  Alert.alert(
+                    'Test Native Crash',
+                    'This will trigger a native crash to test Sentry native crash reporting. Continue?',
+                    [
+                      {
+                        text: 'Cancel',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Crash App',
+                        style: 'destructive',
+                        onPress: () => {
+                          // Trigger native crash via Sentry
+                          Sentry.nativeCrash();
+                        },
+                      },
+                    ],
+                    { cancelable: true }
+                  );
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.testEmailCellText, { color: colors.destructive }]}>
+                  Trigger Native Crash
+                </Text>
+              </TouchableOpacity>
+            </GroupedSection>
+          </>
+        )}
 
         {/* Save Button - Hide when contact modal is open */}
         {!isContactModalVisible && (

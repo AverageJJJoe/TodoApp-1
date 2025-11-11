@@ -111,7 +111,15 @@ export default {
       ]
     },
     plugins: [
-      "expo-localization"
+      "expo-localization",
+      [
+        "@sentry/react-native/expo",
+        {
+          url: "https://sentry.io/",
+          project: "react-native",
+          organization: "todotomorrow"
+        }
+      ]
     ]
   }
 };

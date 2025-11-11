@@ -6,6 +6,7 @@ import {
   assignCohort,
   getLaunchDate,
 } from '../lib/cohortAssignment';
+import { trackTaskAdded, trackTaskDeleted } from '../lib/posthog';
 
 export interface Task {
   id: string;
@@ -278,6 +279,25 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             : t
         ),
       }));
+
+      // Track task_added event
+      try {
+        // Fetch workflow_mode from users table
+        const { data: userData } = await supabase
+          .from('users')
+          .select('workflow_mode')
+          .eq('id', userId)
+          .maybeSingle();
+        
+        trackTaskAdded(createdTask.id, {
+          workflow_mode: userData?.workflow_mode || null,
+        });
+      } catch (trackError) {
+        // Don't fail task creation if tracking fails
+        if (__DEV__) {
+          console.error('Failed to track task_added event:', trackError);
+        }
+      }
     }
   },
   deleteTask: async (id: string) => {
@@ -309,6 +329,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
       if (error) {
         throw error;
+      }
+
+      // Track task_deleted event
+      try {
+        trackTaskDeleted(id);
+      } catch (trackError) {
+        // Don't fail task deletion if tracking fails
+        if (__DEV__) {
+          console.error('Failed to track task_deleted event:', trackError);
+        }
       }
 
       // Success: Task already removed from local state

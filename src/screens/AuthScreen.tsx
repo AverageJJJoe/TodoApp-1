@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { clearStoredDeepLink } from '../lib/deepLinkIntent';
 import { useTheme, typography, spacing } from '../design-system';
+import { trackUserSignedUp, trackUserLoggedIn } from '../lib/posthog';
 
 interface AuthScreenProps {
   initialDeepLink?: string | null;
@@ -397,6 +398,34 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
               // Update Zustand store with session to trigger navigation to MainScreen
               setSession(sessionData.session);
               setSuccessMessage('Successfully signed in!');
+              
+              // Track authentication event (signup vs login)
+              try {
+                const isSignup = fragmentType === 'signup';
+                if (isSignup) {
+                  // Fetch user data for signup event
+                  const { data: userData } = await supabase
+                    .from('users')
+                    .select('cohort')
+                    .eq('auth_id', sessionData.session.user.id)
+                    .maybeSingle();
+                  
+                  trackUserSignedUp(sessionData.session.user.id, {
+                    email: sessionData.session.user.email || undefined,
+                    cohort: userData?.cohort || undefined,
+                  });
+                } else {
+                  trackUserLoggedIn(sessionData.session.user.id, {
+                    email: sessionData.session.user.email || undefined,
+                  });
+                }
+              } catch (trackError) {
+                // Don't fail authentication if tracking fails
+                if (__DEV__) {
+                  console.error('Failed to track auth event:', trackError);
+                }
+              }
+              
               // Clear stored deep link since we've successfully processed it
               clearStoredDeepLink();
               // Navigation to MainScreen happens automatically via App.tsx session check and onAuthStateChange
@@ -536,6 +565,34 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                 // Update Zustand store with session to trigger navigation to MainScreen
                 setSession(sessionData.session);
                 setSuccessMessage('Successfully signed in!');
+                
+                // Track authentication event (signup vs login)
+                try {
+                  const isSignup = verifyType === 'signup';
+                  if (isSignup) {
+                    // Fetch user data for signup event
+                    const { data: userData } = await supabase
+                      .from('users')
+                      .select('cohort')
+                      .eq('auth_id', sessionData.session.user.id)
+                      .maybeSingle();
+                    
+                    trackUserSignedUp(sessionData.session.user.id, {
+                      email: sessionData.session.user.email || undefined,
+                      cohort: userData?.cohort || undefined,
+                    });
+                  } else {
+                    trackUserLoggedIn(sessionData.session.user.id, {
+                      email: sessionData.session.user.email || undefined,
+                    });
+                  }
+                } catch (trackError) {
+                  // Don't fail authentication if tracking fails
+                  if (__DEV__) {
+                    console.error('Failed to track auth event:', trackError);
+                  }
+                }
+                
                 // Clear stored deep link since we've successfully processed it
                 clearStoredDeepLink();
                 // Navigation to MainScreen happens automatically via App.tsx session check and onAuthStateChange
@@ -553,6 +610,34 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                     }
                     setSession(retrySession.session);
                     setSuccessMessage('Successfully signed in!');
+                    
+                    // Track authentication event (signup vs login)
+                    try {
+                      const isSignup = verifyType === 'signup';
+                      if (isSignup) {
+                        // Fetch user data for signup event
+                        const { data: userData } = await supabase
+                          .from('users')
+                          .select('cohort')
+                          .eq('auth_id', retrySession.session.user.id)
+                          .maybeSingle();
+                        
+                        trackUserSignedUp(retrySession.session.user.id, {
+                          email: retrySession.session.user.email || undefined,
+                          cohort: userData?.cohort || undefined,
+                        });
+                      } else {
+                        trackUserLoggedIn(retrySession.session.user.id, {
+                          email: retrySession.session.user.email || undefined,
+                        });
+                      }
+                    } catch (trackError) {
+                      // Don't fail authentication if tracking fails
+                      if (__DEV__) {
+                        console.error('Failed to track auth event:', trackError);
+                      }
+                    }
+                    
                     // Clear stored deep link since we've successfully processed it
                     clearStoredDeepLink();
                   } else {

@@ -23,6 +23,7 @@ import { SettingsScreen } from './SettingsScreen';
 import { TaskItem } from '../components/TaskItem';
 import { ShareHandler, SharedData } from '../components/ShareHandler';
 import { useTheme, typography, spacing } from '../design-system';
+import { trackTaskCompleted } from '../lib/posthog';
 
 export const MainScreen = () => {
   const { colors } = useTheme();
@@ -702,6 +703,16 @@ export const MainScreen = () => {
         .eq('id', id);
 
       if (error) throw error;
+
+      // Track task_completed event
+      try {
+        trackTaskCompleted(id);
+      } catch (trackError) {
+        // Don't fail task completion if tracking fails
+        if (__DEV__) {
+          console.error('Failed to track task_completed event:', trackError);
+        }
+      }
 
       // Refresh tasks to reflect completion
       await loadTasks();

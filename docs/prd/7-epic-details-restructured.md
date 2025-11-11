@@ -1186,3 +1186,25 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 **Test:** Share URL from Safari → Verify TodoTomorrow appears → Tap it → Verify task creation modal opens with URL pre-filled
 
 ---
+
+## Epic 8: PostHog Analytics & Loops Email Sequences (Post-Launch)
+
+**Epic Goal:** Integrate PostHog for unified analytics and crash reporting, plus Loops for automated email sequences to improve user engagement and retention post-launch.
+
+**Status:** 📋 **PLANNED** (Post-Launch)
+
+**Timing:** After app launch (Epic 7 complete), when we have real users to track and engage
+
+**See:** `docs/prd/epic-8-posthog-loops-integration.md` for complete epic details, stories, and implementation notes.
+
+**Epic Summary:**
+- Story 8.1: Sentry Setup & Crash Reporting (3-4 hours)
+- Story 8.2: PostHog Setup & Initialization (2-3 hours)
+- Story 8.3: PostHog Event Tracking Implementation (2-3 hours)
+- Story 8.4: Loops Integration & Welcome Email Sequence (3-4 hours)
+- Story 8.5: Loops Re-Engagement Sequence & Inactivity Detection (4-5 hours)
+- Story 8.6: PostHog Retention Tracking & Analytics Dashboard (2-3 hours)
+
+**Total:** 6 stories, 16-21 hours development time
+
+---

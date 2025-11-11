@@ -61,3 +61,5 @@ web-build/
 *.log
 *.tmp
 *.temp
+
+.env.local
