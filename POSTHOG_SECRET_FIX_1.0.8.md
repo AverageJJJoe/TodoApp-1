@@ -66,8 +66,9 @@
    ```
 
 **Verification:**
-- [ ] API key regenerated in PostHog Dashboard (optional)
-- [ ] EAS secret updated (if rotating)
+- [x] API key regenerated in PostHog Dashboard ✅ (New key: phc_wbVxqoHW4r7aIDKFCZhthadcj2t3olV685JauaS40jU)
+- [x] EAS secret updated ✅ (Updated: 2025-01-27 via `eas env:update`)
+- [x] Secret verified in EAS ✅
 - [ ] App still connects to PostHog (test in next build)
 
 ---
@@ -76,8 +77,8 @@
 
 ### Immediate Actions
 - [x] Remove hardcoded PostHog API key from documentation ✅
-- [ ] **Rotate PostHog API Key** (Optional - Recommended)
-- [ ] **Update EAS secret for EXPO_PUBLIC_POSTHOG_KEY** (If rotating)
+- [x] **Rotate PostHog API Key** ✅ (Completed: 2025-01-27)
+- [x] **Update EAS secret for EXPO_PUBLIC_POSTHOG_KEY** ✅ (New key set)
 
 ---
 
@@ -85,8 +86,8 @@
 
 **Version:** 1.0.8 (versionCode 11)  
 **Secret Removed:** ✅ Yes  
-**Secret Rotated:** ⏳ Optional (not critical, but recommended)  
-**Ready for Production:** ✅ Yes (API key is public-scoped, less critical than auth tokens)
+**Secret Rotated:** ✅ Yes (Completed: 2025-01-27)  
+**Ready for Production:** ✅ Yes
 
 ---
 
