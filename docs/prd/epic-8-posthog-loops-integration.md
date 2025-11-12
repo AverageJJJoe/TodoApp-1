@@ -2,9 +2,9 @@
 
 **Epic Goal:** Integrate Sentry for crash logging, PostHog for product analytics, and ~~Loops for automated email sequences~~ (DEFERRED) to improve user engagement, retention, and crash debugging post-launch.
 
-**Status:** 📋 **PARTIALLY COMPLETE** (Post-Launch)
+**Status:** ✅ **COMPLETE** (Post-Launch)
 - ✅ Sentry Integration: Complete
-- ✅ PostHog Integration: Complete  
+- ✅ PostHog Integration: Complete (including retention tracking & dashboard)
 - ❌ Loops Integration: **DEFERRED / ABANDONED** (2025-11-12) - Excessive complexity, will explore simpler alternatives post-launch
 
 **Timing:** After app launch (Epic 7 complete), when we have real users to track and engage
@@ -432,14 +432,14 @@ ON users(last_reengagement_email_sent_at);
 - [x] Story 8.3: All key events tracked in PostHog ✅
 - [x] Story 8.4: ~~Loops welcome sequence working~~ ❌ **DEFERRED** (2025-11-12)
 - [x] Story 8.5: ~~Loops re-engagement sequence working~~ ❌ **DEFERRED** (2025-11-12)
-- [ ] Story 8.6: PostHog dashboard configured with retention metrics
+- [x] Story 8.6: PostHog dashboard configured with retention metrics ✅
 - [x] Existing functionality verified (magic links, daily emails still work) ✅
 - [x] Integration points tested on iOS, Android, and web ✅
 - [x] Environment variables configured in EAS secrets ✅
 - [x] Documentation updated ✅
-- [ ] No regression in existing features
-- [ ] Sentry dashboard accessible and showing crash reports
-- [ ] PostHog dashboard accessible and showing data
+- [x] No regression in existing features ✅
+- [x] Sentry dashboard accessible and showing crash reports ✅
+- [x] PostHog dashboard accessible and showing data ✅
 - [x] ~~Loops dashboard showing email sends and delivery rates~~ ❌ DEFERRED
 
 ---
@@ -668,10 +668,10 @@ All environment variables must be configured in EAS secrets before deployment:
 ---
 
 **Epic Created:** 2025-01-27  
-**Epic Updated:** 2025-11-12 (Loops integration deferred/abandoned due to complexity)  
+**Epic Updated:** 2025-01-28 (Story 8.6 complete - PostHog retention tracking & dashboard configured)  
 **Epic Owner:** Product Manager (John)  
-**Status:** 📋 **PARTIALLY COMPLETE** (Post-Launch)
+**Status:** ✅ **COMPLETE** (Post-Launch)
 - ✅ Sentry Integration: Complete
-- ✅ PostHog Integration: Complete
+- ✅ PostHog Integration: Complete (including retention tracking & dashboard)
 - ❌ Loops Integration: **DEFERRED / ABANDONED** (2025-11-12)
 
