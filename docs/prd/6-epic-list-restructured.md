@@ -9,7 +9,7 @@
 | E5 | Workflow Modes & Polish | 4 stories | 10 hours | E4 Story 4.1 complete | ✅ **COMPLETE** |
 | E6 | Design System Integration & UI Polish | 4 stories | 16 hours | Can run parallel with E3-E5 | ✅ **COMPLETE** |
 | E7 | Pre-Launch Polish | 9 stories (4 done, 4 approved, 1 deferred) | 15-20 hours | E1-E6 complete | 🔄 **IN PROGRESS** |
-| E8 | Sentry Crash Logging, PostHog Analytics & Loops Email Sequences | 6 stories | 16-21 hours | E7 complete (post-launch) | 📋 **PLANNED** |
+| E8 | Sentry Crash Logging, PostHog Analytics & ~~Loops Email Sequences~~ (DEFERRED) | 6 stories (4 complete, 2 deferred) | 16-21 hours | E7 complete (post-launch) | ✅ **PARTIALLY COMPLETE** (Sentry ✅, PostHog ✅, Loops ❌ DEFERRED 2025-11-12) |
 
 **📋 Sequencing Plan:** See `docs/development-sequencing-plan.md` for detailed execution strategy (hybrid approach: design-first + parallel execution)
 

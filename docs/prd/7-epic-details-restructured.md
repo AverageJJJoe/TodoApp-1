@@ -1187,11 +1187,14 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 
 ---
 
-## Epic 8: PostHog Analytics & Loops Email Sequences (Post-Launch)
+## Epic 8: Sentry Crash Logging, PostHog Analytics & ~~Loops Email Sequences~~ (DEFERRED) (Post-Launch)
 
-**Epic Goal:** Integrate PostHog for unified analytics and crash reporting, plus Loops for automated email sequences to improve user engagement and retention post-launch.
+**Epic Goal:** Integrate Sentry for crash logging, PostHog for product analytics, and ~~Loops for automated email sequences~~ (DEFERRED) to improve user engagement, retention, and crash debugging post-launch.
 
-**Status:** 📋 **PLANNED** (Post-Launch)
+**Status:** ✅ **PARTIALLY COMPLETE**
+- ✅ Sentry Integration: Complete
+- ✅ PostHog Integration: Complete
+- ❌ Loops Integration: **DEFERRED / ABANDONED** (2025-11-12) - Excessive complexity, will explore simpler alternatives post-launch
 
 **Timing:** After app launch (Epic 7 complete), when we have real users to track and engage
 
@@ -1201,8 +1204,8 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 - Story 8.1: Sentry Setup & Crash Reporting (3-4 hours)
 - Story 8.2: PostHog Setup & Initialization (2-3 hours)
 - Story 8.3: PostHog Event Tracking Implementation (2-3 hours)
-- Story 8.4: Loops Integration & Welcome Email Sequence (3-4 hours)
-- Story 8.5: Loops Re-Engagement Sequence & Inactivity Detection (4-5 hours)
+- Story 8.4: ~~Loops Integration & Welcome Email Sequence~~ ❌ **DEFERRED** (2025-11-12)
+- Story 8.5: ~~Loops Re-Engagement Sequence & Inactivity Detection~~ ❌ **DEFERRED** (2025-11-12)
 - Story 8.6: PostHog Retention Tracking & Analytics Dashboard (2-3 hours)
 
 **Total:** 6 stories, 16-21 hours development time
