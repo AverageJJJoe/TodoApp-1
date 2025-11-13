@@ -15,6 +15,7 @@ import {
   Animated,
   StatusBar,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Icon library: @expo/vector-icons (built into Expo)
 import { Swipeable } from 'react-native-gesture-handler';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
@@ -48,28 +49,31 @@ export const MainScreen = () => {
     header: {
       height: 44, // Match Lovable: h-[44px]
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
       backgroundColor: colors.background,
       paddingHorizontal: spacing.lg, // Match Lovable: px-lg
       borderBottomWidth: 1,
       borderBottomColor: colors.separator, // Match Lovable: border-b border-separator
     },
+    headerSpacer: {
+      width: 44, // Match settings button width (24px icon + padding)
+      alignItems: 'flex-start',
+    },
     title: {
       ...typography.bodyLarge, // Match Lovable: text-body-large (NOT titleMedium)
       fontWeight: '600', // Match Lovable: font-semibold
       color: colors.textPrimary,
+      flex: 1,
+      textAlign: 'center',
     },
     headerButton: {
+      width: 44, // Match left spacer width for perfect centering
+      height: 44,
       padding: spacing.sm, // Match Lovable: p-2
       marginHorizontal: -spacing.sm, // Match Lovable: -ml-2, -mr-2
       borderRadius: spacing.radiusLg, // Match Lovable: rounded-lg (for hover state)
-    },
-    headerIcon: {
-      fontSize: 24, // Match Lovable: w-6 h-6
-      color: colors.textPrimary,
-      fontWeight: '400',
-      lineHeight: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     tabBar: {
       flexDirection: 'row',
@@ -232,7 +236,7 @@ export const MainScreen = () => {
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: spacing.md, // Match Lovable: gap-md
-      padding: spacing.lg, // Match Lovable: p-lg
+      padding: spacing.md, // Reduced from spacing.lg (16px → 12px) for better visual density
     },
     checkboxContainer: {
       marginTop: 2, // Match Lovable: mt-[2px]
@@ -777,7 +781,7 @@ export const MainScreen = () => {
       )}
       {/* Header - Match Lovable: h-[44px], border separator, settings right */}
       <View style={styles.header}>
-        <View style={styles.headerButton} />
+        <View style={styles.headerSpacer} />
         <Text style={styles.title}>TodoTomorrow</Text>
         <TouchableOpacity
           onPress={() => setIsSettingsVisible(true)}
@@ -786,7 +790,7 @@ export const MainScreen = () => {
           accessibilityLabel="Open settings"
           accessibilityRole="button"
         >
-          <Text style={styles.headerIcon}>⚙</Text>
+          <Ionicons name="settings-outline" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -1002,6 +1006,17 @@ export const MainScreen = () => {
                 autoFocus={true}
                 multiline={true}
               />
+              {/* Voice Input Tip */}
+              <Text style={[
+                typography.caption,
+                {
+                  color: colors.textTertiary,
+                  marginTop: -spacing.md,
+                  marginBottom: spacing.md,
+                }
+              ]}>
+                💡 Tip: Use native keyboard mic button for voice input while driving!
+              </Text>
               <TouchableOpacity
                 style={[
                   styles.addTaskButton,

@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Icon library: @expo/vector-icons (built into Expo)
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
@@ -115,10 +116,6 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
     },
     buttonDisabled: {
       opacity: 0.5,
-    },
-    buttonIcon: {
-      fontSize: 20,
-      color: colors.background,
     },
     buttonText: {
       ...typography.bodyLarge,
@@ -965,6 +962,9 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
           onPress={handleSendMagicLink}
           disabled={!validateEmail(email) || isLoading}
           activeOpacity={0.8}
+          accessible={true}
+          accessibilityLabel="Send magic link"
+          accessibilityRole="button"
         >
           {isLoading ? (
             <>
@@ -973,7 +973,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
             </>
           ) : (
             <>
-              <Text style={styles.buttonIcon}>✉</Text>
+              <Ionicons name="mail-outline" size={20} color={colors.background} />
               <Text style={styles.buttonText}>Send Magic Link</Text>
             </>
           )}

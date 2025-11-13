@@ -11,6 +11,7 @@ import {
   Switch,
   StatusBar,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Icon library: @expo/vector-icons (built into Expo)
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Localization from 'expo-localization';
 import { useUserPreferencesStore } from '../stores/userPreferencesStore';
@@ -79,11 +80,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       minHeight: 44,
       justifyContent: 'center',
       alignItems: 'flex-start',
-    },
-    backButton: {
-      ...typography.bodyLarge,
-      color: colors.primary,
-      fontWeight: '400',
     },
     title: {
       ...typography.bodyLarge,
@@ -970,8 +966,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
             style={styles.backButtonContainer}
             onPress={onClose}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessible={true}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
-            <Text style={styles.backButton}>←</Text>
+            <Ionicons name="chevron-back" size={24} color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.title}>Settings</Text>
           <View style={styles.headerSpacer} />
@@ -995,8 +994,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
           style={styles.backButtonContainer}
           onPress={onClose}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessible={true}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
-          <Text style={styles.backButton}>←</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.title}>Settings</Text>
         <View style={styles.headerSpacer} />

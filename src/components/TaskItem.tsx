@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Icon library: @expo/vector-icons (built into Expo)
 import { Swipeable } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { Task } from '../stores/taskStore';
@@ -170,8 +171,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       <TouchableOpacity
         style={componentStyles.deleteButton}
         onPress={() => onDelete(task.id)}
+        accessible={true}
+        accessibilityLabel="Delete task"
+        accessibilityRole="button"
       >
-        <Text style={componentStyles.deleteButtonText}>Delete</Text>
+        <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
       </TouchableOpacity>
     );
   };

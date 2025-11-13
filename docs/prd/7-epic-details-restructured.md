@@ -1187,27 +1187,45 @@ This epic is **NEW** and addresses a critical gap: integrating professionally de
 
 ---
 
-## Epic 8: Sentry Crash Logging, PostHog Analytics & ~~Loops Email Sequences~~ (DEFERRED) (Post-Launch)
+## Epic 8: Sentry Crash Logging, PostHog Analytics & Loops SMTP Integration (Post-Launch)
 
-**Epic Goal:** Integrate Sentry for crash logging, PostHog for product analytics, and ~~Loops for automated email sequences~~ (DEFERRED) to improve user engagement, retention, and crash debugging post-launch.
+**Epic Goal:** Integrate Sentry for crash logging, PostHog for product analytics, and Loops for email design control (via Supabase native SMTP integration) to improve user engagement, retention, and crash debugging post-launch.
 
-**Status:** ✅ **PARTIALLY COMPLETE**
+**Status:** 🔄 **IN PROGRESS**
 - ✅ Sentry Integration: Complete
-- ✅ PostHog Integration: Complete
-- ❌ Loops Integration: **DEFERRED / ABANDONED** (2025-11-12) - Excessive complexity, will explore simpler alternatives post-launch
+- ✅ PostHog Integration: Complete (including retention tracking & dashboard)
+- 🔄 Loops Integration: **REVISED APPROACH** (2025-01-28) - Using Supabase native SMTP integration (much simpler than custom solution)
 
 **Timing:** After app launch (Epic 7 complete), when we have real users to track and engage
 
 **See:** `docs/prd/epic-8-posthog-loops-integration.md` for complete epic details, stories, and implementation notes.
 
 **Epic Summary:**
-- Story 8.1: Sentry Setup & Crash Reporting (3-4 hours)
-- Story 8.2: PostHog Setup & Initialization (2-3 hours)
-- Story 8.3: PostHog Event Tracking Implementation (2-3 hours)
-- Story 8.4: ~~Loops Integration & Welcome Email Sequence~~ ❌ **DEFERRED** (2025-11-12)
-- Story 8.5: ~~Loops Re-Engagement Sequence & Inactivity Detection~~ ❌ **DEFERRED** (2025-11-12)
-- Story 8.6: PostHog Retention Tracking & Analytics Dashboard (2-3 hours)
+- Story 8.1: Sentry Setup & Crash Reporting (3-4 hours) ✅ Complete
+- Story 8.2: PostHog Setup & Initialization (2-3 hours) ✅ Complete
+- Story 8.3: PostHog Event Tracking Implementation (2-3 hours) ✅ Complete
+- Story 8.4: Loops API Integration for Lifecycle Emails (2-3 hours) 🔄 In Progress
+- Story 8.5: Loops Email Sequences (Optional - Post-Launch) (2-3 hours) ⏸️ Optional
+- Story 8.6: PostHog Retention Tracking & Analytics Dashboard (2-3 hours) ✅ Complete
 
-**Total:** 6 stories, 16-21 hours development time
+**Total:** 6 stories (4 complete, 1 in progress, 1 optional), 15-20 hours development time
+
+---
+
+## Epic 9: Post-Launch Design Refinements (Post-Launch)
+
+**Epic Goal:** Refine UI components and visual design elements to match Lovable reference design, improve icon consistency, enhance visual hierarchy, and add helpful user tips for better UX.
+
+**Status:** 🔄 **NOT STARTED**
+
+**Timing:** Post-launch, based on user feedback and design review
+
+**See:** `docs/prd/epic-9-post-launch-design-refinements.md` for complete epic details and stories.
+
+**Epic Summary:**
+- Story 9.1: Icon System Updates - Match Lovable Design (3-4 hours)
+- Story 9.2: UI Spacing & Layout Refinements (2-3 hours)
+
+**Total:** 2 stories, 5-7 hours development time
 
 ---

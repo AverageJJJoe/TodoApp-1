@@ -58,3 +58,5 @@ CREATE POLICY "email_logs_select_own"
 
 
 
+
+

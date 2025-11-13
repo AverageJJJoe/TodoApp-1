@@ -76,18 +76,62 @@ Deno.serve(async (req: Request) => {
 
     console.log(`Processing account deletion for user: ${user.id}`);
 
-    // Find user record in users table
+    // Find user record in users table (including soft-deleted users)
+    // Using service role key bypasses RLS, so we can find soft-deleted users
     const { data: userRecord, error: userError } = await supabase
       .from('users')
-      .select('id, auth_id')
+      .select('id, auth_id, deleted_at')
       .eq('auth_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (userError || !userRecord) {
-      console.error('User record not found:', userError?.message || 'No record found');
+    if (userError) {
+      console.error('Error querying user record:', userError.message);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Failed to query user record' }),
+        { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      );
+    }
+
+    if (!userRecord) {
+      console.error('User record not found');
       return new Response(
         JSON.stringify({ success: false, error: 'User not found' }),
         { status: 404, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      );
+    }
+
+    // If user is already soft-deleted, just hard delete the auth user and user record
+    if (userRecord.deleted_at) {
+      console.log(`User record already soft-deleted, hard deleting user record and auth user: ${userRecord.id}`);
+      
+      // Hard delete user record (cascades to tasks)
+      const { error: hardDeleteError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userRecord.id);
+
+      if (hardDeleteError) {
+        console.error('Failed to hard delete user record:', hardDeleteError.message);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Failed to delete user record' }),
+          { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        );
+      }
+
+      // Hard delete auth user
+      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id);
+      if (authDeleteError) {
+        console.error('Failed to delete auth user:', authDeleteError.message);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Failed to delete auth user' }),
+          { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        );
+      }
+
+      console.log(`✅ Successfully deleted already-soft-deleted account for user: ${user.id}`);
+      return new Response(
+        JSON.stringify({ success: true, message: 'Account deleted successfully' }),
+        { status: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
