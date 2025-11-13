@@ -7,7 +7,7 @@ export default {
     name: "TodoTomorrow",
     slug: "todotomorrow",
     scheme: "todotomorrow",
-    version: "1.0.10",
+    version: "1.0.12",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",
@@ -35,7 +35,7 @@ export default {
     updates: {
       url: "https://u.expo.dev/d9259efb-a198-4da8-9580-23e51504ac3b"
     },
-    runtimeVersion: "1.0.10",
+    runtimeVersion: "1.0.12",
     extra: {
       // Supabase configuration - MUST be set via environment variables or EAS secrets
       // For local development: Set in .env file (gitignored)
@@ -49,13 +49,16 @@ export default {
       posthogHost: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
       EXPO_PUBLIC_POSTHOG_KEY: process.env.EXPO_PUBLIC_POSTHOG_KEY, // Also expose as EXPO_PUBLIC_* for direct access
       EXPO_PUBLIC_POSTHOG_HOST: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+      // Loops configuration - MUST be set via environment variables or EAS secrets
+      // For EAS Build: Set via EAS secrets (eas secret:create)
+      EXPO_PUBLIC_LOOPS_API_KEY: process.env.EXPO_PUBLIC_LOOPS_API_KEY, // Loops API key for welcome emails
       launchDate: "2025-09-15T00:00:00Z",
       eas: {
         projectId: "d9259efb-a198-4da8-9580-23e51504ac3b"
       }
     },
     ios: {
-      runtimeVersion: "1.0.10",
+      runtimeVersion: "1.0.12",
       supportsTablet: true,
       bundleIdentifier: "com.todotomorrow.app",
       associatedDomains: [
@@ -63,8 +66,8 @@ export default {
       ]
     },
     android: {
-      versionCode: 13,
-      runtimeVersion: "1.0.10",
+      versionCode: 15,
+      runtimeVersion: "1.0.12",
       adaptiveIcon: {
         foregroundImage: "./assets/icon.png",
         backgroundColor: "#FFFFFF"

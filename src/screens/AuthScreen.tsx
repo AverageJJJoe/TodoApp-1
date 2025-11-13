@@ -16,6 +16,7 @@ import { useAuthStore } from '../stores/authStore';
 import { clearStoredDeepLink } from '../lib/deepLinkIntent';
 import { useTheme, typography, spacing } from '../design-system';
 import { trackUserSignedUp, trackUserLoggedIn } from '../lib/posthog';
+import { sendWelcomeEmail } from '../lib/loops';
 
 interface AuthScreenProps {
   initialDeepLink?: string | null;
@@ -401,19 +402,64 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
               
               // Track authentication event (signup vs login)
               try {
-                const isSignup = fragmentType === 'signup';
-                if (isSignup) {
-                  // Fetch user data for signup event
-                  const { data: userData } = await supabase
+                // Fetch user data to check signup status and welcome_email_sent flag
+                let { data: userData, error: userError } = await supabase
+                  .from('users')
+                  .select('id, cohort, created_at, welcome_email_sent')
+                  .eq('auth_id', sessionData.session.user.id)
+                  .maybeSingle();
+                
+                // If user record doesn't exist and this is a signup, create it
+                if ((userError?.code === 'PGRST116' || !userData) && fragmentType === 'signup') {
+                  console.log('📝 [AuthScreen] User record not found for signup, creating one...');
+                  const { data: newUser, error: createError } = await supabase
                     .from('users')
-                    .select('cohort')
-                    .eq('auth_id', sessionData.session.user.id)
-                    .maybeSingle();
+                    .insert([
+                      {
+                        auth_id: sessionData.session.user.id,
+                        email: sessionData.session.user.email || '',
+                      },
+                    ])
+                    .select('id, cohort, created_at, welcome_email_sent')
+                    .single();
                   
+                  if (createError || !newUser) {
+                    console.error('❌ [AuthScreen] Failed to create user record:', createError);
+                  } else {
+                    userData = newUser;
+                    console.log('✅ [AuthScreen] User record created successfully');
+                  }
+                }
+                
+                // Check if this is a new user (created within last 5 minutes) OR explicit signup
+                const userCreatedAt = userData?.created_at ? new Date(userData.created_at) : null;
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                const isNewUser = userCreatedAt && userCreatedAt > fiveMinutesAgo;
+                const isSignup = fragmentType === 'signup' || isNewUser;
+                
+                // Check if welcome email should be sent (new user AND not already sent)
+                const shouldSendWelcomeEmail = isSignup && 
+                                              sessionData.session.user.email && 
+                                              userData?.id &&
+                                              !userData?.welcome_email_sent;
+                
+                console.log('🔍 [AuthScreen] fragmentType:', fragmentType, 'isNewUser:', isNewUser, 'welcome_email_sent:', userData?.welcome_email_sent, 'shouldSendWelcome:', shouldSendWelcomeEmail);
+                
+                if (isSignup) {
                   trackUserSignedUp(sessionData.session.user.id, {
                     email: sessionData.session.user.email || undefined,
                     cohort: userData?.cohort || undefined,
                   });
+                  
+                  // Send welcome email only if flag indicates it hasn't been sent
+                  if (shouldSendWelcomeEmail) {
+                    console.log('📧 [AuthScreen] Calling sendWelcomeEmail (fragment path) for:', sessionData.session.user.email);
+                    sendWelcomeEmail(sessionData.session.user.email, userData.id).catch((error) => {
+                      console.error('❌ [AuthScreen] Welcome email promise rejected:', error);
+                    });
+                  } else if (userData?.welcome_email_sent) {
+                    console.log('⏭️ [AuthScreen] Welcome email already sent, skipping');
+                  }
                 } else {
                   trackUserLoggedIn(sessionData.session.user.id, {
                     email: sessionData.session.user.email || undefined,
@@ -421,9 +467,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                 }
               } catch (trackError) {
                 // Don't fail authentication if tracking fails
-                if (__DEV__) {
-                  console.error('Failed to track auth event:', trackError);
-                }
+                console.error('❌ [AuthScreen] Failed to track auth event:', trackError);
               }
               
               // Clear stored deep link since we've successfully processed it
@@ -568,19 +612,65 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                 
                 // Track authentication event (signup vs login)
                 try {
-                  const isSignup = verifyType === 'signup';
-                  if (isSignup) {
-                    // Fetch user data for signup event
-                    const { data: userData } = await supabase
+                  // Fetch user data to check signup status and welcome_email_sent flag
+                  let { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .select('id, cohort, created_at, welcome_email_sent')
+                    .eq('auth_id', sessionData.session.user.id)
+                    .maybeSingle();
+                  
+                  // If user record doesn't exist and this is a signup, create it
+                  if ((userError?.code === 'PGRST116' || !userData) && verifyType === 'signup') {
+                    console.log('📝 [AuthScreen] User record not found for signup, creating one...');
+                    const { data: newUser, error: createError } = await supabase
                       .from('users')
-                      .select('cohort')
-                      .eq('auth_id', sessionData.session.user.id)
-                      .maybeSingle();
+                      .insert([
+                        {
+                          auth_id: sessionData.session.user.id,
+                          email: sessionData.session.user.email || '',
+                        },
+                      ])
+                      .select('id, cohort, created_at, welcome_email_sent')
+                      .single();
                     
+                    if (createError || !newUser) {
+                      console.error('❌ [AuthScreen] Failed to create user record:', createError);
+                    } else {
+                      userData = newUser;
+                      console.log('✅ [AuthScreen] User record created successfully');
+                    }
+                  }
+                  
+                  // Check if this is a new user (created within last 5 minutes) OR explicit signup
+                  const userCreatedAt = userData?.created_at ? new Date(userData.created_at) : null;
+                  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                  const isNewUser = userCreatedAt && userCreatedAt > fiveMinutesAgo;
+                  const isSignup = verifyType === 'signup' || isNewUser;
+                  
+                  // Check if welcome email should be sent (new user AND not already sent)
+                  const shouldSendWelcomeEmail = isSignup && 
+                                                sessionData.session.user.email && 
+                                                userData?.id &&
+                                                !userData?.welcome_email_sent;
+                  
+                  console.log('🔍 [AuthScreen] verifyType:', verifyType, 'isNewUser:', isNewUser, 'welcome_email_sent:', userData?.welcome_email_sent, 'shouldSendWelcome:', shouldSendWelcomeEmail);
+                  
+                  if (isSignup) {
                     trackUserSignedUp(sessionData.session.user.id, {
                       email: sessionData.session.user.email || undefined,
                       cohort: userData?.cohort || undefined,
                     });
+                    
+                    // Send welcome email only if flag indicates it hasn't been sent
+                    if (shouldSendWelcomeEmail) {
+                      console.log('📧 [AuthScreen] Calling sendWelcomeEmail for:', sessionData.session.user.email);
+                      sendWelcomeEmail(sessionData.session.user.email, userData.id).catch((error) => {
+                        // Already handled in function, but catch here to prevent unhandled promise rejection
+                        console.error('❌ [AuthScreen] Welcome email promise rejected:', error);
+                      });
+                    } else if (userData?.welcome_email_sent) {
+                      console.log('⏭️ [AuthScreen] Welcome email already sent, skipping');
+                    }
                   } else {
                     trackUserLoggedIn(sessionData.session.user.id, {
                       email: sessionData.session.user.email || undefined,
@@ -613,19 +703,62 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                     
                     // Track authentication event (signup vs login)
                     try {
-                      const isSignup = verifyType === 'signup';
-                      if (isSignup) {
-                        // Fetch user data for signup event
-                        const { data: userData } = await supabase
+                      // Fetch user data to check signup status and welcome_email_sent flag
+                      let { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('id, cohort, created_at, welcome_email_sent')
+                        .eq('auth_id', retrySession.session.user.id)
+                        .maybeSingle();
+                      
+                      // If user record doesn't exist and this is a signup, create it
+                      if ((userError?.code === 'PGRST116' || !userData) && verifyType === 'signup') {
+                        console.log('📝 [AuthScreen] User record not found for signup (retry path), creating one...');
+                        const { data: newUser, error: createError } = await supabase
                           .from('users')
-                          .select('cohort')
-                          .eq('auth_id', retrySession.session.user.id)
-                          .maybeSingle();
+                          .insert([
+                            {
+                              auth_id: retrySession.session.user.id,
+                              email: retrySession.session.user.email || '',
+                            },
+                          ])
+                          .select('id, cohort, created_at, welcome_email_sent')
+                          .single();
                         
+                        if (createError || !newUser) {
+                          console.error('❌ [AuthScreen] Failed to create user record (retry path):', createError);
+                        } else {
+                          userData = newUser;
+                          console.log('✅ [AuthScreen] User record created successfully (retry path)');
+                        }
+                      }
+                      
+                      // Check if this is a new user (created within last 5 minutes) OR explicit signup
+                      const userCreatedAt = userData?.created_at ? new Date(userData.created_at) : null;
+                      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                      const isNewUser = userCreatedAt && userCreatedAt > fiveMinutesAgo;
+                      const isSignup = verifyType === 'signup' || isNewUser;
+                      
+                      // Check if welcome email should be sent (new user AND not already sent)
+                      const shouldSendWelcomeEmail = isSignup && 
+                                                    retrySession.session.user.email && 
+                                                    userData?.id &&
+                                                    !userData?.welcome_email_sent;
+                      
+                      if (isSignup) {
                         trackUserSignedUp(retrySession.session.user.id, {
                           email: retrySession.session.user.email || undefined,
                           cohort: userData?.cohort || undefined,
                         });
+                        
+                        // Send welcome email only if flag indicates it hasn't been sent
+                        if (shouldSendWelcomeEmail) {
+                          console.log('📧 [AuthScreen] Calling sendWelcomeEmail (retry path) for:', retrySession.session.user.email);
+                          sendWelcomeEmail(retrySession.session.user.email, userData.id).catch((error) => {
+                            console.error('❌ [AuthScreen] Welcome email promise rejected:', error);
+                          });
+                        } else if (userData?.welcome_email_sent) {
+                          console.log('⏭️ [AuthScreen] Welcome email already sent, skipping');
+                        }
                       } else {
                         trackUserLoggedIn(retrySession.session.user.id, {
                           email: retrySession.session.user.email || undefined,
@@ -708,17 +841,26 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
       });
 
       if (error) {
+        // Log full error details for debugging
+        console.error('❌ Magic link error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          fullError: JSON.stringify(error, null, 2),
+        });
+        
         // Show user-friendly error message
         // Check for specific error types to provide better feedback
         if (error.message?.toLowerCase().includes('rate limit')) {
           setErrorMessage('Too many requests. Please wait a few minutes before trying again.');
         } else if (error.message?.toLowerCase().includes('email')) {
           setErrorMessage('Unable to send magic link. Please check your email address and try again.');
+        } else if (error.message?.toLowerCase().includes('redirect') || error.message?.toLowerCase().includes('url')) {
+          setErrorMessage('Configuration error. Please contact support.');
         } else {
           // Generic error (don't reveal whether email exists - security best practice)
           setErrorMessage('Unable to send magic link. Please try again.');
         }
-        console.error('Magic link error:', error);
       } else {
         // Store email so we can use it during token verification
         setRequestedEmail(trimmedEmail);

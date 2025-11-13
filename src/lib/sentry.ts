@@ -23,7 +23,7 @@ export function initSentry() {
   }
 
   // Get app version from app.config.js via expo-constants
-  const appVersion = Constants.expoConfig?.version || '1.0.10';
+  const appVersion = Constants.expoConfig?.version || '1.0.12';
 
   try {
     Sentry.init({

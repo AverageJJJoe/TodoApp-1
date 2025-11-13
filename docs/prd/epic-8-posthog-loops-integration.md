@@ -1,11 +1,12 @@
 # Epic 8: Sentry Crash Logging, PostHog Analytics & Loops Email Sequences - Post-Launch Enhancement
 
-**Epic Goal:** Integrate Sentry for crash logging, PostHog for product analytics, and ~~Loops for automated email sequences~~ (DEFERRED) to improve user engagement, retention, and crash debugging post-launch.
+**Epic Goal:** Integrate Sentry for crash logging, PostHog for product analytics, and Loops for lifecycle/marketing emails (welcome, re-engagement sequences) to improve user engagement, retention, and crash debugging post-launch.
 
-**Status:** ✅ **COMPLETE** (Post-Launch)
+**Status:** 🔄 **IN PROGRESS** (Post-Launch)
 - ✅ Sentry Integration: Complete
 - ✅ PostHog Integration: Complete (including retention tracking & dashboard)
-- ❌ Loops Integration: **DEFERRED / ABANDONED** (2025-11-12) - Excessive complexity, will explore simpler alternatives post-launch
+- ✅ Loops Welcome Email: Complete (Story 8.4 - 2025-11-13)
+- 🔄 Loops Re-Engagement: In Progress (Story 8.5 - implementation complete, testing pending)
 
 **Timing:** After app launch (Epic 7 complete), when we have real users to track and engage
 
@@ -30,10 +31,22 @@
 - Recent crash issues (ShareHandler) discovered only through manual log checking
 
 **Current Email Infrastructure:**
-- Supabase Auth for magic link authentication emails
+- Supabase Auth for magic link authentication emails (using default Supabase SMTP)
 - Resend API for daily task batch emails (via `send-daily-emails` Edge Function)
 - Email logs table (`email_logs`) for tracking delivery status
 - No automated lifecycle emails (welcome, re-engagement, etc.)
+
+**Email Provider Strategy (CORRECTED):**
+- **Resend (Transactional Emails - Critical):**
+  - ✅ Magic link authentication (time-sensitive, critical) - via Supabase SMTP
+  - ✅ Daily todo digest emails (core product feature) - via Edge Functions API
+  - **Why:** These MUST be delivered reliably and immediately. Resend is built for transactional emails.
+- **Loops (Lifecycle/Marketing Emails - Non-Critical):**
+  - ✅ Welcome emails (nice-to-have, not critical) - via Loops API
+  - ✅ Day 3 "no tasks" nudge (re-engagement) - via Loops API
+  - ✅ Day 5 inactivity email (re-engagement) - via Loops API
+  - **Why:** These are marketing/engagement emails, not product-critical. Loops is built for marketing automation.
+- **Rationale:** Different email types = different providers. This split protects deliverability (if Loops has issues, core product still works) and optimizes costs (both free tiers sufficient).
 
 **Technology Stack:**
 - React Native + Expo SDK 54
@@ -70,20 +83,20 @@
    - Free tier: 1M events/month (sufficient for MVP)
    - Use immediately (no 7-day delay)
 
-3. **Loops Integration:** ❌ **DEFERRED / ABANDONED** (2025-11-12)
-   - ~~Automated email sequences for user lifecycle~~
-   - ~~Post-signup welcome email~~
-   - ~~Day 2 engagement nudge~~
-   - ~~7-day re-engagement campaign~~
-   - **Decision:** Permanently deferred due to excessive complexity (database triggers, Edge Functions, pg_net issues)
-   - **Future Alternatives:** App code integration, Supabase Auth webhooks, or Resend transactional emails
-   - **Timing:** Only revisit when we have plenty of users and can justify the complexity
+3. **Loops Integration:** 🔄 **REVISED APPROACH** (2025-01-28)
+   - Using Loops API for lifecycle/marketing emails (welcome, re-engagement sequences)
+   - **NOT for auth emails** - Resend handles transactional emails (magic links, daily digests)
+   - Welcome emails sent via Loops API (from app code or Edge Functions)
+   - Re-engagement emails sent via Loops API (Day 3, Day 5 sequences)
+   - **Previous Approach:** Custom solution with database triggers, Edge Functions, pg_net (rolled back due to complexity)
+   - **New Approach:** Simple Loops API integration - send lifecycle emails directly from app code or Edge Functions (10-20 lines of code)
+   - **Reference:** [Loops API Documentation](https://loops.so/docs/api)
 
 **How It Integrates:**
 
 - **Sentry:** Initialized in `App.tsx`, wraps app with error boundary, automatically captures crashes and errors ✅
 - **PostHog:** Initialized in `App.tsx`, tracks events throughout app lifecycle, separate from crash reporting ✅
-- **Loops:** ❌ **DEFERRED** - Was planned via Edge Functions listening for database events, but complexity too high. Will explore simpler alternatives post-launch.
+- **Loops:** 🔄 **REVISED** - Using Loops API for lifecycle/marketing emails (welcome, re-engagement). Simple API integration from app code or Edge Functions (10-20 lines). Previous custom solution (database triggers, Edge Functions, pg_net) was rolled back due to complexity.
 - **Non-Breaking:** All services are additive - existing functionality remains unchanged
 - **Configuration:** Environment variables stored in EAS secrets, loaded via `app.config.js`
 
@@ -92,7 +105,7 @@
 - ✅ Sentry automatically captures all crashes with stack traces and source maps
 - ✅ PostHog tracks all key user events (signup, task creation, completion, email sends)
 - ✅ Crash reports appear in Sentry dashboard within minutes of occurrence
-- ❌ Loops integration deferred - welcome emails not critical for launch
+- 🔄 Loops API integrated - Lifecycle/marketing emails (welcome, re-engagement) sent via Loops API
 - ✅ All integrations work on iOS, Android, and web (PWA)
 - ✅ Zero impact on existing functionality (magic links, daily emails continue working)
 
@@ -210,133 +223,188 @@
 
 ---
 
-### Story 8.4: Loops Integration & Welcome Email Sequence
-**Status:** ❌ **DEFERRED / ABANDONED** (2025-11-12)  
-**Estimated Time:** ~~3-4 hours~~ (N/A - Deferred)  
-**Dependencies:** ~~Story 8.1 complete~~ (Deferred indefinitely)
+### Story 8.4: Loops API Integration for Lifecycle Emails
+**Status:** 🔄 **REVISED APPROACH** (2025-01-28)  
+**Estimated Time:** 2-3 hours (simple API integration)  
+**Dependencies:** Story 8.1 complete (app launched)
 
-**Decision:** Permanently deferred due to excessive complexity. Database triggers, Edge Functions, pg_net issues, and multiple migrations created too many blockers for a "nice-to-have" feature.
+**Previous Approach:** Custom solution with database triggers, Edge Functions, pg_net - **ROLLED BACK** (2025-11-12) due to excessive complexity.
+
+**New Approach:** Simple Loops API integration - send lifecycle/marketing emails directly from app code or Edge Functions (10-20 lines of code). No database triggers, no complex infrastructure.
+
+**Email Provider Strategy:**
+- **Resend:** Handles transactional emails (magic links via SMTP, daily digests via API) - CRITICAL, must be reliable
+- **Loops:** Handles lifecycle/marketing emails (welcome, re-engagement) - NON-CRITICAL, nice-to-have
 
 **As a** product manager  
-**I want** ~~Loops integrated with automated welcome email sequence~~  
-**So that** ~~new users receive onboarding emails to improve engagement~~
-
-**Future Alternatives:**
-- Send welcome email directly from app code (10 lines vs. database infrastructure)
-- Use Supabase Auth webhooks instead of database triggers
-- Use Resend transactional emails (already integrated)
-- Only implement when we have plenty of users requesting it
+**I want** Loops API integrated for lifecycle/marketing emails  
+**So that** users receive welcome emails and re-engagement sequences to improve engagement and retention
 
 **Acceptance Criteria:**
-1. Loops account created, API key obtained
-2. Loops email templates created:
-   - Welcome email (sent immediately after signup)
-   - Day 2 nudge email (sent 2 days after signup)
-3. Supabase Edge Function created: `trigger-loops-welcome`
-   - **Recommended approach:** Use Supabase database trigger (simpler, more reliable)
-   - Database trigger fires on `users` table INSERT
-   - Edge Function called via webhook from database trigger
-   - Calls Loops API to send welcome email
-   - Handles errors gracefully (logs, doesn't break signup flow)
-4. Loops API key stored in Supabase secrets (`LOOPS_API_KEY`) for Edge Function access
-5. Welcome email sent within 5 minutes of signup
-6. Day 2 email scheduled automatically via Loops (using Loops' built-in scheduling)
-7. Email templates match TodoTomorrow branding (simple, clean, email-native)
 
-**Deliverable:** Loops integrated, welcome sequence working
+1. **Loops Account Setup:**
+   - Loops account created (if not already exists)
+   - Loops API key obtained from Loops dashboard → Settings → API
+   - Loops API key stored in Supabase Edge Functions secrets (`LOOPS_API_KEY`)
+
+2. **Loops Email Templates Created:**
+   - Create "Welcome Email" template in Loops:
+     - Go to Loops → Transactional → New (or use Loops email sequences if available)
+     - Design welcome email matching TodoTomorrow branding
+     - Include: Welcome message, app features overview, link to open app
+     - Publish template
+   - Create "Day 3 No Tasks" template (optional, for Story 8.5):
+     - Design re-engagement email for users with no tasks
+     - Include: Friendly reminder, link to add first task
+     - Publish template
+   - Create "Day 5 Inactivity" template (optional, for Story 8.5):
+     - Design re-engagement email for inactive users
+     - Include: Come back message, link to open app
+     - Publish template
+
+3. **Loops API Integration - Welcome Email:**
+   - Add Loops API call in app code (after successful signup):
+     - Location: `src/screens/AuthScreen.tsx` or `src/stores/authStore.ts`
+     - Call Loops API: `POST https://app.loops.so/api/v1/transactional`
+     - Send welcome email immediately after user signs up
+     - Use Loops API key from environment variables
+   - **OR** Use Edge Function approach (if preferred):
+     - Create Edge Function: `supabase/functions/send-loops-welcome/index.ts`
+     - Call from app after signup success
+     - Edge Function calls Loops API to send welcome email
+   - Handle errors gracefully (log but don't break signup flow)
+
+4. **Code Implementation:**
+   - Simple API call (10-20 lines):
+     ```typescript
+     // Example: Send welcome email via Loops API
+     const sendWelcomeEmail = async (email: string) => {
+       try {
+         await fetch('https://app.loops.so/api/v1/transactional', {
+           method: 'POST',
+           headers: {
+             'Authorization': `Bearer ${LOOPS_API_KEY}`,
+             'Content-Type': 'application/json',
+           },
+           body: JSON.stringify({
+             transactionalId: '[WELCOME_EMAIL_TEMPLATE_ID]',
+             email: email,
+           }),
+         });
+       } catch (error) {
+         // Log error but don't break signup flow
+         console.error('Failed to send welcome email:', error);
+       }
+     };
+     ```
+
+5. **Testing:**
+   - Sign up new user → Verify welcome email received via Loops
+   - Check Loops dashboard → Transactional → Metrics → Verify email sent/delivered
+   - Verify email design matches Loops template
+   - Verify signup flow still works if Loops API fails (non-blocking)
+
+**Deliverable:** Loops API integrated, welcome emails sent via Loops API
 
 **Test:**
-- Sign up new user → Verify welcome email received within 5 minutes
-- Wait 2 days → Verify Day 2 nudge email received
-- Check Loops dashboard → Emails show as sent/delivered
-- Verify existing magic link emails still work (non-breaking)
+- Sign up new user → Verify welcome email received via Loops
+- Check Loops dashboard → Transactional → Metrics → Verify email sent/delivered
+- Verify email design matches Loops template
+- Verify signup flow completes even if Loops API fails (non-blocking)
+- Verify magic link emails still work via Resend (unchanged)
 
-**Code Structure:**
-- `supabase/functions/trigger-loops-welcome/index.ts` - Edge Function for welcome email
-- `supabase/migrations/XXX_add_loops_webhook.sql` - Database trigger to call Edge Function on user signup
-- Loops dashboard: Email templates configured
+**Setup Steps Summary:**
+1. Loops Dashboard: Create welcome email template
+2. Get Loops API key and store in Supabase secrets
+3. Add Loops API call in app code (after signup) OR create Edge Function
+4. Test: Sign up new user and verify welcome email received
 
-**Database Trigger Approach (Recommended):**
-```sql
--- Create database trigger that calls Edge Function webhook on user signup
-CREATE OR REPLACE FUNCTION trigger_loops_welcome()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Call Edge Function webhook (async, non-blocking)
-  PERFORM net.http_post(
-    url := 'https://[PROJECT_REF].supabase.co/functions/v1/trigger-loops-welcome',
-    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer [ANON_KEY]'),
-    body := jsonb_build_object('user_id', NEW.id, 'email', NEW.email)
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+**Reference Documentation:**
+- [Loops API Documentation](https://loops.so/docs/api)
+- [Loops Transactional Emails](https://loops.so/docs/transactional-emails)
+- [Email Provider Comparison: Resend vs Loops](./EMAIL_PROVIDER_COMPARISON_RESEND_VS_LOOPS.md)
 
-CREATE TRIGGER on_user_signup_trigger_loops
-  AFTER INSERT ON users
-  FOR EACH ROW
-  EXECUTE FUNCTION trigger_loops_welcome();
-```
+**Email Provider Separation (CORRECTED):**
+- **Resend (Transactional - CRITICAL):**
+  - ✅ Magic link authentication (via Supabase SMTP) - MUST be reliable
+  - ✅ Daily todo digest emails (via Edge Functions API) - Core product feature
+  - **Why:** These are product-critical, time-sensitive emails. Resend is built for transactional emails.
+- **Loops (Lifecycle/Marketing - NON-CRITICAL):**
+  - ✅ Welcome emails (via Loops API) - Nice-to-have, not critical
+  - ✅ Day 3/Day 5 re-engagement emails (via Loops API) - Marketing/engagement
+  - **Why:** These are marketing/engagement emails. If Loops has issues, core product still works.
+
+**Benefits of This Split:**
+- ✅ Deliverability protection: If Loops fails, magic links and daily emails still work
+- ✅ Cost optimization: Both free tiers sufficient (Resend: 3K/month, Loops: 2K contacts)
+- ✅ Tool specialization: Resend for transactional, Loops for marketing automation
+- ✅ Non-blocking: Welcome emails don't break signup flow if Loops API fails
+
+**Troubleshooting:**
+- **Welcome emails not sending:** Check Loops API key is valid, verify template ID is correct, check Loops dashboard for errors
+- **Signup flow broken:** Ensure Loops API call is non-blocking (try-catch, doesn't throw errors)
+- **Magic link emails affected:** Magic links use Resend SMTP (separate), should not be affected
+- **Daily emails affected:** Daily emails use Resend API (separate), should not be affected
+- **Rollback:** Remove Loops API call from code (welcome emails stop, but signup still works)
 
 ---
 
-### Story 8.5: Loops Re-Engagement Sequence & Inactivity Detection
-**Status:** ❌ **DEFERRED / ABANDONED** (2025-11-12)  
-**Estimated Time:** ~~4-5 hours~~ (N/A - Deferred)  
-**Dependencies:** ~~Story 8.4 complete~~ (Story 8.4 deferred, this story also deferred)
+### Story 8.5: Loops Re-Engagement Email Sequences (Optional - Post-Launch)
+**Status:** 🔄 **OPTIONAL** (Post-Launch Enhancement)  
+**Estimated Time:** 2-3 hours (if implemented)  
+**Dependencies:** Story 8.4 complete (Loops API integration for welcome emails)
 
-**Decision:** Deferred along with Story 8.4. Will explore simpler alternatives post-launch.
+**Decision:** Optional post-launch enhancement. Can be implemented using Loops' built-in automation features or simple Edge Functions (no database triggers needed).
 
 **As a** product manager  
-**I want** ~~Loops re-engagement emails for inactive users~~  
-**So that** ~~I can bring back users who haven't used the app in 7 days~~
+**I want** automated re-engagement email sequences for inactive users  
+**So that** I can bring back users who haven't used the app in 3-5 days
 
-**Acceptance Criteria:**
-1. Loops email template created: 7-day re-engagement email
-2. Supabase Edge Function created: `check-inactive-users`
-   - Runs daily (via pg_cron or scheduled Edge Function)
-   - Queries users who haven't created a task in 7 days
-   - Calls Loops API to send re-engagement email
-   - Tracks last email sent to prevent duplicates:
-     - **Recommended approach:** Add `last_reengagement_email_sent_at` timestamp field to `users` table
-     - Alternative: Use Loops' built-in deduplication if available
-     - Check timestamp before sending to prevent duplicate emails
-3. Edge Function scheduled to run daily at 9 AM in user's configured timezone:
-   - Use `users.timezone` field (IANA timezone string, e.g., "America/New_York")
-   - For MVP: Run at 9 AM UTC, then filter users whose timezone matches current UTC+offset
-   - Future enhancement: Run at 9 AM in each user's specific timezone
-4. Re-engagement email includes:
+**Acceptance Criteria (If Implemented):**
+
+**Option A: Use Loops Built-in Automation (Recommended - Zero Code)**
+1. Check Loops dashboard for "Email Sequences" or "Automation" features
+2. Create email sequence triggered by user signup date or last activity:
+   - Day 3: "No tasks" nudge email (if user has no tasks created)
+   - Day 5: Inactivity re-engagement email (if user hasn't created task in 5 days)
+3. Configure Loops to track user activity via Loops API events (sent from app when tasks are created)
+4. Loops automatically sends emails based on sequence rules
+
+**Option B: Simple Edge Function Approach (If Loops Automation Not Available)**
+1. Loops email templates created:
+   - "Day 3 No Tasks" template (re-engagement for users with no tasks)
+   - "Day 5 Inactivity" template (re-engagement for inactive users)
+2. Supabase Edge Function created: `send-loops-reengagement-emails`
+   - Runs daily (via Supabase cron job or scheduled Edge Function)
+   - Queries users who match criteria:
+     - Day 3: Users who signed up 3 days ago with no tasks created
+     - Day 5: Users who haven't created a task in 5 days
+   - Calls Loops API to send appropriate re-engagement email
+   - Uses Loops API: `POST https://app.loops.so/api/v1/transactional`
+   - Tracks last email sent to prevent duplicates (store timestamp in user metadata or separate table)
+3. Edge Function scheduled to run daily at 9 AM UTC
+4. Re-engagement emails include:
    - Friendly reminder about TodoTomorrow
    - Link to open app
-   - Stats about their usage (if available)
-5. Users who become active again are removed from re-engagement queue
-6. Edge Function logs all actions for debugging
+   - Contextual message based on user state (no tasks vs inactive)
+5. Edge Function logs all actions for debugging
 
-**Deliverable:** Re-engagement sequence working, inactive users receive emails
+**Deliverable:** Re-engagement email sequences working (if implemented)
 
-**Test:**
-- Create test user, wait 7 days without activity → Verify re-engagement email sent
-- Create task after receiving email → Verify user removed from queue
+**Test (If Implemented):**
+- Create test user, wait 3 days with no tasks → Verify Day 3 "no tasks" email sent
+- Create test user, wait 5 days without activity → Verify Day 5 inactivity email sent
 - Check Loops dashboard → Re-engagement emails tracked
 - Verify no duplicate emails sent to same user
+- Verify users who become active are removed from re-engagement queue
 
-**Code Structure:**
-- `supabase/functions/check-inactive-users/index.ts` - Edge Function for inactivity detection
-- `supabase/migrations/XXX_add_reengagement_tracking.sql` - Add `last_reengagement_email_sent_at` field to `users` table
-- Loops dashboard: Re-engagement email template
+**Code Structure (If Using Option B):**
+- `supabase/functions/send-loops-reengagement-emails/index.ts` - Edge Function for scheduled emails
+- Loops dashboard: Re-engagement email templates
+- Supabase cron job: Daily execution at 9 AM UTC
+- Optional: Add `last_reengagement_email_sent_at` field to users table (or use user metadata)
 
-**Database Schema Addition:**
-```sql
--- Add field to track last re-engagement email sent
-ALTER TABLE users 
-ADD COLUMN IF NOT EXISTS last_reengagement_email_sent_at TIMESTAMP DEFAULT NULL;
-
--- Create index for performance
-CREATE INDEX IF NOT EXISTS idx_users_last_reengagement_email 
-ON users(last_reengagement_email_sent_at);
-```
-
-**Note:** Inactivity detection uses existing `tasks.created_at` timestamp - query tasks table to find users who haven't created a task in 7 days. The `last_reengagement_email_sent_at` field prevents sending duplicate emails.
+**Note:** This story is optional and can be deferred until we have users and can validate the need for re-engagement emails. The welcome email (Story 8.4) provides immediate value for new user onboarding.
 
 ---
 
@@ -391,7 +459,8 @@ ON users(last_reengagement_email_sent_at);
 - ✅ UI changes are minimal (error boundary wrapper, no visible UI changes)
 - ✅ Performance impact is minimal (Sentry and PostHog use batching, Loops is async)
 - ✅ Magic link emails continue working (Supabase Auth unchanged)
-- ✅ Daily task batch emails continue working (Resend integration unchanged)
+- ✅ Daily task batch emails continue working (Resend API integration unchanged)
+- ✅ Magic link authentication emails continue working (Resend SMTP integration unchanged)
 - ✅ Existing error handling preserved (Sentry error boundary wraps, doesn't replace)
 
 ---
@@ -403,24 +472,31 @@ ON users(last_reengagement_email_sent_at);
 **Mitigation:**
 - Sentry initialized with error handling - failures don't crash app
 - PostHog initialized with error handling - failures don't crash app
-- Loops Edge Functions have try-catch blocks - failures logged but don't break signup flow
+- Loops API integration: Non-blocking API calls - failures don't break signup flow (welcome emails are nice-to-have, not critical)
 - All integrations wrapped in feature flags (can disable via environment variables)
 - Test thoroughly on staging before production deployment
 - Monitor error logs after deployment
 
 **Rollback Plan:**
-- Disable Sentry: Remove initialization from `App.tsx`, remove error boundary
-- Disable PostHog: Remove initialization from `App.tsx`
-- Disable Loops: Comment out Edge Function calls, remove database triggers
+- **Disable Sentry:** Remove initialization from `App.tsx`, remove error boundary
+- **Disable PostHog:** Remove initialization from `App.tsx`
+- **Disable Loops API:**
+  - Remove Loops API call from app code (after signup handler)
+  - OR remove Edge Function if using Edge Function approach
+  - Remove `LOOPS_API_KEY` from Supabase secrets (optional)
+  - No database migrations needed
+  - Welcome emails stop, but signup flow continues working (non-critical feature)
 - All changes are additive - removing them restores original functionality
-- No database migrations required (optional indexes can be dropped if added)
+- No database migrations required (Loops API is code-only, no schema changes)
+- **Critical:** Magic links and daily emails continue working via Resend (unchanged)
 
 **Testing Strategy:**
-- Test Sentry crash reporting with test crash button (dev mode only)
+- Test Sentry crash reporting with test crash button (dev mode only) ✅
 - Test PostHog event tracking with user actions ✅
-- ~~Test Loops welcome email with new test account~~ ❌ DEFERRED
-- ~~Test re-engagement sequence with test user~~ ❌ DEFERRED
-- Verify existing functionality still works (magic links, daily emails) ✅
+- Test Loops API integration: Sign up new user, verify welcome email received via Loops 🔄 In Progress
+- Test Loops email template rendering: Verify email design matches Loops template 🔄 In Progress
+- Test non-blocking behavior: Verify signup completes even if Loops API fails ✅
+- Verify existing functionality still works (magic links via Resend SMTP, daily emails via Resend API) ✅
 - Test on iOS, Android, and web (PWA) ✅
 
 ---
@@ -430,8 +506,8 @@ ON users(last_reengagement_email_sent_at);
 - [x] Story 8.1: Sentry integrated, crash reporting verified ✅
 - [x] Story 8.2: PostHog integrated, analytics tracking verified ✅
 - [x] Story 8.3: All key events tracked in PostHog ✅
-- [x] Story 8.4: ~~Loops welcome sequence working~~ ❌ **DEFERRED** (2025-11-12)
-- [x] Story 8.5: ~~Loops re-engagement sequence working~~ ❌ **DEFERRED** (2025-11-12)
+- [x] Story 8.4: Loops API integrated for lifecycle emails (welcome email) ✅ **COMPLETE** (2025-11-13)
+- [ ] Story 8.5: Loops email sequences (optional - post-launch enhancement) 🔄 **IN PROGRESS**
 - [x] Story 8.6: PostHog dashboard configured with retention metrics ✅
 - [x] Existing functionality verified (magic links, daily emails still work) ✅
 - [x] Integration points tested on iOS, Android, and web ✅
@@ -521,46 +597,67 @@ export default function App() {
 }
 ```
 
-### ~~Loops Integration~~ ❌ **DEFERRED / ABANDONED** (2025-11-12)
+### Loops Integration 🔄 **REVISED APPROACH** (2025-01-28)
 
-**Decision:** Permanently deferred due to excessive complexity. Database triggers, Edge Functions, pg_net issues, and multiple migrations created too many blockers for a "nice-to-have" feature.
+**Previous Approach:** Custom solution with database triggers, Edge Functions, pg_net - **ROLLED BACK** (2025-11-12) due to excessive complexity.
 
-**What Was Planned:**
-- ~~Loops REST API integration~~
-- ~~Database triggers calling Edge Functions~~
-- ~~Automated welcome email sequences~~
-- ~~Day 2 engagement emails~~
-- ~~7-day re-engagement campaigns~~
+**New Approach:** Simple Loops API integration - send lifecycle/marketing emails directly from app code or Edge Functions (10-20 lines of code).
 
-**Why Deferred:**
-- Too many errors and issues during implementation
-- Excessive complexity (database triggers, Edge Functions, pg_net function signatures)
-- Multiple migrations with conflicts
-- Not critical for launch - welcome emails are "nice-to-have"
+**What's Being Implemented:**
+- Loops API integration for lifecycle emails (welcome, re-engagement)
+- Welcome email sent immediately after signup (non-blocking)
+- Re-engagement emails sent via Loops API (Day 3, Day 5 sequences - Story 8.5)
+- **NOT for auth emails** - Resend handles transactional emails (magic links, daily digests)
 
-**Future Alternatives:**
-- Send welcome email directly from app code (10 lines vs. database infrastructure)
-- Use Supabase Auth webhooks instead of database triggers
-- Use Resend transactional emails (already integrated)
-- Only implement when we have plenty of users requesting it
+**Email Provider Strategy:**
+- **Resend (Transactional - CRITICAL):**
+  - Magic link authentication (via Supabase SMTP)
+  - Daily todo digest emails (via Edge Functions API)
+- **Loops (Lifecycle/Marketing - NON-CRITICAL):**
+  - Welcome emails (via Loops API)
+  - Re-engagement emails (via Loops API)
 
-**Code Example (For Future Reference - Not Implemented):**
+**Setup Process:**
+1. Loops Dashboard: Create email templates (welcome, re-engagement)
+2. Get Loops API key, store in Supabase secrets
+3. Add Loops API call in app code (after signup) OR Edge Function
+4. Test: Sign up user, verify welcome email received
+
+**Reference Documentation:**
+- [Loops API Documentation](https://loops.so/docs/api)
+- [Loops Transactional Emails](https://loops.so/docs/transactional-emails)
+
+**Benefits:**
+- Simple API integration (10-20 lines of code)
+- No database triggers or complex infrastructure
+- Non-blocking (welcome emails don't break signup if Loops fails)
+- Deliverability protection (if Loops fails, core product still works)
+- Cost optimization (both providers stay in free tiers)
+
+**Code Example:**
 ```typescript
-// Future: Simple app code approach (10 lines)
-// In signup success handler:
-await fetch('https://api.resend.com/emails', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${RESEND_API_KEY}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    from: 'hello@todotomorrow.com',
-    to: userEmail,
-    subject: 'Welcome to TodoTomorrow!',
-    html: '<h1>Welcome!</h1><p>Get started with your first task...</p>',
-  }),
-});
+// Send welcome email via Loops API (non-blocking)
+const sendWelcomeEmail = async (email: string) => {
+  try {
+    await fetch('https://app.loops.so/api/v1/transactional', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOOPS_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        transactionalId: '[WELCOME_EMAIL_TEMPLATE_ID]',
+        email: email,
+      }),
+    });
+  } catch (error) {
+    // Log but don't break signup flow
+    console.error('Failed to send welcome email:', error);
+  }
+};
+
+// Call after successful signup
+await sendWelcomeEmail(userEmail);
 ```
 
 **PostHog Edge Function Integration:**
@@ -598,11 +695,12 @@ await fetch(`${posthogHost}/capture/`, {
 - `paywall_viewed` - Properties: `user_id`, `trial_days_remaining`
 - `purchase_completed` - Properties: `user_id`, `price`, `cohort`
 
-**~~Loops Email Sequences:~~** ❌ **DEFERRED** (2025-11-12)
-- ~~Welcome email: Sent immediately after signup~~
-- ~~Day 2 nudge: Sent 2 days after signup~~
-- ~~7-day re-engagement: Sent when user inactive for 7 days~~
-- **Future:** Will explore simpler alternatives when we have users requesting onboarding emails
+**Loops Email Sequences:** 🔄 **IN PROGRESS** (Post-Launch Enhancement)
+- Welcome email: Via Loops API (sent immediately after signup) - Story 8.4
+- Day 3 "no tasks" nudge: Optional - can use Loops built-in automation or simple Edge Function - Story 8.5
+- Day 5 inactivity email: Optional - can use Loops built-in automation or simple Edge Function - Story 8.5
+- **Current Focus:** Loops API integration for welcome emails (Story 8.4)
+- **Future:** Re-engagement sequences can be added post-launch using Loops API or automation features (Story 8.5)
 
 ---
 
@@ -615,11 +713,15 @@ await fetch(`${posthogHost}/capture/`, {
 - Monitor email delivery: 95%+ delivery rate (Resend only) ✅ Daily emails via Resend
 - Crash resolution time: Fix critical crashes within 24 hours ✅ Sentry alerts configured
 
-**~~Loops Email Goals:~~** ❌ **DEFERRED** (2025-11-12)
-- ~~Welcome email open rate: Target 40%+~~
-- ~~Day 2 email engagement: Target 20%+ click-through~~
-- ~~7-day re-engagement: Target 10%+ return to app~~
-- **Future:** Will revisit email sequences when we have users and can justify the complexity
+**Loops Email Goals:** 🔄 **IN PROGRESS**
+- Welcome email delivery: Target 95%+ delivery rate (non-critical, but good to track)
+- Welcome email open rate: Target 40%+ (track via Loops dashboard)
+- Email visibility: Full tracking of lifecycle emails via Loops dashboard
+- Template rendering success: 100% (all lifecycle emails render correctly)
+- **Non-blocking behavior:** Signup flow completes even if Loops API fails (welcome emails are nice-to-have)
+- **Future (Optional):** Email sequence metrics when sequences are implemented:
+  - Day 3 email engagement: Target 20%+ click-through
+  - Day 5 re-engagement: Target 10%+ return to app
 
 ---
 
@@ -635,10 +737,9 @@ This epic is intentionally planned for **post-launch** because:
 **Recommended Timeline:**
 - Week 1 post-launch: Implement Sentry (Story 8.1) - **Priority: High** ✅ Complete
 - Week 1 post-launch: Implement PostHog (Stories 8.2, 8.3, 8.6) - **Priority: High** ✅ Complete
-- ~~Week 2 post-launch: Implement Loops welcome sequence (Story 8.4)~~ ❌ **DEFERRED** (2025-11-12)
-- ~~Week 3 post-launch: Implement Loops re-engagement (Story 8.5)~~ ❌ **DEFERRED** (2025-11-12)
-- Ongoing: Monitor Sentry for crashes, PostHog for analytics
-- Future: Explore simpler email alternatives when we have users requesting onboarding emails
+- Week 2 post-launch: Implement Loops API integration for welcome emails (Story 8.4) - **Priority: Medium** ✅ Complete (2025-11-13)
+- Week 3+ post-launch: Optional Loops re-engagement sequences (Story 8.5) - **Priority: Low** 🔄 In Progress (implementation complete, testing pending)
+- Ongoing: Monitor Sentry for crashes, PostHog for analytics, Loops for lifecycle email metrics
 
 ---
 
@@ -654,24 +755,29 @@ All environment variables must be configured in EAS secrets before deployment:
 - `EXPO_PUBLIC_POSTHOG_HOST` - PostHog host URL (Story 8.2, default: `https://us.i.posthog.com`)
 
 **Edge Function Variables (Supabase):**
-- ~~`LOOPS_API_KEY` - Loops API key (Stories 8.4, 8.5)~~ ❌ **DEFERRED** - Not needed
+- `LOOPS_API_KEY` - Loops API key (Story 8.4 - for Loops API calls, Story 8.5 optional if using Edge Functions)
 - `POSTHOG_API_KEY` - PostHog API key for Edge Functions (Story 8.3, optional if using HTTP API)
 - `POSTHOG_HOST` - PostHog host URL for Edge Functions (Story 8.3, optional)
 
 **Configuration Steps:**
-1. Create accounts: Sentry ✅, PostHog ✅, ~~Loops~~ ❌ Deferred
-2. Obtain API keys and DSNs: Sentry ✅, PostHog ✅
+1. Create accounts: Sentry ✅, PostHog ✅, Loops ✅
+2. Obtain API keys and DSNs: Sentry ✅, PostHog ✅, Loops ✅
 3. Set EAS secrets: `eas secret:create --scope project --name EXPO_PUBLIC_SENTRY_DSN --value [DSN]` ✅
-4. ~~Set Supabase secrets: `supabase secrets set LOOPS_API_KEY=[key]`~~ ❌ Not needed (Loops deferred)
-5. Verify secrets are accessible in production builds ✅
+4. Set EAS secrets: `eas secret:create --scope project --name EXPO_PUBLIC_LOOPS_API_KEY --value [key]` ✅ (Story 8.4)
+5. Set Supabase secrets: `supabase secrets set LOOPS_API_KEY=[key]` ✅ (Story 8.5)
+6. Configure Resend SMTP in Supabase Dashboard (Settings → Auth → SMTP) - for magic link emails ✅
+7. Verify secrets are accessible in production builds ✅
 
 ---
 
 **Epic Created:** 2025-01-27  
 **Epic Updated:** 2025-01-28 (Story 8.6 complete - PostHog retention tracking & dashboard configured)  
+**Epic Updated:** 2025-01-28 (Epic 8 revised - Loops integration approach changed to use Loops API)  
+**Epic Updated:** 2025-11-13 (Story 8.4 complete - Loops welcome email integration)  
 **Epic Owner:** Product Manager (John)  
-**Status:** ✅ **COMPLETE** (Post-Launch)
+**Status:** 🔄 **IN PROGRESS** (Post-Launch)
 - ✅ Sentry Integration: Complete
 - ✅ PostHog Integration: Complete (including retention tracking & dashboard)
-- ❌ Loops Integration: **DEFERRED / ABANDONED** (2025-11-12)
+- ✅ Loops Welcome Email: Complete (Story 8.4 - 2025-11-13)
+- 🔄 Loops Re-Engagement: In Progress (Story 8.5 - implementation complete, testing pending)
 
