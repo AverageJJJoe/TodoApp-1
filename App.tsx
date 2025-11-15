@@ -4,6 +4,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useEffect, useState } from 'react';
 import * as Linking from 'expo-linking';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { supabase } from './src/lib/supabase';
 import { AuthScreen } from './src/screens/AuthScreen';
 import { MainScreen } from './src/screens/MainScreen';
@@ -224,12 +225,14 @@ export default function App() {
   // Show loading state while checking session
   if (isLoading) {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-        <StatusBar style="auto" />
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+          <StatusBar style="auto" />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
     );
   }
 
@@ -245,31 +248,35 @@ export default function App() {
   // Show loading while checking onboarding status
   if (session && needsOnboarding === null) {
     return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-        <StatusBar style="auto" />
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+          <StatusBar style="auto" />
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
     );
   }
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider>
-          {DEV_BYPASS_AUTH || session ? (
-            needsOnboarding ? (
-              <OnboardingScreen onComplete={() => setNeedsOnboarding(false)} />
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <ThemeProvider>
+            {DEV_BYPASS_AUTH || session ? (
+              needsOnboarding ? (
+                <OnboardingScreen onComplete={() => setNeedsOnboarding(false)} />
+              ) : (
+                <MainScreen />
+              )
             ) : (
-              <MainScreen />
-            )
-          ) : (
-            <AuthScreen initialDeepLink={initialDeepLink} />
-          )}
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </GestureHandlerRootView>
+              <AuthScreen initialDeepLink={initialDeepLink} />
+            )}
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
     </ErrorBoundary>
   );
 }

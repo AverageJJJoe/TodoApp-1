@@ -15,6 +15,7 @@ import {
   Animated,
   StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons'; // Icon library: @expo/vector-icons (built into Expo)
 import { Swipeable } from 'react-native-gesture-handler';
 import { supabase } from '../lib/supabase';
@@ -28,6 +29,7 @@ import { trackTaskCompleted } from '../lib/posthog';
 
 export const MainScreen = () => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -47,13 +49,16 @@ export const MainScreen = () => {
       backgroundColor: colors.background,
     },
     header: {
-      height: 44, // Match Lovable: h-[44px]
-      flexDirection: 'row',
-      alignItems: 'center',
       backgroundColor: colors.background,
-      paddingHorizontal: spacing.lg, // Match Lovable: px-lg
+      paddingTop: Platform.OS === 'ios' ? insets.top : 0, // Add safe area padding for iOS
       borderBottomWidth: 1,
       borderBottomColor: colors.separator, // Match Lovable: border-b border-separator
+    },
+    headerContent: {
+      height: 44, // Match Lovable: h-[44px] - fixed height for content area
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg, // Match Lovable: px-lg
     },
     headerSpacer: {
       width: 44, // Match settings button width (24px icon + padding)
@@ -328,7 +333,7 @@ export const MainScreen = () => {
       ...typography.bodyLarge,
       fontWeight: '600',
     },
-  }), [colors]);
+  }), [colors, insets.top]);
   
   // Empty state floating animation
   const emptyStateYAnim = useRef(new Animated.Value(0)).current;
@@ -780,18 +785,21 @@ export const MainScreen = () => {
         <View style={{ height: StatusBar.currentHeight }} />
       )}
       {/* Header - Match Lovable: h-[44px], border separator, settings right */}
+      {/* iOS safe area padding is handled in header style via paddingTop */}
       <View style={styles.header}>
-        <View style={styles.headerSpacer} />
-        <Text style={styles.title}>TodoTomorrow</Text>
-        <TouchableOpacity
-          onPress={() => setIsSettingsVisible(true)}
-          style={styles.headerButton}
-          accessible={true}
-          accessibilityLabel="Open settings"
-          accessibilityRole="button"
-        >
-          <Ionicons name="settings-outline" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <View style={styles.headerSpacer} />
+          <Text style={styles.title}>TodoTomorrow</Text>
+          <TouchableOpacity
+            onPress={() => setIsSettingsVisible(true)}
+            style={styles.headerButton}
+            accessible={true}
+            accessibilityLabel="Open settings"
+            accessibilityRole="button"
+          >
+            <Ionicons name="settings-outline" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tab Bar - Show for both Fresh Start and Carry Over modes */}

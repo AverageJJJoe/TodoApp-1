@@ -11,6 +11,7 @@ import {
   Switch,
   StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons'; // Icon library: @expo/vector-icons (built into Expo)
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Localization from 'expo-localization';
@@ -34,6 +35,7 @@ interface SettingsScreenProps {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [selectedTime, setSelectedTime] = useState<Date>(() => {
     // Default to 06:00 AM
     const defaultTime = new Date();
@@ -66,14 +68,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       backgroundColor: colors.surface,
     },
     header: {
+      backgroundColor: colors.background,
+      paddingTop: Platform.OS === 'ios' ? insets.top : 0, // Use safe area insets for iOS
+      ...colors.shadowSm,
+    },
+    headerContent: {
+      height: 44, // Fixed height for content area
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      height: 44,
-      backgroundColor: colors.background,
       paddingHorizontal: spacing.lg,
-      ...colors.shadowSm,
-      paddingTop: Platform.OS === 'ios' ? 60 : 0,
     },
     backButtonContainer: {
       minWidth: 44,
@@ -239,7 +243,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     workflowSwitch: {
       marginLeft: spacing.sm,
     },
-  }), [colors]);
+  }), [colors, insets.top]);
 
   // Get user email from session
   useEffect(() => {
@@ -989,19 +993,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
         <View style={{ height: StatusBar.currentHeight }} />
       )}
       {/* Navigation Bar */}
+      {/* iOS safe area padding is handled in header style via paddingTop */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButtonContainer}
-          onPress={onClose}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          accessible={true}
-          accessibilityLabel="Go back"
-          accessibilityRole="button"
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Settings</Text>
-        <View style={styles.headerSpacer} />
+        <View style={styles.headerContent}>
+          <TouchableOpacity
+            style={styles.backButtonContainer}
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessible={true}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
+            <Ionicons name="chevron-back" size={24} color={colors.primary} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Settings</Text>
+          <View style={styles.headerSpacer} />
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
