@@ -300,6 +300,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
           token?: string;
           token_hash?: string;
           type?: string;
+          t?: string;
         };
         
         // Extract fragment from URL (everything after #)
@@ -428,19 +429,22 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                   }
                 }
                 
-                // Check if this is a new user (created within last 5 minutes) OR explicit signup
+                // Check if this is a signup:
+                // 1. Explicit signup type from URL (always send, regardless of time window - Supabase preserves type in magic link)
+                // 2. OR new user within 24 hours who hasn't received email (catches edge cases where type might be missing/incorrect)
+                // Note: Magic links expire after ~1 hour, so delayed clicks >24 hours require new magic link request
                 const userCreatedAt = userData?.created_at ? new Date(userData.created_at) : null;
-                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-                const isNewUser = userCreatedAt && userCreatedAt > fiveMinutesAgo;
-                const isSignup = fragmentType === 'signup' || isNewUser;
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const isNewUserWithinWindow = userCreatedAt && userCreatedAt > twentyFourHoursAgo;
+                const isSignup = fragmentType === 'signup' || (isNewUserWithinWindow && !userData?.welcome_email_sent);
                 
-                // Check if welcome email should be sent (new user AND not already sent)
+                // Check if welcome email should be sent (signup AND not already sent)
                 const shouldSendWelcomeEmail = isSignup && 
                                               sessionData.session.user.email && 
                                               userData?.id &&
                                               !userData?.welcome_email_sent;
                 
-                console.log('🔍 [AuthScreen] fragmentType:', fragmentType, 'isNewUser:', isNewUser, 'welcome_email_sent:', userData?.welcome_email_sent, 'shouldSendWelcome:', shouldSendWelcomeEmail);
+                console.log('🔍 [AuthScreen] fragmentType:', fragmentType, 'isNewUserWithinWindow:', isNewUserWithinWindow, 'welcome_email_sent:', userData?.welcome_email_sent, 'shouldSendWelcome:', shouldSendWelcomeEmail);
                 
                 if (isSignup) {
                   trackUserSignedUp(sessionData.session.user.id, {
@@ -449,7 +453,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                   });
                   
                   // Send welcome email only if flag indicates it hasn't been sent
-                  if (shouldSendWelcomeEmail) {
+                  if (shouldSendWelcomeEmail && sessionData.session.user.email && userData?.id) {
                     console.log('📧 [AuthScreen] Calling sendWelcomeEmail (fragment path) for:', sessionData.session.user.email);
                     sendWelcomeEmail(sessionData.session.user.email, userData.id).catch((error) => {
                       console.error('❌ [AuthScreen] Welcome email promise rejected:', error);
@@ -638,19 +642,22 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                     }
                   }
                   
-                  // Check if this is a new user (created within last 5 minutes) OR explicit signup
+                  // Check if this is a signup:
+                  // 1. Explicit signup type from URL (always send, regardless of time window - Supabase preserves type in magic link)
+                  // 2. OR new user within 24 hours who hasn't received email (catches edge cases where type might be missing/incorrect)
+                  // Note: Magic links expire after ~1 hour, so delayed clicks >24 hours require new magic link request
                   const userCreatedAt = userData?.created_at ? new Date(userData.created_at) : null;
-                  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-                  const isNewUser = userCreatedAt && userCreatedAt > fiveMinutesAgo;
-                  const isSignup = verifyType === 'signup' || isNewUser;
+                  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                  const isNewUserWithinWindow = userCreatedAt && userCreatedAt > twentyFourHoursAgo;
+                  const isSignup = verifyType === 'signup' || (isNewUserWithinWindow && !userData?.welcome_email_sent);
                   
-                  // Check if welcome email should be sent (new user AND not already sent)
+                  // Check if welcome email should be sent (signup AND not already sent)
                   const shouldSendWelcomeEmail = isSignup && 
                                                 sessionData.session.user.email && 
                                                 userData?.id &&
                                                 !userData?.welcome_email_sent;
                   
-                  console.log('🔍 [AuthScreen] verifyType:', verifyType, 'isNewUser:', isNewUser, 'welcome_email_sent:', userData?.welcome_email_sent, 'shouldSendWelcome:', shouldSendWelcomeEmail);
+                  console.log('🔍 [AuthScreen] verifyType:', verifyType, 'isNewUserWithinWindow:', isNewUserWithinWindow, 'welcome_email_sent:', userData?.welcome_email_sent, 'shouldSendWelcome:', shouldSendWelcomeEmail);
                   
                   if (isSignup) {
                     trackUserSignedUp(sessionData.session.user.id, {
@@ -659,7 +666,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                     });
                     
                     // Send welcome email only if flag indicates it hasn't been sent
-                    if (shouldSendWelcomeEmail) {
+                    if (shouldSendWelcomeEmail && sessionData.session.user.email && userData?.id) {
                       console.log('📧 [AuthScreen] Calling sendWelcomeEmail for:', sessionData.session.user.email);
                       sendWelcomeEmail(sessionData.session.user.email, userData.id).catch((error) => {
                         // Already handled in function, but catch here to prevent unhandled promise rejection
@@ -729,13 +736,16 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                         }
                       }
                       
-                      // Check if this is a new user (created within last 5 minutes) OR explicit signup
+                      // Check if this is a signup:
+                      // 1. Explicit signup type from URL (always send, regardless of time window - Supabase preserves type in magic link)
+                      // 2. OR new user within 24 hours who hasn't received email (catches edge cases where type might be missing/incorrect)
+                      // Note: Magic links expire after ~1 hour, so delayed clicks >24 hours require new magic link request
                       const userCreatedAt = userData?.created_at ? new Date(userData.created_at) : null;
-                      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-                      const isNewUser = userCreatedAt && userCreatedAt > fiveMinutesAgo;
-                      const isSignup = verifyType === 'signup' || isNewUser;
+                      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                      const isNewUserWithinWindow = userCreatedAt && userCreatedAt > twentyFourHoursAgo;
+                      const isSignup = verifyType === 'signup' || (isNewUserWithinWindow && !userData?.welcome_email_sent);
                       
-                      // Check if welcome email should be sent (new user AND not already sent)
+                      // Check if welcome email should be sent (signup AND not already sent)
                       const shouldSendWelcomeEmail = isSignup && 
                                                     retrySession.session.user.email && 
                                                     userData?.id &&
@@ -748,7 +758,7 @@ export const AuthScreen = ({ initialDeepLink }: AuthScreenProps) => {
                         });
                         
                         // Send welcome email only if flag indicates it hasn't been sent
-                        if (shouldSendWelcomeEmail) {
+                        if (shouldSendWelcomeEmail && retrySession.session.user.email && userData?.id) {
                           console.log('📧 [AuthScreen] Calling sendWelcomeEmail (retry path) for:', retrySession.session.user.email);
                           sendWelcomeEmail(retrySession.session.user.email, userData.id).catch((error) => {
                             console.error('❌ [AuthScreen] Welcome email promise rejected:', error);

@@ -101,16 +101,20 @@ Deno.serve(async (req: Request) => {
     };
 
     // Day 3: Users who signed up 3 days ago with no tasks created
+    // Use time range instead of exact date match (24-hour window: 2.5-3.5 days ago)
+    // This accounts for cron job timing variance and catches users regardless of signup time
     console.log('🔍 Querying Day 3 eligible users...');
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-    const threeDaysAgoDate = threeDaysAgo.toISOString().split('T')[0]; // YYYY-MM-DD format
+    // Use reliable date calculation to avoid month rollover issues
+    const now = new Date();
+    const threeDaysAgoStart = new Date(now.getTime() - (3 * 24 + 12) * 60 * 60 * 1000); // 3.5 days ago
+    const twoDaysAgoEnd = new Date(now.getTime() - (2 * 24 + 12) * 60 * 60 * 1000);     // 2.5 days ago
 
     const { data: day3Users, error: day3Error } = await supabase
       .from('users')
       .select('id, email, auth_id, created_at, last_day3_email_sent_at')
       .is('deleted_at', null)
-      .eq('created_at::date', threeDaysAgoDate)
+      .gte('created_at', threeDaysAgoStart.toISOString())  // >= 3 days 12 hours ago
+      .lte('created_at', twoDaysAgoEnd.toISOString())      // <= 2 days 12 hours ago
       .is('last_day3_email_sent_at', null);
 
     if (day3Error) {
