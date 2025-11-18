@@ -445,7 +445,13 @@ eas submit --platform android
      - Add release notes (e.g., "Initial release of TodoTomorrow")
    - File: `.aab` format (not `.apk`) ✅
 
-7. [ ] **Review & Submit** ⚠️ **FINAL STEP**
+7. [ ] **Add Test Account (Required for Apps with Authentication)** ⚠️ **REQUIRED**
+   - **Test Account Email:** _To be determined_
+   - **Sign-In Instructions:** _To be determined_
+   - **Location:** Play Console → Your App → App Content → Test Accounts
+   - **Status:** ⏸️ **DEFERRED** (Story 7.10 was scrapped - alternative approach needed)
+
+8. [ ] **Review & Submit** ⚠️ **FINAL STEP**
    - Review all information one final time
    - Verify privacy policy link works
    - Check release notes

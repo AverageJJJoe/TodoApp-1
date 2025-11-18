@@ -539,7 +539,13 @@ eas submit --platform ios
    - Verify screenshots are correct
    - Verify app icon is correct
 
-7. [ ] **Submit for Review** ⚠️ **FINAL STEP**
+7. [ ] **Add Demo Account (Required for Apps with Authentication)** ⚠️ **REQUIRED**
+   - **Demo Account Email:** _To be determined_
+   - **Demo Account Instructions:** _To be determined_
+   - **Location:** App Store Connect → Your App → App Information → Demo Account
+   - **Status:** ⏸️ **DEFERRED** (Story 7.10 was scrapped - alternative approach needed)
+
+8. [ ] **Submit for Review** ⚠️ **FINAL STEP**
    - Click "Submit for Review" button
    - Answer any additional questions
    - Submit
